@@ -2,13 +2,14 @@ package com.prestarte.tfg.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "collectors")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class Collector extends User {
 
     @Column(length = 255)

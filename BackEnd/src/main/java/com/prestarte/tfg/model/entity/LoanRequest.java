@@ -3,7 +3,6 @@ package com.prestarte.tfg.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +25,7 @@ public class LoanRequest {
     @JoinColumn(name = "foundation_id", nullable = false)
     private Foundation foundation;
 
+    // CORREGIDO: Sincronizado con el nombre del Enum inferior
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
@@ -37,12 +37,13 @@ public class LoanRequest {
     private ChatSession chatSession;
 
     @Column(columnDefinition = "TEXT")
-    private String agreedConditions;  // JSON condiciones finales
+    private String agreedConditions;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public enum EstadoSolicitud {
+    // CORREGIDO: Nombre cambiado a Status para coincidir con el atributo
+    public enum Status {
         PENDIENTE, APROBADO, RECHAZADO, CANCELADO, EN_CURSO
     }
 }

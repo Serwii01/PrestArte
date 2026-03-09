@@ -4,13 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collector;
 
-@Entity                    // ← AÑADIDO (¡importante!)
-@Table(name = "artworks")  // ← AÑADIDO
+@Entity
+@Table(name = "artworks")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +17,7 @@ public class Artwork {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;  // ← Long (no long)
+    private Long id;
 
     @Column(length = 200, nullable = false)
     private String title;
@@ -49,12 +47,11 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String loanConditions;
 
-    // Relación con coleccionista
+    // CORREGIDO: Ahora usa tu entidad Collector, no el de java.util
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "collector_id", nullable = false)
     private Collector collector;
 
-    // Fotos/documentos
     @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL)
     private List<ArtworkFile> files;
 
@@ -68,5 +65,4 @@ public class Artwork {
     public enum Condition {
         EXCELENTE, BUENO, REGULAR, DEFECTUOSO, DAÑADO
     }
-
 }
