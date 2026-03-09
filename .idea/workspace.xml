@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c38460b3-49b5-40a9-a41d-d0a13d0f12ea" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ArtworkRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ChatSessionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/LoanRequestRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/MessageRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Collector.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Collector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Foundation.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Foundation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/TransportCompany.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/TransportCompany.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,10 +46,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
@@ -104,7 +102,7 @@
       <workItem from="1772704199018" duration="1297000" />
       <workItem from="1773064646825" duration="2275000" />
       <workItem from="1773067005615" duration="563000" />
-      <workItem from="1773067582818" duration="331000" />
+      <workItem from="1773067582818" duration="562000" />
     </task>
     <servers />
   </component>
