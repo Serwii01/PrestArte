@@ -38,7 +38,7 @@ public class Artwork {
     private Double depthCm;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "artwork_condition", nullable = false)
     private Condition condition;
 
     @Column(columnDefinition = "TEXT")
