@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,7 +26,6 @@ public class LoanRequest {
     @JoinColumn(name = "foundation_id", nullable = false)
     private Foundation foundation;
 
-    // CORREGIDO: Sincronizado con el nombre del Enum inferior
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
@@ -34,6 +34,7 @@ public class LoanRequest {
     private LocalDateTime requestedDate;
 
     @OneToOne(mappedBy = "loanRequest", cascade = CascadeType.ALL)
+    @JsonIgnore
     private ChatSession chatSession;
 
     @Column(columnDefinition = "TEXT")
@@ -42,7 +43,6 @@ public class LoanRequest {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    // CORREGIDO: Nombre cambiado a Status para coincidir con el atributo
     public enum Status {
         PENDIENTE, APROBADO, RECHAZADO, CANCELADO, EN_CURSO
     }

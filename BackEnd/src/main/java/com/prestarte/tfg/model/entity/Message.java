@@ -26,21 +26,20 @@ public class Message {
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;  // texto o "" si es imagen
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String content;
 
     @CreationTimestamp
-    private LocalDateTime timestamp;
+    private LocalDateTime sentAt;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TipoMensaje tipo;
-
-    private boolean isClosed = false;  // "Cerrar trato"
+    private TipoMensaje tipo = TipoMensaje.TEXTO;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attachment_id")
-    private DBFile attachment;  // foto/PDF opcional
+    private DBFile attachment;
 
     public enum TipoMensaje {
         TEXTO, IMAGEN, DOCUMENTO, ACUERDO

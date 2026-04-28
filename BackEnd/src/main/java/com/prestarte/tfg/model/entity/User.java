@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder // Permite usar el builder en las clases hijas
+@SuperBuilder
 public abstract class User {
 
     @Id
@@ -27,6 +28,7 @@ public abstract class User {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 

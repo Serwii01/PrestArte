@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
     // Obtener el historial de un chat ordenado por fecha
-    List<Message> findByChatSessionIdOrderByTimestampAsc(Long sessionId);
+    List<Message> findByChatSessionIdOrderBySentAtAsc(Long chatSessionId);
 }

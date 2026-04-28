@@ -49,7 +49,7 @@ public class Artwork {
 
     // CORREGIDO: Ahora usa tu entidad Collector, no el de java.util
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collector_id", nullable = false)
+    @JoinColumn(name = "collector_id", nullable = true)
     private Collector collector;
 
     @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL)
