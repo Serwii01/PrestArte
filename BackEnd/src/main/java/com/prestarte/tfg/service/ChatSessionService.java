@@ -2,7 +2,9 @@ package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.model.dto.ChatSessionResponse;
 import com.prestarte.tfg.model.entity.ChatSession;
+import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.repository.ChatSessionRepository;
+import com.prestarte.tfg.repository.LoanRequestRepository; // Necesitamos esto
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,16 +18,27 @@ import java.util.stream.Collectors;
 public class ChatSessionService {
 
     private final ChatSessionRepository chatSessionRepository;
+    private final LoanRequestRepository loanRequestRepository; // Añadido
 
     @Transactional
-    public ChatSessionResponse createChatSession(ChatSession chatSession) {
-        if (chatSession.getLoanRequest() == null || chatSession.getLoanRequest().getId() == null) {
-            throw new RuntimeException("LoanRequest es obligatorio para iniciar un chat");
+    public ChatSessionResponse createChatSession(Long loanRequestId) {
+        // 1. Validar que el ID no sea nulo
+        if (loanRequestId == null) {
+            throw new RuntimeException("El ID del LoanRequest es obligatorio para iniciar un chat");
         }
 
-        if (chatSession.getEstado() == null) {
-            chatSession.setEstado(ChatSession.EstadoChat.ACTIVO);
-        }
+        // 2. Buscar la solicitud de préstamo real en la DB
+        LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
+                .orElseThrow(() -> new RuntimeException("No existe una solicitud de préstamo con ID: " + loanRequestId));
+
+        // 3. Opcional: Evitar crear dos chats para la misma solicitud
+        // if (chatSessionRepository.existsByLoanRequestId(loanRequestId)) { ... }
+
+        // 4. Construir la nueva sesión
+        ChatSession chatSession = ChatSession.builder()
+                .loanRequest(loanRequest)
+                .estado(ChatSession.EstadoChat.ACTIVO)
+                .build();
 
         ChatSession saved = chatSessionRepository.save(chatSession);
         return mapToResponse(saved);
@@ -61,7 +74,7 @@ public class ChatSessionService {
     private ChatSessionResponse mapToResponse(ChatSession chatSession) {
         return ChatSessionResponse.builder()
                 .id(chatSession.getId())
-                .loanRequestId(chatSession.getLoanRequest().getId())
+                .loanRequestId(chatSession.getLoanRequest() != null ? chatSession.getLoanRequest().getId() : null)
                 .estado(chatSession.getEstado())
                 .createdAt(chatSession.getCreatedAt())
                 .closedAt(chatSession.getClosedAt())

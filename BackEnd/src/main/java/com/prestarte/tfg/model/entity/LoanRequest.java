@@ -1,10 +1,8 @@
 package com.prestarte.tfg.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "loan_requests")
@@ -18,32 +16,26 @@ public class LoanRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "artwork_id", nullable = false)
     private Artwork artwork;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "foundation_id", nullable = false)
     private Foundation foundation;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Status status;
-
-    @CreationTimestamp
-    private LocalDateTime requestedDate;
-
-    @OneToOne(mappedBy = "loanRequest", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private ChatSession chatSession;
+    // Cambiamos los nombres para que el servicio los encuentre
+    private LocalDate proposedStartDate;
+    private LocalDate proposedEndDate;
 
     @Column(columnDefinition = "TEXT")
     private String agreedConditions;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20) // Añade esto para asegurar espacio
+    private Status status;
 
     public enum Status {
-        PENDIENTE, APROBADO, RECHAZADO, CANCELADO, EN_CURSO
+        PENDIENTE, ACEPTADA, RECHAZADA, FINALIZADA
     }
 }

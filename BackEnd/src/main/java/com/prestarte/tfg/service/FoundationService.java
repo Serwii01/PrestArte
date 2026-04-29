@@ -1,11 +1,11 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.model.entity.Foundation;
-import com.prestarte.tfg.model.entity.User; // 1. Cambiamos el import para traer a User completo
+import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.repository.FoundationRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -17,8 +17,8 @@ public class FoundationService {
 
     @Transactional
     public Foundation createFoundation(Foundation foundation) {
-        // 2. Accedemos al Role a través de User
-        foundation.setRole(User.Role.FOUNDATION);
+        // Asignamos el rol usando el enum
+        foundation.setRole(Role.FOUNDATION);
         return foundationRepository.save(foundation);
     }
 

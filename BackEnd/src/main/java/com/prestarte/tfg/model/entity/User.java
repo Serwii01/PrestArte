@@ -1,6 +1,5 @@
 package com.prestarte.tfg.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +28,6 @@ public abstract class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    // Sustituye @JsonIgnore por esto:
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
@@ -51,6 +49,3 @@ public abstract class User {
     private LocalDateTime updatedAt;
 }
 
-enum Role {
-    COLLECTOR, FOUNDATION, TRANSPORT, ADMIN
-}

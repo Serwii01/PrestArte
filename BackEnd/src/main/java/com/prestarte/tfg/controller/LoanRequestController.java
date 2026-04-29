@@ -1,5 +1,6 @@
 package com.prestarte.tfg.controller;
 
+import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.service.LoanRequestService;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,8 @@ public class LoanRequestController {
     private final LoanRequestService loanRequestService;
 
     @PostMapping
-    public LoanRequest createLoanRequest(@RequestBody LoanRequest loanRequest) {
-        return loanRequestService.createLoanRequest(loanRequest);
+    public LoanRequest createLoanRequest(@RequestBody CreateLoanRequest request) {
+        return loanRequestService.createLoanRequest(request);
     }
 
     @GetMapping
@@ -24,9 +25,10 @@ public class LoanRequestController {
         return loanRequestService.getAllLoanRequests();
     }
 
-    @GetMapping("/{id}")
-    public LoanRequest getLoanRequestById(@PathVariable Long id) {
-        return loanRequestService.getLoanRequestById(id)
-                .orElseThrow(() -> new RuntimeException("Loan request not found"));
+    @PatchMapping("/{id}/status")
+    public LoanRequest updateStatus(
+            @PathVariable Long id,
+            @RequestParam LoanRequest.Status status) {
+        return loanRequestService.updateRequestStatus(id, status);
     }
 }

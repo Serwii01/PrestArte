@@ -1,12 +1,12 @@
 package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.ChatSessionResponse;
-import com.prestarte.tfg.model.entity.ChatSession;
 import com.prestarte.tfg.service.ChatSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat-sessions")
@@ -16,13 +16,9 @@ public class ChatSessionController {
     private final ChatSessionService chatSessionService;
 
     @PostMapping
-    public ChatSessionResponse createChatSession(@RequestBody ChatSession chatSession) {
-        return chatSessionService.createChatSession(chatSession);
-    }
-
-    @PutMapping("/{id}/close")
-    public ChatSessionResponse closeChatSession(@PathVariable Long id) {
-        return chatSessionService.closeChatSession(id);
+    public ChatSessionResponse createChatSession(@RequestBody Map<String, Long> payload) {
+        // Extraemos el ID del JSON {"loanRequestId": 1}
+        return chatSessionService.createChatSession(payload.get("loanRequestId"));
     }
 
     @GetMapping
@@ -33,5 +29,10 @@ public class ChatSessionController {
     @GetMapping("/{id}")
     public ChatSessionResponse getChatSessionById(@PathVariable Long id) {
         return chatSessionService.getChatSessionDtoById(id);
+    }
+
+    @PutMapping("/{id}/close")
+    public ChatSessionResponse closeChatSession(@PathVariable Long id) {
+        return chatSessionService.closeChatSession(id);
     }
 }
