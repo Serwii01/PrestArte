@@ -1,6 +1,7 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.model.dto.ArtworkDto;
+import com.prestarte.tfg.model.dto.FileDto;
 import com.prestarte.tfg.model.dto.CreateArtworkRequest;
 import com.prestarte.tfg.model.entity.Artwork;
 import com.prestarte.tfg.model.entity.Collector;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,11 +24,11 @@ public class ArtworkService {
 
     @Transactional
     public ArtworkDto createArtwork(CreateArtworkRequest request) {
-        // 1. Buscar al coleccionista que será dueño de la obra
+        // Validamos que el ID pertenezca a un Coleccionista.
+        // Si se pasa el ID de un Museo, el repositorio de Coleccionistas no lo encontrará.
         Collector collector = collectorRepository.findById(request.getCollectorId())
-                .orElseThrow(() -> new RuntimeException("Coleccionista no encontrado con ID: " + request.getCollectorId()));
+                .orElseThrow(() -> new RuntimeException("Error: La obra debe pertenecer a un Coleccionista válido. ID no encontrado: " + request.getCollectorId()));
 
-        // 2. Mapear el Request DTO a la Entidad Artwork
         Artwork artwork = new Artwork();
         artwork.setTitle(request.getTitle());
         artwork.setArtist(request.getArtist());
@@ -35,19 +37,19 @@ public class ArtworkService {
         artwork.setHeightCm(request.getHeightCm());
         artwork.setDepthCm(request.getDepthCm());
         artwork.setDescription(request.getDescription());
+
+        // Establecemos la relación con el coleccionista
         artwork.setCollector(collector);
 
-        // CORRECCIÓN AQUÍ: Usamos Artwork.Condition en lugar de EstadoConservacion
+        // Gestión del estado de conservación
         if (request.getCondition() != null) {
             try {
                 artwork.setCondition(Artwork.Condition.valueOf(request.getCondition().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                // Si el valor enviado no coincide con (EXCELENTE, BUENO, REGULAR, MALO, RESTAURACION)
                 artwork.setCondition(null);
             }
         }
 
-        // 3. Guardar y devolver como DTO
         Artwork savedArtwork = artworkRepository.save(artwork);
         return convertToDto(savedArtwork);
     }
@@ -65,6 +67,17 @@ public class ArtworkService {
     }
 
     private ArtworkDto convertToDto(Artwork artwork) {
+        List<FileDto> fileDtos = new ArrayList<>();
+        if (artwork.getFiles() != null) {
+            fileDtos = artwork.getFiles().stream()
+                    .map(af -> FileDto.builder()
+                            .id(af.getFile().getId())
+                            .fileName(af.getFile().getFileName())
+                            .fileType(af.getFile().getFileType())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
         return ArtworkDto.builder()
                 .id(artwork.getId())
                 .title(artwork.getTitle())
@@ -77,6 +90,7 @@ public class ArtworkService {
                 .description(artwork.getDescription())
                 .loanConditions(artwork.getLoanConditions())
                 .collectorName(artwork.getCollector() != null ? artwork.getCollector().getName() : "Anónimo")
+                .files(fileDtos)
                 .createdAt(artwork.getCreatedAt())
                 .build();
     }

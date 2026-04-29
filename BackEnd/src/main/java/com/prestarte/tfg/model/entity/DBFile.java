@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,7 +17,8 @@ import java.util.UUID;
 public class DBFile {
 
     @Id
-    private String id = UUID.randomUUID().toString();
+    @GeneratedValue(strategy = GenerationType.UUID) // Esto genera el ID automáticamente
+    private String id;
 
     @Column(nullable = false, length = 255)
     private String fileName;
@@ -26,6 +28,7 @@ public class DBFile {
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
+    @JsonIgnore
     private byte[] data;  // ← BYTES de la foto
 
     private Long fileSize;  // bytes

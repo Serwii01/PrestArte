@@ -6,7 +6,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,7 +38,23 @@ public abstract class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    private boolean enabled = true;
+    // --- NUEVOS CAMPOS PARA KYB ---
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserStatus status = UserStatus.PENDING; // Por defecto nace en espera
+
+    @Column(length = 50)
+    private String taxId; // CIF, NIF, LEI, DNI...
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "verification_file_id")
+    private DBFile verificationFile; // El documento PDF o imagen de identidad
+
+    // ------------------------------
+
+    @Builder.Default
+    private boolean enabled = false; // IMPORTANTE: Cambiamos a false por defecto
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -48,4 +63,3 @@ public abstract class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
-

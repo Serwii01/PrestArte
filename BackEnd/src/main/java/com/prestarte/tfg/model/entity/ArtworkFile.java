@@ -19,7 +19,8 @@ public class ArtworkFile {
     @JoinColumn(name = "artwork_id", nullable = false)
     private Artwork artwork;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // CAMBIO: Añadimos cascade para evitar el error de "unsaved transient instance"
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "file_id", nullable = false)
     private DBFile file;
 
@@ -28,7 +29,7 @@ public class ArtworkFile {
     private FileType type;
 
     @Column(length = 100)
-    private String description;  // "Foto frontal", "Detalle marco"
+    private String description;
 
     public enum FileType {
         IMAGE_MAIN,     // foto principal

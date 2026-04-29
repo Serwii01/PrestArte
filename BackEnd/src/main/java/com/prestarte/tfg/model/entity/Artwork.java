@@ -19,6 +19,12 @@ public class Artwork {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // En Artwork.java
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false) // Cambiamos el nombre de la columna en BD
+    private User owner;
+
+
     @Column(length = 200, nullable = false)
     private String title;
 
