@@ -2,7 +2,6 @@ package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.CreateMessageRequest;
 import com.prestarte.tfg.model.dto.MessageResponse;
-import com.prestarte.tfg.model.entity.Message;
 import com.prestarte.tfg.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +22,13 @@ public class MessageController {
     }
 
     @GetMapping
-    public List<Message> getAllMessages() {
+    public List<MessageResponse> getAllMessages() {
         return messageService.getAllMessages();
     }
 
     @GetMapping("/{id}")
-    public Message getMessageById(@PathVariable Long id) {
-        return messageService.getMessageById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
+    public MessageResponse getMessageById(@PathVariable Long id) {
+        return messageService.getMessageDtoById(id);
     }
 
     @GetMapping("/chat/{chatSessionId}")

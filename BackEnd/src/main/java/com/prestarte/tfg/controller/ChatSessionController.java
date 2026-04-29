@@ -16,7 +16,7 @@ public class ChatSessionController {
     private final ChatSessionService chatSessionService;
 
     @PostMapping
-    public ChatSession createChatSession(@RequestBody ChatSession chatSession) {
+    public ChatSessionResponse createChatSession(@RequestBody ChatSession chatSession) {
         return chatSessionService.createChatSession(chatSession);
     }
 
@@ -26,13 +26,12 @@ public class ChatSessionController {
     }
 
     @GetMapping
-    public List<ChatSession> getAllChatSessions() {
+    public List<ChatSessionResponse> getAllChatSessions() {
         return chatSessionService.getAllChatSessions();
     }
 
     @GetMapping("/{id}")
-    public ChatSession getChatSessionById(@PathVariable Long id) {
-        return chatSessionService.getChatSessionById(id)
-                .orElseThrow(() -> new RuntimeException("Chat session not found"));
+    public ChatSessionResponse getChatSessionById(@PathVariable Long id) {
+        return chatSessionService.getChatSessionDtoById(id);
     }
 }

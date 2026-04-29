@@ -10,9 +10,10 @@ import com.prestarte.tfg.repository.MessageRepository;
 import com.prestarte.tfg.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,51 @@ public class MessageService {
         return messageRepository.findByChatSessionIdOrderBySentAtAsc(chatSessionId)
                 .stream()
                 .map(this::mapToResponse)
-                .toList();
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public MessageResponse createMessage(CreateMessageRequest request) {
+        // 1. Validaciones previas
+        ChatSession chatSession = chatSessionRepository.findById(request.getChatSessionId())
+                .orElseThrow(() -> new RuntimeException("ChatSession no encontrada"));
+
+        User sender = userRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new RuntimeException("Remitente no encontrado"));
+
+        if (chatSession.getEstado() == ChatSession.EstadoChat.CERRADO) {
+            throw new RuntimeException("No se pueden enviar mensajes a un chat cerrado");
+        }
+
+        // 2. Validar que el usuario participa en este préstamo
+        Long collectorId = chatSession.getLoanRequest().getArtwork().getCollector().getId();
+        Long foundationId = chatSession.getLoanRequest().getFoundation().getId();
+
+        if (!sender.getId().equals(collectorId) && !sender.getId().equals(foundationId)) {
+            throw new RuntimeException("Este usuario no tiene permiso para participar en este chat");
+        }
+
+        // 3. Crear y guardar
+        Message message = Message.builder()
+                .chatSession(chatSession)
+                .sender(sender)
+                .content(request.getContent())
+                .tipo(request.getTipo() != null ? request.getTipo() : Message.TipoMensaje.TEXTO)
+                .build();
+
+        return mapToResponse(messageRepository.save(message));
+    }
+
+    public List<MessageResponse> getAllMessages() {
+        return messageRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public MessageResponse getMessageDtoById(Long id) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mensaje no encontrado"));
+        return mapToResponse(message);
     }
 
     private MessageResponse mapToResponse(Message message) {
@@ -39,43 +84,5 @@ public class MessageService {
                 .sentAt(message.getSentAt())
                 .tipo(message.getTipo())
                 .build();
-    }
-
-    public MessageResponse createMessage(CreateMessageRequest request) {
-        ChatSession chatSession = chatSessionRepository.findById(request.getChatSessionId())
-                .orElseThrow(() -> new RuntimeException("ChatSession no encontrada"));
-
-        User sender = userRepository.findById(request.getSenderId())
-                .orElseThrow(() -> new RuntimeException("Sender no encontrado"));
-
-        Message message = Message.builder()
-                .chatSession(chatSession)
-                .sender(sender)
-                .content(request.getContent())
-                .tipo(request.getTipo() != null ? request.getTipo() : Message.TipoMensaje.TEXTO)
-                .build();
-
-        Message savedMessage = messageRepository.save(message);
-
-        Long collectorId = chatSession.getLoanRequest().getArtwork().getCollector().getId();
-        Long foundationId = chatSession.getLoanRequest().getFoundation().getId();
-
-        if (!sender.getId().equals(collectorId) && !sender.getId().equals(foundationId)) {
-            throw new RuntimeException("Este usuario no pertenece al chat");
-        }
-
-        if (chatSession.getEstado() == ChatSession.EstadoChat.CERRADO) {
-            throw new RuntimeException("No se pueden enviar mensajes a un chat cerrado");
-        }
-
-        return mapToResponse(savedMessage);
-    }
-
-    public List<Message> getAllMessages() {
-        return messageRepository.findAll();
-    }
-
-    public Optional<Message> getMessageById(Long id) {
-        return messageRepository.findById(id);
     }
 }

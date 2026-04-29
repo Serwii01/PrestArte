@@ -1,6 +1,7 @@
 package com.prestarte.tfg.controller;
 
-import com.prestarte.tfg.model.entity.Artwork;
+import com.prestarte.tfg.model.dto.ArtworkDto;
+import com.prestarte.tfg.model.dto.CreateArtworkRequest;
 import com.prestarte.tfg.service.ArtworkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,18 +16,17 @@ public class ArtworkController {
     private final ArtworkService artworkService;
 
     @PostMapping
-    public Artwork createArtwork(@RequestBody Artwork artwork) {
-        return artworkService.createArtwork(artwork);
+    public ArtworkDto createArtwork(@RequestBody CreateArtworkRequest request) {
+        return artworkService.createArtwork(request);
     }
 
     @GetMapping
-    public List<Artwork> getAllArtworks() {
+    public List<ArtworkDto> getAllArtworks() {
         return artworkService.getAllArtworks();
     }
 
     @GetMapping("/{id}")
-    public Artwork getArtworkById(@PathVariable Long id) {
-        return artworkService.getArtworkById(id)
-                .orElseThrow(() -> new RuntimeException("Artwork not found"));
+    public ArtworkDto getArtworkById(@PathVariable Long id) {
+        return artworkService.getArtworkById(id);
     }
 }

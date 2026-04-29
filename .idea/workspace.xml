@@ -5,29 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c38460b3-49b5-40a9-a41d-d0a13d0f12ea" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ChatSessionController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/CollectorController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/FoundationController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/MessageController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/ChatSessionResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/CreateMessageRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/MessageResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/CollectorRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/FoundationRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ChatSessionService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/CollectorService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/CreateArtworkRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Role.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/ChatSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/ChatSession.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Message.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ArtworkController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ArtworkController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ChatSessionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ChatSessionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/MessageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/MessageController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/MessageRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/MessageRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ArtworkService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ArtworkService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ChatSessionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ChatSessionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,6 +26,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
@@ -138,6 +127,8 @@
       <workItem from="1774983195891" duration="7510000" />
       <workItem from="1775030825801" duration="2636000" />
       <workItem from="1775642908889" duration="5926000" />
+      <workItem from="1777362805935" duration="728000" />
+      <workItem from="1777448503245" duration="5103000" />
     </task>
     <servers />
   </component>

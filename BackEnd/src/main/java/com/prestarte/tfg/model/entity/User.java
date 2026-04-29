@@ -1,6 +1,7 @@
 package com.prestarte.tfg.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -28,7 +29,8 @@ public abstract class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @JsonIgnore
+    // Sustituye @JsonIgnore por esto:
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 
