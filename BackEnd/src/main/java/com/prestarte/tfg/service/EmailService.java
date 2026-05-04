@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,25 +16,39 @@ public class EmailService {
     private final JavaMailSender mailSender;
 
     /**
-     * Envía un email con el contrato PDF adjunto.
+     * Sends a basic text email without attachments.
+     */
+    public void sendSimpleEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("Notification email sent to: " + to);
+        } catch (Exception e) {
+            System.err.println("Error sending simple email: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Sends an email with a PDF contract attached.
      */
     public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String fileName) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            // true indica que es un mensaje "multipart" (con adjuntos)
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(body, true); // true para permitir HTML en el cuerpo
+            helper.setText(body, true);
 
-            // Añadimos el PDF desde el array de bytes que genera nuestro PdfGeneratorService
             helper.addAttachment(fileName, new ByteArrayResource(attachment));
 
             mailSender.send(message);
-            System.out.println("Email enviado con éxito a: " + to);
+            System.out.println("Email with attachment sent successfully to: " + to);
         } catch (MessagingException e) {
-            throw new RuntimeException("Error al enviar el email: " + e.getMessage());
+            throw new RuntimeException("Error sending email with attachment: " + e.getMessage());
         }
     }
 }

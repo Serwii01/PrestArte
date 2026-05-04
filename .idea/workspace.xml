@@ -5,22 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c38460b3-49b5-40a9-a41d-d0a13d0f12ea" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/FoundationDashboardDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/FoundationInventoryDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/FoundationPendingRequestDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/EmailService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/PdfGeneratorService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BackEnd/src/main/resources/static/images/logo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/FoundationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/FoundationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/LoanRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/LoanRequestRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ShipmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ShipmentRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/EmailService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/UserService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -143,7 +133,7 @@
       <workItem from="1777506769451" duration="8000" />
       <workItem from="1777534480189" duration="5139000" />
       <workItem from="1777539803806" duration="494000" />
-      <workItem from="1777879879971" duration="11333000" />
+      <workItem from="1777879879971" duration="13579000" />
     </task>
     <servers />
   </component>

@@ -51,52 +51,89 @@ public class LoanRequestService {
         return loanRequestRepository.findByArtworkCollectorId(collectorId);
     }
 
+
     @Transactional
     public LoanResponse updateStatus(Long loanId, LoanRequest.Status status) {
         LoanRequest request = loanRequestRepository.findById(loanId)
-                .orElseThrow(() -> new RuntimeException("Petición no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Loan request not found"));
 
-        request.setStatus(status);
-        LoanRequest saved = loanRequestRepository.save(request);
-
-        // --- LÓGICA AUTOMÁTICA DE EMAIL ---
+        // VALIDATION: If the status is being changed to ACCEPTED
         if (status == LoanRequest.Status.ACEPTADA) {
-            notificarAceptacionConContrato(saved);
+            boolean isOverlapping = loanRequestRepository.existsOverlappingLoan(
+                    request.getArtwork().getId(),
+                    request.getStartDate(),
+                    request.getEndDate()
+            );
+
+            if (isOverlapping) {
+                // This will roll back the transaction and return an error to the user
+                throw new RuntimeException("CONFLICT: This artwork is already booked for the selected dates.");
+            }
+
+            // If not overlapping, proceed and notify parties
+            request.setStatus(status);
+            LoanRequest saved = loanRequestRepository.save(request);
+            notifyPartiesOnAcceptance(saved);
+            return convertToResponse(saved);
         }
 
+        // For other status changes (REJECTED, etc.)
+        request.setStatus(status);
+        LoanRequest saved = loanRequestRepository.save(request);
         return convertToResponse(saved);
     }
 
     /**
      * Lógica interna para generar el PDF y enviar el correo al Museo
      */
-    private void notificarAceptacionConContrato(LoanRequest loan) {
+    /**
+     * Notifies all three parties (Foundation, Collector, and Transport Company)
+     * by sending the formal contract via email.
+     */
+    private void notifyPartiesOnAcceptance(LoanRequest loan) {
         try {
-            // 1. Buscamos si ya existe un envío (Shipment) para el PDF
+            // 1. Fetch shipment and generate the PDF document
             Shipment shipment = shipmentService.getByLoanId(loan.getId());
-
-            // 2. Generamos el PDF usando los datos reales (DNI, CIF, etc)
             byte[] pdfBytes = pdfGeneratorService.generateLoanContract(loan, shipment);
 
-            // 3. Datos del envío de email
-            String emailDestino = loan.getFoundation().getEmail();
-            String asunto = "CONTRATO FORMALIZADO: " + loan.getArtwork().getTitle();
-            String cuerpo = "<h2>Petición Aceptada</h2>" +
-                    "<p>Estimados responsables de <b>" + loan.getFoundation().getName() + "</b>,</p>" +
-                    "<p>Nos complace informarles que el coleccionista ha aceptado el préstamo de la obra.</p>" +
-                    "<p>Adjunto a este correo encontrarán el <b>contrato logístico y legal</b> generado por el sistema.</p>" +
-                    "<br><p>Atentamente,<br>Equipo Prestarte.</p>";
+            String fileName = "Contract_" + loan.getArtwork().getTitle().replace(" ", "_") + ".pdf";
+            String subject = "LOAN CONTRACT FORMALIZED: " + loan.getArtwork().getTitle();
 
-            String nombreArchivo = "Contrato_" + loan.getArtwork().getTitle().replace(" ", "_") + ".pdf";
+            // --- 1. NOTIFICATION TO THE FOUNDATION (MUSEUM) ---
+            String foundationEmail = loan.getFoundation().getEmail();
+            if (foundationEmail != null) {
+                String foundationBody = "<h3>Loan Contract - Recipient Copy</h3>" +
+                        "<p>Dear team at <b>" + loan.getFoundation().getName() + "</b>,</p>" +
+                        "<p>The loan request has been officially accepted. Please find the attached legal contract.</p>";
+                emailService.sendEmailWithAttachment(foundationEmail, subject, foundationBody, pdfBytes, fileName);
+            }
 
-            // 4. Disparamos el email
-            emailService.sendEmailWithAttachment(emailDestino, asunto, cuerpo, pdfBytes, nombreArchivo);
+            // --- 2. NOTIFICATION TO THE COLLECTOR (OWNER) ---
+            String collectorEmail = loan.getArtwork().getCollector().getEmail();
+            if (collectorEmail != null) {
+                String collectorBody = "<h3>Loan Contract - Owner Copy</h3>" +
+                        "<p>Hello <b>" + loan.getArtwork().getCollector().getName() + "</b>,</p>" +
+                        "<p>You have accepted the loan request for <i>" + loan.getArtwork().getTitle() + "</i>. " +
+                        "Attached is your copy of the signed agreement.</p>";
+                emailService.sendEmailWithAttachment(collectorEmail, subject, collectorBody, pdfBytes, fileName);
+            }
 
-            System.out.println("Email con contrato enviado correctamente a: " + emailDestino);
+            // --- 3. NOTIFICATION TO THE TRANSPORT COMPANY ---
+            if (shipment != null && shipment.getTransportCompany() != null) {
+                String transportEmail = shipment.getTransportCompany().getEmail();
+                if (transportEmail != null) {
+                    String transportBody = "<h3>Art Transport Order</h3>" +
+                            "<p>A new transport service has been assigned for: <b>" + loan.getArtwork().getTitle() + "</b>.</p>" +
+                            "<p>Please find the attached contract containing all safety and handling requirements.</p>";
+                    emailService.sendEmailWithAttachment(transportEmail, "NEW SERVICE: " + loan.getArtwork().getTitle(), transportBody, pdfBytes, fileName);
+                }
+            }
+
+            System.out.println("Multi-party notification flow completed successfully.");
 
         } catch (Exception e) {
-            // Usamos un log o print para no interrumpir el flujo si el email falla
-            System.err.println("Error crítico al enviar notificación: " + e.getMessage());
+            // We log the error but don't break the main transaction
+            System.err.println("Error sending multi-party notifications: " + e.getMessage());
         }
     }
 
