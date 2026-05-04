@@ -14,4 +14,6 @@ public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> 
     // Busca peticiones recibidas por un coleccionista (dueño de la obra)
     // Usamos 'artworkCollectorId' porque en Artwork el campo es 'collector'
     List<LoanRequest> findByArtworkCollectorId(Long collectorId);
+
+    List<LoanRequest> findByFoundationIdAndStatus(Long foundationId, LoanRequest.Status status);
 }

@@ -97,4 +97,9 @@ public class ShipmentService {
                 .transportCompanyName(saved.getTransportCompany().getCompanyName())
                 .build();
     }
+
+    public Shipment getByLoanId(Long loanId) {
+        // Lógica para buscar el envío por el ID del préstamo
+        return shipmentRepository.findByLoanRequestId(loanId).orElse(null);
+    }
 }
