@@ -7,12 +7,11 @@ import java.util.List;
 
 @Repository
 public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> {
-    // Solicitudes hechas por una fundación
+
+    // Busca peticiones hechas por una fundación específica
     List<LoanRequest> findByFoundationId(Long foundationId);
 
-    // Solicitudes recibidas por un coleccionista (mirando el dueño de la obra)
+    // Busca peticiones recibidas por un coleccionista (dueño de la obra)
+    // Usamos 'artworkCollectorId' porque en Artwork el campo es 'collector'
     List<LoanRequest> findByArtworkCollectorId(Long collectorId);
-
-    // Filtrar por estado (PENDIENTE, APROBADO, etc.)
-    List<LoanRequest> findByStatus(LoanRequest.Status status);
 }

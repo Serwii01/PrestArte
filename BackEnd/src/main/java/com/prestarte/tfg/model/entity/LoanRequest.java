@@ -24,15 +24,15 @@ public class LoanRequest {
     @JoinColumn(name = "foundation_id", nullable = false)
     private Foundation foundation;
 
-    // Cambiamos los nombres para que el servicio los encuentre
-    private LocalDate proposedStartDate;
-    private LocalDate proposedEndDate;
+    // Nombres simplificados para consistencia profesional
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     @Column(columnDefinition = "TEXT")
     private String agreedConditions;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20) // Añade esto para asegurar espacio
+    @Column(length = 20)
     private Status status;
 
     public enum Status {

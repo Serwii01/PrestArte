@@ -1,16 +1,12 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
-import com.prestarte.tfg.model.entity.Artwork;
-import com.prestarte.tfg.model.entity.Foundation;
-import com.prestarte.tfg.model.entity.LoanRequest;
-import com.prestarte.tfg.repository.ArtworkRepository;
-import com.prestarte.tfg.repository.FoundationRepository;
-import com.prestarte.tfg.repository.LoanRequestRepository;
+import com.prestarte.tfg.model.dto.LoanResponse;
+import com.prestarte.tfg.model.entity.*;
+import com.prestarte.tfg.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -22,38 +18,57 @@ public class LoanRequestService {
     private final FoundationRepository foundationRepository;
 
     @Transactional
-    public LoanRequest createLoanRequest(CreateLoanRequest request) {
-        Artwork artwork = artworkRepository.findById(request.getArtworkId())
+    public LoanResponse createRequest(CreateLoanRequest dto) {
+        Artwork artwork = artworkRepository.findById(dto.getArtworkId())
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
-        Foundation foundation = foundationRepository.findById(request.getFoundationId())
-                .orElseThrow(() -> new RuntimeException("Fundación no encontrada"));
+        Foundation foundation = foundationRepository.findById(dto.getFoundationId())
+                .orElseThrow(() -> new RuntimeException("Institución no encontrada"));
 
-        LoanRequest loanRequest = new LoanRequest();
-        loanRequest.setArtwork(artwork);
-        loanRequest.setFoundation(foundation);
+        LoanRequest request = LoanRequest.builder()
+                .artwork(artwork)
+                .foundation(foundation)
+                .startDate(dto.getStartDate()) // <--- Actualizado
+                .endDate(dto.getEndDate())     // <--- Actualizado
+                .status(LoanRequest.Status.PENDIENTE)
+                .build();
 
-        // Ahora estos métodos sí coinciden con la Entidad
-        loanRequest.setProposedStartDate(request.getProposedStartDate());
-        loanRequest.setProposedEndDate(request.getProposedEndDate());
+        LoanRequest saved = loanRequestRepository.save(request);
 
-        loanRequest.setAgreedConditions(request.getAdditionalConditions());
-        loanRequest.setStatus(LoanRequest.Status.PENDIENTE);
-
-        return loanRequestRepository.save(loanRequest);
+        return LoanResponse.builder()
+                .id(saved.getId())
+                .artworkTitle(artwork.getTitle())
+                .foundationName(foundation.getName())
+                .startDate(saved.getStartDate()) // <--- Actualizado
+                .endDate(saved.getEndDate())     // <--- Actualizado
+                .status(saved.getStatus().name())
+                .build();
     }
 
-    public List<LoanRequest> getAllLoanRequests() {
-        return loanRequestRepository.findAll();
+    public List<LoanRequest> getRequestsByFoundation(Long foundationId) {
+        return loanRequestRepository.findByFoundationId(foundationId);
     }
+
+    public List<LoanRequest> getRequestsByCollector(Long collectorId) {
+        // Cambiamos 'Owner' por 'Collector' para que coincida con tu Repository
+        return loanRequestRepository.findByArtworkCollectorId(collectorId);
+    }
+
     @Transactional
-    public LoanRequest updateRequestStatus(Long requestId, LoanRequest.Status newStatus) {
-        LoanRequest request = loanRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+    public LoanResponse updateStatus(Long loanId, LoanRequest.Status status) {
+        LoanRequest request = loanRequestRepository.findById(loanId)
+                .orElseThrow(() -> new RuntimeException("Petición no encontrada"));
 
-        request.setStatus(newStatus);
+        request.setStatus(status);
+        LoanRequest saved = loanRequestRepository.save(request);
 
-        // Si se acepta, podrías disparar otras lógicas aquí (como avisar a transporte)
-        return loanRequestRepository.save(request);
+        return LoanResponse.builder()
+                .id(saved.getId())
+                .artworkTitle(saved.getArtwork().getTitle())
+                .foundationName(saved.getFoundation().getName())
+                .startDate(saved.getStartDate()) // <--- Actualizado
+                .endDate(saved.getEndDate())     // <--- Actualizado
+                .status(saved.getStatus().name())
+                .build();
     }
 }
