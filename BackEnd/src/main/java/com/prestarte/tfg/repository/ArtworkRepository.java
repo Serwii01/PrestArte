@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
-    List<Artwork> findByOwnerId(Long ownerId); // <--- ESTE ES EL CLAVE
+    // La entidad Artwork tiene un campo 'collector', no 'owner'.
+    List<Artwork> findByCollectorId(Long collectorId);
 }

@@ -19,12 +19,6 @@ public class Artwork {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // En Artwork.java
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false) // Cambiamos el nombre de la columna en BD
-    private User owner;
-
-
     @Column(length = 200, nullable = false)
     private String title;
 
@@ -50,16 +44,16 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // En Artwork.java
     @Column(nullable = false)
-    private Double estimatedValue; // El valor que el coleccionista asigna a la obra
+    private Double estimatedValue;
 
     @Column(columnDefinition = "TEXT")
     private String loanConditions;
 
-    // CORREGIDO: Ahora usa tu entidad Collector, no el de java.util
+    // UNIFICADO: Usamos collector como única referencia al dueño.
+    // Marcamos nullable = false porque toda obra debe tener un dueño en el sistema.
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collector_id", nullable = true)
+    @JoinColumn(name = "collector_id", nullable = false)
     private Collector collector;
 
     @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL)

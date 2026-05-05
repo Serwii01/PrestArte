@@ -21,12 +21,8 @@ public class ShipmentService {
     private final LoanRequestRepository loanRequestRepository;
     private final TransportCompanyRepository transportCompanyRepository;
     private final EmailService emailService;
-    private final PdfGeneratorService pdfGeneratorService; // Inyectado para la formalización
+    private final PdfGeneratorService pdfGeneratorService;
 
-    /**
-     * 1. Solicitar servicio.
-     * Se invoca cuando el Museo o el Coleccionista (según mandatoryTransport) eligen empresa.
-     */
     @Transactional
     public ShipmentResponse requestShipment(Long loanId, Long transportCompanyId) {
         LoanRequest loan = loanRequestRepository.findById(loanId)
@@ -35,7 +31,6 @@ public class ShipmentService {
         TransportCompany company = transportCompanyRepository.findById(transportCompanyId)
                 .orElseThrow(() -> new RuntimeException("Transport company not found"));
 
-        // El préstamo pasa a fase de logística
         loan.setStatus(LoanRequest.Status.LOGISTICS_PENDING);
         loanRequestRepository.save(loan);
 
@@ -45,24 +40,21 @@ public class ShipmentService {
                 .status(Shipment.ShipmentStatus.SOLICITADO)
                 .trackingNumber("REQ-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .priceAccepted(false)
-                .insuranceValue(loan.getArtwork().getEstimatedValue()) // Valor base para el seguro
+                .insuranceValue(loan.getArtwork().getEstimatedValue())
                 .build();
 
         return mapToResponse(shipmentRepository.save(shipment));
     }
+
     @Transactional(readOnly = true)
     public Shipment getByLoanId(Long loanId) {
-        return shipmentRepository.findByLoanRequestId(loanId)
-                .orElse(null); // Devolvemos null si aún no hay transporte asignado
+        return shipmentRepository.findByLoanRequestId(loanId).orElse(null);
     }
 
     public Shipment getByIdRaw(Long id) {
-        return shipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
+        return shipmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Shipment not found"));
     }
-    /**
-     * 2. Proponer presupuesto (Acción del Transportista).
-     */
+
     @Transactional
     public ShipmentResponse proposeBudget(Long shipmentId, Double transportPrice, Double insuranceCost, String policy) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
@@ -72,16 +64,9 @@ public class ShipmentService {
         shipment.setInsuranceCost(insuranceCost);
         shipment.setInsurancePolicy(policy);
 
-        // Notificar a la fundación que ya tiene un presupuesto listo para revisar
-        // emailService.sendBudgetNotification(shipment);
-
         return mapToResponse(shipmentRepository.save(shipment));
     }
 
-    /**
-     * 3. Aprobar presupuesto y formalizar (Acción del Museo/Fundación).
-     * Cambia el préstamo a ACEPTADA y genera el contrato.
-     */
     @Transactional
     public ShipmentResponse approveBudget(Long shipmentId) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
@@ -91,30 +76,20 @@ public class ShipmentService {
             throw new RuntimeException("Cannot approve a shipment without a price proposal.");
         }
 
-        // Bloqueamos el acuerdo
         shipment.setPriceAccepted(true);
         shipment.setStatus(Shipment.ShipmentStatus.PENDIENTE);
         shipment.setTrackingNumber(shipment.getTrackingNumber().replace("REQ-", "TK-"));
 
-        // El préstamo ya es oficial
         LoanRequest loan = shipment.getLoanRequest();
         loan.setStatus(LoanRequest.Status.ACEPTADA);
         loanRequestRepository.save(loan);
 
-        Shipment saved = shipmentRepository.save(shipment);
-
-        // DISPARADOR DE FORMALIZACIÓN:
-        // 1. Generar el PDF final con los datos de transporte y seguro
-        // byte[] contractPdf = pdfGeneratorService.generateLoanContract(loan, saved);
-
-        // 2. Enviar email con el PDF a las tres partes
-        // emailService.sendFinalContract(loan, saved, contractPdf);
-
-        return mapToResponse(saved);
+        return mapToResponse(shipmentRepository.save(shipment));
     }
 
     /**
      * Actualizar estado durante el tránsito (Acción del Transportista).
+     * SINCRONIZADO: Cambia el estado del préstamo a EN_TRANSITO.
      */
     @Transactional
     public ShipmentResponse updateStatus(Long shipmentId, Shipment.ShipmentStatus newStatus) {
@@ -123,10 +98,10 @@ public class ShipmentService {
 
         shipment.setStatus(newStatus);
 
-        // --- NUEVA LÓGICA DE SINCRONIZACIÓN ---
-        if (newStatus == Shipment.ShipmentStatus.EN_TRANSITO) {
-            // En tu enum de LoanRequest falta el estado EN_TRANSITO, deberías añadirlo
-            // shipment.getLoanRequest().setStatus(LoanRequest.Status.EN_TRANSITO);
+        // Sincronización con el estado del préstamo[cite: 4, 7]
+        if (newStatus == Shipment.ShipmentStatus.RECOGIDO || newStatus == Shipment.ShipmentStatus.EN_TRANSITO) {
+            shipment.getLoanRequest().setStatus(LoanRequest.Status.EN_TRANSITO);
+            loanRequestRepository.save(shipment.getLoanRequest());
         }
 
         return mapToResponse(shipmentRepository.save(shipment));
@@ -134,6 +109,7 @@ public class ShipmentService {
 
     /**
      * Confirmar entrega (Acción del Museo).
+     * SINCRONIZADO: Cambia el estado del préstamo a RECIBIDA[cite: 4, 7].
      */
     @Transactional
     public ShipmentResponse confirmArrival(Long shipmentId, ConfirmReceiptRequest request) {
@@ -144,6 +120,10 @@ public class ShipmentService {
         shipment.setReceivedBy(request.getReceivedBy());
         shipment.setNotes(request.getNotes());
         shipment.setDeliveryDate(LocalDateTime.now());
+
+        // Actualizamos el préstamo a RECIBIDA[cite: 4, 7]
+        shipment.getLoanRequest().setStatus(LoanRequest.Status.RECIBIDA);
+        loanRequestRepository.save(shipment.getLoanRequest());
 
         return mapToResponse(shipmentRepository.save(shipment));
     }
@@ -172,11 +152,11 @@ public class ShipmentService {
                 .notes(s.getNotes())
                 .deliveryDate(s.getDeliveryDate())
                 .createdAt(s.getCreatedAt())
-                // --- CAMPOS AÑADIDOS PARA EL DASHBOARD ---
+                // Asignación de fechas del préstamo para los Dashboards
                 .startDate(s.getLoanRequest().getStartDate() != null ?
                         s.getLoanRequest().getStartDate().atStartOfDay() : null)
                 .endDate(s.getLoanRequest().getEndDate() != null ?
                         s.getLoanRequest().getEndDate().atStartOfDay() : null)
                 .build();
-    }   
+    }
 }

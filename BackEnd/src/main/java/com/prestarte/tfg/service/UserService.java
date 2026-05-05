@@ -1,13 +1,17 @@
 package com.prestarte.tfg.service;
 
+import com.prestarte.tfg.exception.EmailAlreadyExistsException;
+import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.RegistrationRequest;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.DBFileRepository;
 import com.prestarte.tfg.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -17,103 +21,126 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final DBFileRepository dbFileRepository;
-    private final EmailService emailService; // Injected for notifications
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User registerUser(RegistrationRequest request, MultipartFile file) throws IOException {
-        // 1. Save identity document
+        // 1. Email único
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
+        // 2. Validar archivo de verificación
+        validateVerificationFile(file);
+
+        // 3. Guardar documento de identidad
         DBFile verificationDoc = DBFile.builder()
                 .fileName(file.getOriginalFilename())
                 .fileType(file.getContentType())
                 .data(file.getBytes())
+                .fileSize(file.getSize())
                 .build();
         dbFileRepository.save(verificationDoc);
 
-        // 2. Instantiate the correct subclass based on role
-        User user;
-        String roleStr = request.getRole() != null ? request.getRole().toUpperCase() : "COLLECTOR";
+        // 4. Instanciar la subclase correcta según rol
+        User user = buildUserBySubclass(request);
 
-        switch (roleStr) {
-            case "MUSEUM":
-            case "FOUNDATION":
-                Foundation foundation = new Foundation();
-                foundation.setInstitutionName(request.getName());
-                foundation.setAddress("Pending completion");
-                foundation.setCity("Pending completion");
-                user = foundation;
-                user.setRole(Role.FOUNDATION);
-                break;
-
-            case "TRANSPORT":
-                TransportCompany transport = new TransportCompany();
-                // If TransportCompany has specific required fields, set them here
-                user = transport;
-                user.setRole(Role.TRANSPORT);
-                break;
-
-            default:
-                user = new Collector();
-                user.setRole(Role.COLLECTOR);
-                break;
-        }
-
-        // 3. Set common fields
+        // 5. Datos comunes (la password se hashea aquí)
         user.setEmail(request.getEmail());
         user.setName(request.getName());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
         user.setTaxId(request.getTaxId());
         user.setVerificationFile(verificationDoc);
-
-        // 4. Security status
         user.setStatus(UserStatus.PENDING);
         user.setEnabled(false);
 
         User savedUser = userRepository.save(user);
-
-        // 5. Send welcome email (notifying that account is pending approval)
         sendWelcomeEmail(savedUser);
-
         return savedUser;
     }
 
     @Transactional
     public void approveUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> ResourceNotFoundException.of("Usuario", userId));
 
         user.setStatus(UserStatus.APPROVED);
         user.setEnabled(true);
         userRepository.save(user);
-
-        // Send activation email
         sendActivationEmail(user);
+    }
+
+    @Transactional
+    public void rejectUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Usuario", userId));
+
+        user.setStatus(UserStatus.REJECTED);
+        user.setEnabled(false);
+        userRepository.save(user);
     }
 
     public List<User> getPendingUsers() {
         return userRepository.findByStatus(UserStatus.PENDING);
     }
 
-    // --- Private Helper Methods for Emails ---
+    // --- Helpers privados ---
+
+    private User buildUserBySubclass(RegistrationRequest request) {
+        String roleStr = request.getRole().toUpperCase();
+        switch (roleStr) {
+            case "FOUNDATION":
+            case "MUSEUM":
+                Foundation foundation = new Foundation();
+                foundation.setInstitutionName(request.getName());
+                foundation.setRole(Role.FOUNDATION);
+                return foundation;
+
+            case "TRANSPORT":
+                TransportCompany transport = new TransportCompany();
+                transport.setCompanyName(request.getName());
+                transport.setRole(Role.TRANSPORT);
+                return transport;
+
+            case "COLLECTOR":
+            default:
+                Collector collector = new Collector();
+                collector.setRole(Role.COLLECTOR);
+                return collector;
+        }
+    }
+
+    private void validateVerificationFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("El archivo de verificación es obligatorio");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null ||
+                !(contentType.equals("application/pdf")
+                        || contentType.equals("image/jpeg")
+                        || contentType.equals("image/png"))) {
+            throw new IllegalArgumentException("Tipo de archivo no permitido. Solo PDF, JPEG o PNG.");
+        }
+    }
 
     private void sendWelcomeEmail(User user) {
-        String subject = "Welcome to Prestarte - Registration Received";
-        String body = "Hello " + user.getName() + ",\n\n" +
-                "Thank you for registering on our platform. Your professional profile is currently " +
-                "under review by our administration team to ensure the safety of our art community.\n\n" +
-                "We will notify you via email as soon as your account is activated.\n\n" +
-                "Best regards,\nThe Prestarte Team.";
-
+        String subject = "Bienvenido a Prestarte - Registro recibido";
+        String body = "Hola " + user.getName() + ",\n\n" +
+                "Gracias por registrarte. Tu perfil profesional está siendo revisado " +
+                "por nuestro equipo de administración.\n\n" +
+                "Te avisaremos por email cuando tu cuenta sea activada.\n\n" +
+                "Un saludo,\nEl equipo de Prestarte.";
         emailService.sendSimpleEmail(user.getEmail(), subject, body);
     }
 
     private void sendActivationEmail(User user) {
-        String subject = "Prestarte Account Activated";
-        String body = "Congratulations " + user.getName() + "!\n\n" +
-                "Your account has been successfully verified and activated. You can now log in " +
-                "and participate in our art loan network.\n\n" +
-                "Welcome aboard!\nThe Prestarte Team.";
-
+        String subject = "Tu cuenta de Prestarte ha sido activada";
+        String body = "Enhorabuena " + user.getName() + ",\n\n" +
+                "Tu cuenta ha sido verificada y activada. Ya puedes iniciar sesión " +
+                "y participar en la red de préstamos de obras de arte.\n\n" +
+                "¡Bienvenido a bordo!\nEl equipo de Prestarte.";
         emailService.sendSimpleEmail(user.getEmail(), subject, body);
     }
 }
