@@ -17,7 +17,7 @@ public class Shipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne // Un envío pertenece a un único préstamo
+    @OneToOne
     @JoinColumn(name = "loan_request_id", nullable = false)
     private LoanRequest loanRequest;
 
@@ -30,18 +30,32 @@ public class Shipment {
     @Enumerated(EnumType.STRING)
     private ShipmentStatus status;
 
+    // --- Nuevos campos para Negociación y Seguro ---
+    private Double price;                // Coste del transporte
+    private Double insuranceCost;        // Coste de la prima del seguro
+    private Double insuranceValue;       // Valor total asegurado (valor de la obra)
+    private String insurancePolicy;      // Número de póliza
+
+    @Builder.Default
+    private boolean priceAccepted = false; // ¿Ha aceptado la Fundación el presupuesto?
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(length = 100)
-    private String receivedBy;      // Quién firma en el museo
+    private String receivedBy;
 
-    @Column(columnDefinition = "TEXT") // Permite notas largas si es necesario
+    @Column(columnDefinition = "TEXT")
     private String notes;
 
-    private LocalDateTime deliveryDate; // Se grabará cuando el museo confirme
+    private LocalDateTime deliveryDate;
 
     public enum ShipmentStatus {
-        PENDIENTE, RECOGIDO, EN_TRANSITO, ENTREGADO
+        SOLICITADO,    // La empresa aún no ha aceptado o enviado presupuesto
+        RECHAZADO,     // La empresa no puede realizar el servicio
+        PENDIENTE,     // Presupuesto aceptado, esperando recogida
+        RECOGIDO,
+        EN_TRANSITO,
+        ENTREGADO
     }
 }

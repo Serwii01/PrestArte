@@ -36,6 +36,12 @@ public class LoanRequest {
     private Status status;
 
     public enum Status {
-        PENDIENTE, ACEPTADA, RECHAZADA, FINALIZADA
+        PENDIENTE,
+        LOGISTICS_PENDING,
+        ACEPTADA,      // Contrato firmado, esperando recogida
+        EN_TRANSITO,   // La obra está viajando (Añade este)
+        RECIBIDA,      // La obra ya está en el museo (Añade este)
+        DEVUELTA,      // La obra ha vuelto al coleccionista (Añade este)
+        RECHAZADA
     }
 }

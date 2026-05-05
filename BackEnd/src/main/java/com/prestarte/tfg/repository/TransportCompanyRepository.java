@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TransportCompanyRepository extends JpaRepository<TransportCompany, Long> {
+    boolean existsByTaxId(String taxId);
 }

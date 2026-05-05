@@ -50,6 +50,10 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    // En Artwork.java
+    @Column(nullable = false)
+    private Double estimatedValue; // El valor que el coleccionista asigna a la obra
+
     @Column(columnDefinition = "TEXT")
     private String loanConditions;
 

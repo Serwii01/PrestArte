@@ -3,9 +3,10 @@ package com.prestarte.tfg.controller;
 import com.prestarte.tfg.model.dto.ConfirmReceiptRequest;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.Shipment;
+import com.prestarte.tfg.service.PdfGeneratorService;
 import com.prestarte.tfg.service.ShipmentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,46 +17,84 @@ import java.util.List;
 public class ShipmentController {
 
     private final ShipmentService shipmentService;
+    private final PdfGeneratorService pdfGeneratorService;
 
     /**
-     * Crea un envío para un préstamo aceptado (ej: el préstamo ID 3).
+     * 1. Solicitar envío (El Museo o Coleccionista elige empresa)
      */
-    @PostMapping("/create")
-    public ResponseEntity<ShipmentResponse> createShipment(
+    @PostMapping("/request")
+    public ResponseEntity<ShipmentResponse> requestShipment(
             @RequestParam Long loanId,
             @RequestParam Long transportCompanyId) {
-        return ResponseEntity.ok(shipmentService.createShipment(loanId, transportCompanyId));
+        // Usamos el método que renombramos en el service para ser más precisos
+        return ResponseEntity.ok(shipmentService.requestShipment(loanId, transportCompanyId));
     }
 
     /**
-     * Lista todos los envíos asignados a una empresa de transporte específica.
+     * 2. Proponer presupuesto (Acción del Transportista)
      */
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<ShipmentResponse>> getByCompany(@PathVariable Long companyId) {
-        List<ShipmentResponse> responses = shipmentService.getByCompany(companyId)
-                .stream()
-                .map(s -> ShipmentResponse.builder()
-                        .id(s.getId())
-                        .trackingNumber(s.getTrackingNumber())
-                        .status(s.getStatus().name())
-                        .transportCompanyName(s.getTransportCompany().getCompanyName())
-                        .artworkTitle(s.getLoanRequest().getArtwork().getTitle())
-                        .createdAt(s.getCreatedAt())
-                        .build())
-                .toList();
-        return ResponseEntity.ok(responses);
+    @PatchMapping("/{id}/propose-budget")
+    public ResponseEntity<ShipmentResponse> proposeBudget(
+            @PathVariable Long id,
+            @RequestParam Double price,
+            @RequestParam Double insuranceCost,
+            @RequestParam String policy) {
+        return ResponseEntity.ok(shipmentService.proposeBudget(id, price, insuranceCost, policy));
     }
+
+    /**
+     * 3. Aprobar presupuesto y formalizar (Acción de la Fundación)
+     */
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ShipmentResponse> approveBudget(@PathVariable Long id) {
+        return ResponseEntity.ok(shipmentService.approveBudget(id));
+    }
+
+    /**
+     * 4. Descargar Contrato Formal (PDF)
+     */
+    @GetMapping("/{id}/contract")
+    public ResponseEntity<byte[]> downloadContract(@PathVariable Long id) {
+        Shipment shipment = shipmentService.getByIdRaw(id); // Necesitarás este pequeño helper en el service
+
+        byte[] pdfContent = pdfGeneratorService.generateLoanContract(
+                shipment.getLoanRequest(),
+                shipment
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String filename = "Contrato_PrestArte_" + shipment.getTrackingNumber() + ".pdf";
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+
+        return new ResponseEntity<>(pdfContent, headers, HttpStatus.OK);
+    }
+
+    /**
+     * 5. Actualizar estado de tránsito (Acción del Transportista)
+     */
     @PatchMapping("/{id}/status")
     public ResponseEntity<ShipmentResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam Shipment.ShipmentStatus status) {
-        return ResponseEntity.ok(shipmentService.updateShipmentStatus(id, status));
+        return ResponseEntity.ok(shipmentService.updateStatus(id, status));
     }
 
+    /**
+     * 6. Confirmar llegada (Acción del Museo)
+     */
     @PatchMapping("/{id}/confirm")
     public ResponseEntity<ShipmentResponse> confirmArrival(
             @PathVariable Long id,
             @RequestBody ConfirmReceiptRequest request) {
         return ResponseEntity.ok(shipmentService.confirmArrival(id, request));
+    }
+
+    /**
+     * Listados
+     */
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<ShipmentResponse>> getByCompany(@PathVariable Long companyId) {
+        return ResponseEntity.ok(shipmentService.getByTransportCompany(companyId));
     }
 }

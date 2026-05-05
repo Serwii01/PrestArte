@@ -2,12 +2,8 @@ package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.model.dto.CreateMessageRequest;
 import com.prestarte.tfg.model.dto.MessageResponse;
-import com.prestarte.tfg.model.entity.ChatSession;
-import com.prestarte.tfg.model.entity.Message;
-import com.prestarte.tfg.model.entity.User;
-import com.prestarte.tfg.repository.ChatSessionRepository;
-import com.prestarte.tfg.repository.MessageRepository;
-import com.prestarte.tfg.repository.UserRepository;
+import com.prestarte.tfg.model.entity.*;
+import com.prestarte.tfg.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +18,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final UserRepository userRepository;
+    private final ShipmentRepository shipmentRepository; // <--- Necesario para validar al transportista
 
     public List<MessageResponse> getMessagesByChatSessionId(Long chatSessionId) {
         return messageRepository.findByChatSessionIdOrderBySentAtAsc(chatSessionId)
@@ -32,7 +29,6 @@ public class MessageService {
 
     @Transactional
     public MessageResponse createMessage(CreateMessageRequest request) {
-        // 1. Validaciones previas
         ChatSession chatSession = chatSessionRepository.findById(request.getChatSessionId())
                 .orElseThrow(() -> new RuntimeException("ChatSession no encontrada"));
 
@@ -43,15 +39,9 @@ public class MessageService {
             throw new RuntimeException("No se pueden enviar mensajes a un chat cerrado");
         }
 
-        // 2. Validar que el usuario participa en este préstamo
-        Long collectorId = chatSession.getLoanRequest().getArtwork().getCollector().getId();
-        Long foundationId = chatSession.getLoanRequest().getFoundation().getId();
+        // --- VALIDACIÓN TRIPLE ACTUALIZADA ---
+        validateParticipant(chatSession, sender);
 
-        if (!sender.getId().equals(collectorId) && !sender.getId().equals(foundationId)) {
-            throw new RuntimeException("Este usuario no tiene permiso para participar en este chat");
-        }
-
-        // 3. Crear y guardar
         Message message = Message.builder()
                 .chatSession(chatSession)
                 .sender(sender)
@@ -60,6 +50,31 @@ public class MessageService {
                 .build();
 
         return mapToResponse(messageRepository.save(message));
+    }
+
+    /**
+     * Lógica de validación para permitir 3 actores
+     */
+    private void validateParticipant(ChatSession chatSession, User sender) {
+        LoanRequest loan = chatSession.getLoanRequest();
+        Long senderId = sender.getId();
+
+        // 1. ¿Es el Coleccionista?
+        if (senderId.equals(loan.getArtwork().getCollector().getId())) return;
+
+        // 2. ¿Es la Fundación?
+        if (senderId.equals(loan.getFoundation().getId())) return;
+
+        // 3. ¿Es el Transportista asignado?
+        // Buscamos si existe un envío para este préstamo y si la empresa coincide
+        boolean isAuthorizedTransport = shipmentRepository.findByLoanRequestId(loan.getId())
+                .map(shipment -> shipment.getTransportCompany().getId().equals(senderId))
+                .orElse(false);
+
+        if (isAuthorizedTransport) return;
+
+        // Si no es ninguno de los tres...
+        throw new RuntimeException("Este usuario no tiene permiso para participar en este chat");
     }
 
     public List<MessageResponse> getAllMessages() {
