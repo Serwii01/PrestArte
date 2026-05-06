@@ -1,0 +1,169 @@
+<div class="min-h-screen flex flex-row bg-white">
+  <!-- Panel izquierdo con imagen (sólo en >=lg) -->
+  <div class="hidden lg:flex lg:w-1/2 relative bg-gray-900">
+    <div
+      class="absolute inset-0 bg-cover bg-center opacity-90"
+      style="background-image: url('https://images.unsplash.com/photo-1577720580479-7d839d829c73?auto=format&fit=crop&w=1600&q=80');"
+    ></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+    <div class="relative z-10 flex flex-col justify-end p-16 text-white w-full">
+      <div class="size-10 mb-6 text-white">
+        <span class="material-symbols-outlined" style="font-size:40px;">museum</span>
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-tight mb-4">
+        Gestión segura del préstamo de obras de arte
+      </h1>
+      <p class="text-lg text-gray-300 max-w-md leading-relaxed">
+        Conectamos coleccionistas particulares con museos, fundaciones y empresas de transporte
+        especializadas. Tus obras viajan con confianza.
+      </p>
+      <div class="mt-10 flex items-center gap-4 text-sm text-gray-400">
+        <span>© {{ year }} Prestarte</span>
+        <span class="w-1 h-1 rounded-full bg-gray-500"></span>
+        <a class="hover:text-white transition-colors" href="#">Privacidad</a>
+        <span class="w-1 h-1 rounded-full bg-gray-500"></span>
+        <a class="hover:text-white transition-colors" href="#">Términos</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho: formulario -->
+  <div class="flex flex-1 flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24 overflow-y-auto">
+    <div class="w-full max-w-md space-y-8">
+      <!-- Logo móvil -->
+      <div class="lg:hidden flex justify-center mb-2">
+        <span class="material-symbols-outlined text-primary" style="font-size:40px;">museum</span>
+      </div>
+
+      <div class="text-center lg:text-left">
+        <h2 class="text-text-main tracking-tight text-[28px] font-bold leading-tight pb-2">
+          Bienvenido de nuevo
+        </h2>
+        <p class="text-text-secondary text-sm">
+          Introduce tus credenciales para acceder a tu cuenta.
+        </p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+        <div class="space-y-5">
+          <!-- Email -->
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Email</p>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-secondary">
+                <span class="material-symbols-outlined" style="font-size:20px;">mail</span>
+              </div>
+              <input
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+                placeholder="tu@email.com"
+                class="w-full rounded-lg border border-border bg-white h-12 pl-10 pr-4 text-base
+                       placeholder:text-text-secondary
+                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+          </label>
+
+          <!-- Password -->
+          <label class="block">
+            <div class="flex items-center justify-between pb-2">
+              <p class="text-text-main text-sm font-medium">Contraseña</p>
+              <a class="text-sm font-medium text-primary hover:text-primary-hover" href="#">
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-secondary">
+                <span class="material-symbols-outlined" style="font-size:20px;">lock</span>
+              </div>
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                class="w-full rounded-lg border border-border bg-white h-12 pl-10 pr-10 text-base
+                       focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text-main"
+              >
+                <span class="material-symbols-outlined" style="font-size:20px;">
+                  {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+          </label>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+            <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:18px;">error</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <button
+          type="submit"
+          [disabled]="form.invalid || loading()"
+          class="flex w-full items-center justify-center rounded-lg h-12 px-4
+                 bg-primary hover:bg-primary-hover transition-colors
+                 text-white text-base font-bold tracking-[0.015em] shadow-sm
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ loading() ? 'Entrando...' : 'Iniciar sesión' }}
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-8">
+        <div aria-hidden="true" class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-soft"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <span class="bg-white px-2 text-sm text-text-secondary">¿Aún no estás dentro?</span>
+        </div>
+      </div>
+
+      <!-- Acceso a registro -->
+      <div class="flex flex-col gap-3">
+        <a [routerLink]="['/register']" [queryParams]="{ role: 'COLLECTOR' }"
+           class="flex w-full items-center justify-center rounded-lg h-12 px-4
+                  bg-gray-soft hover:bg-gray-200 transition-colors
+                  text-text-main text-sm font-bold border border-transparent">
+          Regístrate como Coleccionista
+        </a>
+        <a [routerLink]="['/register']" [queryParams]="{ role: 'FOUNDATION' }"
+           class="flex w-full items-center justify-center rounded-lg h-12 px-4
+                  bg-white hover:bg-gray-soft transition-colors
+                  text-text-main text-sm font-medium border border-border">
+          Solicitar como Museo o Fundación
+        </a>
+        <a [routerLink]="['/register']" [queryParams]="{ role: 'TRANSPORT' }"
+           class="group flex w-full items-center justify-between rounded-lg h-auto py-3 px-4
+                  bg-transparent hover:bg-blue-50 transition-colors
+                  border border-dashed border-primary/40">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center size-8 rounded-full bg-blue-100 text-primary">
+              <span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>
+            </div>
+            <div class="text-left">
+              <p class="text-text-main text-sm font-bold leading-tight">¿Empresa de transporte?</p>
+              <p class="text-xs text-text-secondary">Aplica como partner logístico</p>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform" style="font-size:18px;">
+            arrow_forward
+          </span>
+        </a>
+      </div>
+
+      <div class="pt-4 flex items-center justify-center gap-2 opacity-70">
+        <span class="material-symbols-outlined text-green-600" style="font-size:18px;">verified_user</span>
+        <p class="text-xs text-text-secondary">Cifrado de extremo a extremo y autenticación JWT</p>
+      </div>
+    </div>
+  </div>
+</div>

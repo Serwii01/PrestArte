@@ -6,16 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="c38460b3-49b5-40a9-a41d-d0a13d0f12ea" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/RegistrationRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/RegistrationRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ShipmentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ShipmentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/TransportDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/TransportDashboardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/ArtworkDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/ArtworkDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/CreateArtworkRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/CreateArtworkRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/LoanResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/LoanResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Artwork.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ArtworkRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ArtworkRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Foundation.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Foundation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/LoanRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Shipment.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Shipment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/TransportCompany.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/TransportCompany.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/LoanRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/LoanRequestRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/CollectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/CollectorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/EmailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/FoundationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -144,7 +152,9 @@
       <workItem from="1777534480189" duration="5139000" />
       <workItem from="1777539803806" duration="494000" />
       <workItem from="1777879879971" duration="13579000" />
-      <workItem from="1777911739906" duration="9521000" />
+      <workItem from="1777911739906" duration="13750000" />
+      <workItem from="1778015691852" duration="3168000" />
+      <workItem from="1778056026931" duration="949000" />
     </task>
     <servers />
   </component>

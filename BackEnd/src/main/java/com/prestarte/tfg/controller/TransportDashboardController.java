@@ -42,7 +42,7 @@ public class TransportDashboardController {
     public ResponseEntity<List<ShipmentResponse>> getActiveTransits(@PathVariable Long companyId) {
         List<ShipmentResponse> active = shipmentService.getByTransportCompany(companyId)
                 .stream()
-                .filter(s -> s.isPriceAccepted() && !"ENTREGADO".equals(s.getStatus())) // Aprobado pero no finalizado
+                .filter(s -> s.isPriceAccepted() && !"DELIVERED".equals(s.getStatus())) // Aprobado pero no finalizado
                 .toList();
         return ResponseEntity.ok(active);
     }

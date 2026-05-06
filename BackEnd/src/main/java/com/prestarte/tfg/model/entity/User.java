@@ -47,7 +47,7 @@ public abstract class User {
     @Column(length = 50)
     private String taxId; // CIF, NIF, LEI, DNI...
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "verification_file_id")
     private DBFile verificationFile; // El documento PDF o imagen de identidad
 

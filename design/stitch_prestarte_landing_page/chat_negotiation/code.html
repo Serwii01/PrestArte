@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ArtLoan Exchange - Negotiation</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] dark:border-gray-800 bg-white dark:bg-[#1a202c] px-6 py-3 shrink-0 z-20">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-[#111318] dark:text-white">
+<div class="size-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">palette</span>
+</div>
+<h2 class="text-[#111318] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">ArtLoan Exchange</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#616f89] flex border-none bg-background-light dark:bg-gray-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-gray-800 focus:border-none h-full placeholder:text-[#616f89] px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search artworks..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-[#616f89] hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    Dashboard
+                </a>
+<a class="text-primary text-sm font-medium leading-normal flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px] fill">forum</span>
+                    Negotiations
+                </a>
+<a class="text-[#616f89] hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                    Inventory
+                </a>
+<a class="text-[#616f89] hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                    Settings
+                </a>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative text-[#616f89] hover:text-[#111318] dark:hover:text-white">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a202c]"></span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-gray-200 dark:border-gray-700 cursor-pointer" data-alt="User profile picture showing a professional gallery owner" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBz4e-eAf1AKSry_Rx1iPMjBf055Aq7yuueCsqB6D8gfCOnfm0gmsxHUdH2KYmZ3vl61Fn4P7JDuQ2-OxuU1ORqR0A10_i2QMeXzM-ATHj3ng0wlADsedFZCCXQmZs0DbOqTOWBaRUsBPZF33RWF-DlzJC7XDs8olbh8e6nbzzIWeyT95nlrDJQ0-JS7EB-SUZEG-yRroEh3bjvMaL76LEyXu1N1Ed6rHd1R74W8dE9oMCYil2TQoOEueuRlngM1OAWf0nnF3qeQFNB");'></div>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<div class="flex flex-1 overflow-hidden h-full">
+<!-- Left Sidebar: Negotiations List -->
+<aside class="w-80 bg-white dark:bg-[#1a202c] border-r border-[#e5e7eb] dark:border-gray-800 flex flex-col shrink-0">
+<div class="p-4 border-b border-[#e5e7eb] dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-[#111318] dark:text-white text-base font-bold leading-normal">Active Deals</h1>
+<button class="text-primary p-1 hover:bg-primary/10 rounded">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 text-xs font-medium bg-primary text-white py-1.5 px-3 rounded-full text-center">Active</button>
+<button class="flex-1 text-xs font-medium bg-background-light dark:bg-gray-800 text-[#616f89] hover:text-[#111318] py-1.5 px-3 rounded-full text-center transition-colors">Pending</button>
+<button class="flex-1 text-xs font-medium bg-background-light dark:bg-gray-800 text-[#616f89] hover:text-[#111318] py-1.5 px-3 rounded-full text-center transition-colors">Archived</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Active Item -->
+<div class="flex items-start gap-3 bg-primary/5 dark:bg-primary/10 border-l-4 border-primary px-4 py-4 cursor-pointer hover:bg-primary/5 transition-colors">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-12 shrink-0" data-alt="Starry Night painting thumbnail" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC-sYHbI6XeeHwPyq9yxs7rrzxd-bc7tKI_EF4YXrpoOkk-h6y57fEMPOz7nPMil4eSYSuPcVoTM_MA7ICviIzAFv13wpZR-ENrAWkC66c2G72QFEyEF34mrajsXo2rRny4j8ZRi5sHrLCKHMsXZO5ApE-84JlQYWTr55o6XYdCzShaos2zx790-y5290TtIh9ZKhLBNbclU9Xz9TRQ6MmXQ5gLx_QgCaJW8fiMQjpeipBf61m3_9k8RO526L-UT7EZwcqpnOeOv8AO");'></div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<p class="text-[#111318] dark:text-white text-sm font-semibold truncate">MOMA - Starry Night</p>
+<span class="text-[10px] text-primary font-bold whitespace-nowrap">Now</span>
+</div>
+<p class="text-[#111318] dark:text-gray-300 text-xs truncate mt-0.5 font-medium">You: Attached insurance docs.</p>
+<div class="flex items-center gap-1 mt-2">
+<span class="inline-flex items-center rounded-sm bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Negotiating</span>
+</div>
+</div>
+</div>
+<!-- Inactive Item 1 -->
+<div class="flex items-start gap-3 px-4 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-12 shrink-0" data-alt="Classic portrait painting thumbnail" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAA_WxXsKN38ajv9n1DLklvwzt7m4ZQehBOh5FBgPwe9rV4QyEPENP6SnddS5w6An7D62E4oWqIhtkPYKeflPXLg9aWAS7MxZAO8hgQjKkww2kUA5Bi7TTPOfSLVcwhJKNA-_Zf6ohpYUrb_rtJfUS6rFlADCNXu5hFevzWninyV6TlGlbJlUfxKglpxQEn5LwQB3Bo4f7LnruhYpXjBcCDKL4gdw4Vfeo0mQ3wkCpSfb-7LvlhHRE33UIm1mhUPvoBOX1xvkmHTuHW");'></div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<p class="text-[#111318] dark:text-white text-sm font-semibold truncate">Louvre - Mona Lisa Sketch</p>
+<span class="text-[10px] text-[#616f89] whitespace-nowrap">2h ago</span>
+</div>
+<p class="text-[#616f89] text-xs truncate mt-0.5">Transport confirmed for pickup.</p>
+<div class="flex items-center gap-1 mt-2">
+<span class="inline-flex items-center rounded-sm bg-yellow-50 px-1.5 py-0.5 text-[10px] font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Pending Signatures</span>
+</div>
+</div>
+</div>
+<!-- Inactive Item 2 -->
+<div class="flex items-start gap-3 px-4 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-12 shrink-0" data-alt="Modern abstract sculpture thumbnail" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdzGsbZCSiSamIB60Cy1L_lvZv0ma4v4sK7PI_piWBt7uRKq0LcL6cMytnafJCaYNnjz2XtJOwY4TK4MNr4rCn90cPpX68i4hzf6kvUe3b-m_DWEyU_tRvuEHUw6N6u_ZeMYQCpMrLeCvCmgvh0nwiE-s9TN-J8kVZiNj9qNaYYZqHAWYC0mT2XnMAGnCKCctRgiS1HdLaYpH4nCjSI9nV_f8xUB3G-9sZvGPCpJLb0Hyxm0JKLNgHld-gcxZ5q4QRLWKXTIXPNb_L");'></div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<p class="text-[#111318] dark:text-white text-sm font-semibold truncate">Guggenheim - Abstract #4</p>
+<span class="text-[10px] text-[#616f89] whitespace-nowrap">1d ago</span>
+</div>
+<p class="text-[#616f89] text-xs truncate mt-0.5">Can we lower the insurance value?</p>
+<div class="flex items-center gap-1 mt-2">
+<span class="inline-flex items-center rounded-sm bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Negotiating</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Chat Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark relative">
+<!-- Chat Header -->
+<div class="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#1a202c] border-b border-[#e5e7eb] dark:border-gray-800 shrink-0">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<h2 class="text-[#111318] dark:text-white text-lg font-bold leading-tight">MOMA - Starry Night</h2>
+<span class="material-symbols-outlined text-green-600 text-[18px] fill" title="Verified Secure Channel">verified_user</span>
+</div>
+<p class="text-[#616f89] text-xs font-normal mt-1">Ref ID: #LN-2024-8832 • Secure Channel • <span class="text-green-600 font-medium">Active</span></p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2 overflow-hidden">
+<img alt="Sarah (MOMA)" class="inline-block size-8 rounded-full ring-2 ring-white dark:ring-gray-800" data-alt="Portrait of Sarah from MOMA" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg65UPNn4qiNrZWejGmWBMbgu_v4BtAKZuoHwD89CQr73lC9xCL3oaD72fVjGvMgx6iWsyYsMJdzdmlRzKEQZEknLvzHaa0KKyveGW7Cgh83RGDn-i9j-GatyxuUYQ-4stG72sHbBWd-WVQBy6QrxkK6Noe4icIDtxOwKIYloamPMnjsH1e4yiSBHlQ0wW_IyCi0z0wguW7-0k_k4WP5jl1a0dXQDzu2yxxGysxP0715sQ4AM07L9kOXsq2-tihtox8yUfA8qcVmg9"/>
+<img alt="David (Transport)" class="inline-block size-8 rounded-full ring-2 ring-white dark:ring-gray-800" data-alt="Portrait of David from Transport" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDObaFl0Ov2EkfosTjXiYqYGyAAJgXysxfidtHz61J7_nez6HHTm3FKv2UAL-KT0969JGyb9rSVdh7zh427-L5hXEsue_4lLiGFL1YULjziU4Mq86xBkgXlxVR7RUM3lGlOnxb2VbmRf3yLq_HwrbSGOyrVaY36DXjOVNkTPwLaUYxLt4KPggISdvdcWACXCvR807OVPSSqQt0ruNaKviol7ZRlykSd__AtfBBb-pCO8UvoJMay7S5QLZZeXOHa60cq4ptmZWzbiBio"/>
+</div>
+<button class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-[#111318] dark:text-white rounded-lg p-2 transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Messages Stream -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Date Separator -->
+<div class="flex justify-center">
+<span class="text-xs font-medium text-[#616f89] bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">Today, Oct 24</span>
+</div>
+<!-- Message Left (Counterparty) -->
+<div class="flex gap-4 max-w-[80%]">
+<img alt="Sarah" class="size-8 rounded-full object-cover mt-1" data-alt="User avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAIYXkq2_Gv2GsNjtsFsoNkpBiaTBOIbsp9pkZoHfyhOaci5S3T7RTwcwkm6_KTKOdQozvgKRseJ3KXSS_evbnZL1fVFHoRc3AhLLxvIW-iHy8YxaLiG8mIICGkKOrmXI81Ouytt039RV_I1T83YJHjODHrZKXXGAW8yym32R1fWVSaVoPqdSKqUbuPCv-bSzlzCx7unupu1bHLHUsM6G8508yzvkkzEKXHHJghNJPNuwZaD-HhyR64Htz89N3TvwxvJtqnVhitQL0"/>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-[#111318] dark:text-white">Sarah Jenkins</span>
+<span class="text-xs text-[#616f89]">MOMA Curator • 10:30 AM</span>
+</div>
+<div class="bg-white dark:bg-[#2d3748] border border-gray-100 dark:border-gray-700 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-[#111318] dark:text-gray-200 leading-relaxed">
+                            Hello! We've reviewed the preliminary agreement. The dates look good (Jan 10 - Mar 10). However, our conservation team requested updated high-res photos of the frame condition before we finalize the insurance valuation.
+                        </div>
+</div>
+</div>
+<!-- Message Right (User) -->
+<div class="flex gap-4 max-w-[80%] ml-auto flex-row-reverse">
+<div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs mt-1">YO</div>
+<div class="flex flex-col gap-1 items-end">
+<div class="flex items-center gap-2">
+<span class="text-xs text-[#616f89]">10:45 AM</span>
+<span class="text-sm font-bold text-[#111318] dark:text-white">You</span>
+</div>
+<div class="bg-primary p-4 rounded-2xl rounded-tr-none shadow-sm text-sm text-white leading-relaxed">
+                            Hi Sarah, absolutely. I'm attaching the condition report and the high-res photos of the frame taken yesterday.
+                        </div>
+<!-- Attachment Bubble -->
+<div class="bg-primary/10 border border-primary/20 p-3 rounded-xl rounded-tr-none flex items-center gap-3 w-fit mt-1">
+<div class="size-10 bg-white rounded-lg flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="text-sm font-medium text-[#111318] dark:text-white truncate">Condition_Report_v2.pdf</span>
+<span class="text-xs text-[#616f89]">2.4 MB • PDF</span>
+</div>
+<button class="text-[#616f89] hover:text-primary ml-2">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<!-- Image Grid Attachment -->
+<div class="grid grid-cols-2 gap-2 mt-1 w-64">
+<div class="aspect-square bg-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity" data-alt="Close up of gold frame corner" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCPAB0eTwVP_L-Uuv5E1UfdJ5o5rjhSNcIMZk9LlbT5Qla4zirT0btWvkon5z7mdULrd5HM2qf15e29JKmbs80cVqX9kUWrqMnqwfMk-mp0-dtV5giEo9SIKmpHp7BkmThqEd2boICDbtKk_kxhZrb7ZjGNKXgcUdTl1bP8zDR4ZjOpn2oANTaO9uaTZ-ON0jTRB-YJvzwsov3dkETnG86LvbhzvTF9oVPZcDZ6h7B2w4KJ8HlX1jbqk9LcaxpFX8zN8LINFFd93NUw")'></div>
+<div class="aspect-square bg-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity relative" data-alt="Back of the canvas frame" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC05nCRiEV4R0Bycgk628YDblv1eRvSWGYGvrzATUm5Jq4Fm95GkikcOKJ8FBXJtMEfnrAfILudiKtDcFCiOtagsVb5UyJ16OJgG8yKwq0lr-mTlyb_nn3Y1O9wC1VWk0FP4wHK6W2HAscQtHDovO4RTgjehaf4miWVD9mfafla7pMhGu9p9D6YdhH_V3uubMfVNhjo0ahaAvOvlhqsw_-UZ_jtZjypo46rYWldCEqplKoETUqc6EN5kBwp4qIGcOqAh67cgZ_oQEzI")'>
+<div class="absolute inset-0 bg-black/30 flex items-center justify-center rounded-lg">
+<span class="text-white font-bold text-sm">+2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- System Message -->
+<div class="flex items-center gap-4 my-4">
+<div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+<div class="flex items-center gap-2 text-xs text-[#616f89]">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+<span>Global Art Transport Ltd. was invited to the chat</span>
+</div>
+<div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+</div>
+<!-- Message Left (Transport) -->
+<div class="flex gap-4 max-w-[80%]">
+<img alt="David" class="size-8 rounded-full object-cover mt-1" data-alt="Transport agent avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIhsC4_Ymu9bl0TyMKop200fCBRud8zeiRL4gGyC-fp4nVVEfrDnXNDe5zcDELjqvU8t8w7PSlZxZDxzaMmbuSTGbYtcflkNkivddtE9wCOoFVlXH4jBbBPg6YdakfXyFFBpIGNw4jWIUeSOjVARvyGB_m_gv3x7Le3s_VLqgiOB9kXISR_y0UgwUlunpfTJpirikYjCjYwZrXZfu2s1hawEfu_iyDYVfJ_7d9hFPV3joF7xEXPfLNoOWBZFQsxek9UWQJNht3zToD"/>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-[#111318] dark:text-white">David Ross</span>
+<span class="text-xs text-[#616f89]">Global Art Transport • 11:02 AM</span>
+</div>
+<div class="bg-white dark:bg-[#2d3748] border border-gray-100 dark:border-gray-700 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-[#111318] dark:text-gray-200 leading-relaxed">
+                            Thanks for the invite. We have a climate-controlled truck available for the 10th. Do you need crate fabrication or is the existing crate reusable?
+                        </div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 bg-white dark:bg-[#1a202c] border-t border-[#e5e7eb] dark:border-gray-800 shrink-0">
+<div class="flex flex-col gap-2 bg-background-light dark:bg-gray-800 rounded-xl p-2 border border-transparent focus-within:border-primary/50 transition-colors">
+<textarea class="w-full bg-transparent border-none text-sm text-[#111318] dark:text-white placeholder-[#616f89] focus:ring-0 resize-none min-h-[60px]" placeholder="Type your message... (Markdown supported)"></textarea>
+<div class="flex items-center justify-between px-2 pb-1">
+<div class="flex items-center gap-2 text-[#616f89]">
+<button class="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors" title="Attach File">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</button>
+<button class="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors" title="Add Image">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</button>
+<div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+<button class="flex items-center gap-1 p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors text-xs font-medium" title="Private Note">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Private Note</span>
+</button>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-colors">
+                            Send
+                            <span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Sidebar: Context & Actions -->
+<aside class="w-80 bg-white dark:bg-[#1a202c] border-l border-[#e5e7eb] dark:border-gray-800 flex flex-col shrink-0 overflow-y-auto">
+<!-- Artwork Details -->
+<div class="p-6 border-b border-[#e5e7eb] dark:border-gray-800">
+<h3 class="text-xs font-bold text-[#616f89] uppercase tracking-wider mb-4">Artwork Details</h3>
+<div class="flex flex-col gap-4">
+<div class="bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-lg w-full shadow-sm" data-alt="Full view of Starry Night artwork" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC5C_yPuk3l_avNsRj7533IBMoInRJvgX9DfWojPUrdKkd3gMTXtvcKgT19t1PujBrzzh7eNGecjVdfQq-vY-KdjQmTbL7ua_mkxGVRV2FxcNCHJPtF-vE2F0qkQhuB9kFKBHGPL604v-ckoDODE5owj0suzbGaYupjSV3adq48SYDFGw5Qq9ZPwGODW6QQ6-VIvhrWnN3x-JQ4_V0OatYCvuDWs3b_nj2Lp6-JLYem64XD-7U4WqBBSL4hAr33w-uWRcOocX9bdlId");'></div>
+<div>
+<h2 class="text-lg font-bold text-[#111318] dark:text-white leading-tight">Starry Night</h2>
+<p class="text-sm text-[#616f89]">Vincent van Gogh, 1889</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-3 bg-background-light dark:bg-gray-800 rounded-lg">
+<p class="text-xs text-[#616f89] mb-1">Insurance Value</p>
+<p class="text-sm font-bold text-[#111318] dark:text-white">$120,000,000</p>
+</div>
+<div class="p-3 bg-background-light dark:bg-gray-800 rounded-lg">
+<p class="text-xs text-[#616f89] mb-1">Loan Period</p>
+<p class="text-sm font-bold text-[#111318] dark:text-white">60 Days</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Transport Selection -->
+<div class="p-6 border-b border-[#e5e7eb] dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold text-[#616f89] uppercase tracking-wider">Logistics</h3>
+<button class="text-primary text-xs font-bold hover:underline">Manage</button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 p-3 border border-[#e5e7eb] dark:border-gray-700 rounded-lg bg-white dark:bg-[#1a202c]">
+<div class="size-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">local_shipping</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-sm font-semibold text-[#111318] dark:text-white">Global Art Transport</p>
+<div class="flex items-center gap-1 text-xs text-[#616f89]">
+<span class="material-symbols-outlined text-[14px] text-yellow-500 fill">star</span>
+<span>4.9 • Invited</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+</div>
+<button class="flex items-center justify-center gap-2 w-full py-2 border border-dashed border-[#616f89] rounded-lg text-sm text-[#616f89] hover:text-primary hover:border-primary hover:bg-primary/5 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Add Insurance Provider
+                    </button>
+</div>
+</div>
+<!-- Deal Status / Action Center -->
+<div class="p-6 mt-auto bg-gray-50 dark:bg-gray-800/50">
+<h3 class="text-xs font-bold text-[#616f89] uppercase tracking-wider mb-4">Deal Status</h3>
+<div class="relative pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-6 mb-6">
+<!-- Step 1 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-0 size-4 rounded-full bg-green-500 border-2 border-white dark:border-gray-900"></div>
+<p class="text-xs font-bold text-[#111318] dark:text-white">Terms Agreed</p>
+<p class="text-[10px] text-[#616f89]">Oct 22, 2024</p>
+</div>
+<!-- Step 2 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-0 size-4 rounded-full bg-primary border-2 border-white dark:border-gray-900 ring-2 ring-primary/30"></div>
+<p class="text-xs font-bold text-[#111318] dark:text-white">Transport Selection</p>
+<p class="text-[10px] text-primary">In Progress</p>
+</div>
+<!-- Step 3 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-0 size-4 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-gray-900"></div>
+<p class="text-xs font-bold text-gray-400">Final Signatures</p>
+<p class="text-[10px] text-gray-400">Pending</p>
+</div>
+</div>
+<div class="space-y-3">
+<button class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-primary/30 hover:bg-primary/90 flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined">handshake</span>
+                        Close Deal
+                    </button>
+<p class="text-[10px] text-center text-[#616f89]">Requires double confirmation from both parties.</p>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

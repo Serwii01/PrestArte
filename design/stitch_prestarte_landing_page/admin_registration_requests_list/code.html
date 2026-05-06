@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<title>PrestArte | Registration Requests</title>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f0f0fb",
+                        "primary-container": "#1152d4",
+                        "tertiary-fixed": "#ffdbcf",
+                        "tertiary-fixed-dim": "#ffb59a",
+                        "on-primary-fixed-variant": "#003da9",
+                        "on-secondary-fixed": "#0d1c32",
+                        "inverse-surface": "#2e3038",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "background": "#faf8ff",
+                        "outline": "#737686",
+                        "surface-container-highest": "#e2e1ed",
+                        "on-primary": "#ffffff",
+                        "on-background": "#191b23",
+                        "primary": "#003ca7",
+                        "tertiary-container": "#a63800",
+                        "surface-container-low": "#f3f3fe",
+                        "secondary": "#515f78",
+                        "on-tertiary-fixed-variant": "#802900",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#380d00",
+                        "surface-tint": "#1554d5",
+                        "surface-dim": "#d9d9e4",
+                        "surface-variant": "#e2e1ed",
+                        "secondary-container": "#d2e0fe",
+                        "surface-container-high": "#e7e7f2",
+                        "on-surface-variant": "#434654",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#d6e3ff",
+                        "surface": "#faf8ff",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "on-tertiary-container": "#ffcbb9",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#ededf8",
+                        "on-secondary-container": "#55637d",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#00174c",
+                        "on-surface": "#191b23",
+                        "tertiary": "#7e2900",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#cad5ff",
+                        "surface-bright": "#faf8ff",
+                        "inverse-primary": "#b4c5ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element-gap": "1rem",
+                        "container-max": "1280px",
+                        "card-padding": "1.25rem",
+                        "section-gap": "2rem",
+                        "gutter": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope"],
+                        "label-xs": ["Manrope"],
+                        "heading-lg": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "display-xl": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-md": ["1rem", {"lineHeight": "1.5rem", "fontWeight": "400"}],
+                        "label-xs": ["0.75rem", {"lineHeight": "1rem", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "heading-lg": ["1.25rem", {"lineHeight": "1.75rem", "fontWeight": "700"}],
+                        "body-sm": ["0.875rem", {"lineHeight": "1.25rem", "fontWeight": "400"}],
+                        "display-xl": ["1.875rem", {"lineHeight": "2.25rem", "letterSpacing": "-0.025em", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f6f6f8;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col py-6 font-manrope text-sm z-50">
+<div class="px-6 mb-8">
+<h1 class="text-2xl font-black text-[#1152d4] dark:text-blue-400">PrestArte</h1>
+<p class="text-slate-500 font-medium">Admin Console</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+                Overview
+            </a>
+<a class="flex items-center px-6 py-3 bg-blue-50 dark:bg-blue-900/20 text-[#1152d4] dark:text-blue-300 font-bold border-r-4 border-[#1152d4] transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="pending_actions">pending_actions</span>
+                Registrations
+            </a>
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="account_balance">account_balance</span>
+                Art Institutions
+            </a>
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="local_shipping">local_shipping</span>
+                Logistics Partners
+            </a>
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="history_edu">history_edu</span>
+                Audit Logs
+            </a>
+</nav>
+<div class="px-4 mt-4">
+<button class="w-full py-3 px-4 bg-primary text-on-primary rounded-lg font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                Create New Asset
+            </button>
+</div>
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+                Settings
+            </a>
+<a class="flex items-center px-6 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="help_outline">help_outline</span>
+                Help Center
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-40 flex items-center justify-between px-6 py-3 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm font-manrope antialiased">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative max-w-md w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="search">search</span>
+<input class="w-full bg-[#f6f6f8] border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all" placeholder="Search requests..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-colors" data-icon="settings">settings</span>
+<span class="text-sm font-medium text-slate-600 cursor-pointer hover:text-primary transition-colors">Support</span>
+</div>
+<div class="h-8 w-px bg-slate-200"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface">Alex Rivera</p>
+<p class="text-[10px] uppercase tracking-wider text-slate-500">Administrator</p>
+</div>
+<img alt="Administrator Profile" class="h-10 w-10 rounded-full object-cover border border-slate-200" data-alt="A professional headshot of a senior administrator in a high-end corporate setting. The person is dressed in business casual attire with a soft, confident smile. The background is a blurred, bright modern office interior with architectural details and clean lines. The lighting is soft and flattering, emphasizing clarity and trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXZjOATXcldw_Ph6H-HHu1egkyZZeEkV51k3IEuyUJLBiEtNaAHbdTkpVIJ2aZuGgKSu7PgkE2KHG6r3PeyoiJVp8rZgmUaZ5i7zKa2B8-a7EZqV_YWTSoPLt37fFBneJ0GzIYxQesXg48TbZoxlBtfMc7Tvi4riqnd6ggjFKTfKS0Cv2sfLwO6LsVGLIaOPbjqKI7tGLBpcjs2k8-qWBiYLToQXCsE_RsfoquhkYGJT4haBO64uCKWiqPiuYLKONVyhxiA_gx3VmR"/>
+</div>
+</div>
+</header>
+<!-- Page Header & Summary -->
+<div class="px-10 py-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div>
+<h2 class="font-display-xl text-on-surface mb-2">Registration Requests</h2>
+<p class="text-body-md text-secondary">Review and manage institutional and individual onboarding applications.</p>
+</div>
+<div class="flex gap-4">
+<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 min-w-[200px]">
+<div class="p-3 bg-blue-50 rounded-lg text-primary">
+<span class="material-symbols-outlined" data-icon="pending">pending</span>
+</div>
+<div>
+<p class="text-label-xs text-secondary uppercase">Pending</p>
+<p class="text-heading-lg">24</p>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 min-w-[200px]">
+<div class="p-3 bg-orange-50 rounded-lg text-orange-600">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</div>
+<div>
+<p class="text-label-xs text-secondary uppercase">Under Review</p>
+<p class="text-heading-lg">12</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center bg-white p-1 rounded-lg shadow-sm border border-slate-100">
+<button class="px-6 py-2 text-sm font-bold bg-primary text-on-primary rounded-md shadow-md transition-all">All</button>
+<button class="px-6 py-2 text-sm font-medium text-secondary hover:text-on-surface transition-all">Collectors</button>
+<button class="px-6 py-2 text-sm font-medium text-secondary hover:text-on-surface transition-all">Museums/Foundations</button>
+<button class="px-6 py-2 text-sm font-medium text-secondary hover:text-on-surface transition-all">Transport Companies</button>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-secondary bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                        More Filters
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-secondary bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                        Export
+                    </button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead class="bg-[#f9fafb] border-b border-slate-200">
+<tr>
+<th class="px-6 py-4 text-label-xs text-secondary uppercase">Name/Entity</th>
+<th class="px-6 py-4 text-label-xs text-secondary uppercase">Type</th>
+<th class="px-6 py-4 text-label-xs text-secondary uppercase">Request Date</th>
+<th class="px-6 py-4 text-label-xs text-secondary uppercase">Status</th>
+<th class="px-6 py-4 text-label-xs text-secondary uppercase text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary font-bold">
+                                        GA
+                                    </div>
+<div>
+<p class="text-body-md font-bold">Guggenheim Abu Dhabi</p>
+<p class="text-body-sm text-secondary">contact@guggenheim-ad.ae</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-medium py-1 px-3 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full">Museum/Foundation</span>
+</td>
+<td class="px-6 py-4 text-body-sm text-secondary">
+                                Oct 24, 2023
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-orange-600"></span>
+<span class="text-xs font-bold uppercase">Under Review</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors">
+                                    View Details
+                                </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Collector Profile" class="h-10 w-10 rounded-lg object-cover" data-alt="A portrait of a sophisticated private art collector in a minimalist luxury apartment. Natural light streams in through large windows, highlighting high-end furniture and a modern art collection in the background. The aesthetic is clean, warm, and highly professional, reflecting wealth and discerning taste." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXqDTXfOb94m6peQwgqlTEnYPItJlxrLXkIENd3NGABkuuQTdrKxOw015zkPRSyPEwyrmky-LO4CiJR2GdJ-Ov4r7qPqVggk7PQCYye-dn_MhsXwXSZVB7tMQhWnOZD_EXTMgEJdsPbVmze3iIkmjTHHTSpOCKzhJvrUT98Pli8lkJxPZIJJok_YwE0W84WKzxQiJSWW93SHS6njCRbmWjayVu1dDTPW2U_vXOVAPBUcerIoB_El2fphMFx3VIlvFsT72xUHGELxIy"/>
+<div>
+<p class="text-body-md font-bold">Elena Van Der Berg</p>
+<p class="text-body-sm text-secondary">elena.vdb@private.art</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-medium py-1 px-3 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full">Collector</span>
+</td>
+<td class="px-6 py-4 text-body-sm text-secondary">
+                                Oct 23, 2023
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+<span class="text-xs font-bold uppercase">Pending</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors">
+                                    View Details
+                                </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
+                                        AL
+                                    </div>
+<div>
+<p class="text-body-md font-bold">ArtLogistics Global</p>
+<p class="text-body-sm text-secondary">ops@artlogistics.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-medium py-1 px-3 bg-slate-100 text-slate-700 rounded-full">Transport Company</span>
+</td>
+<td class="px-6 py-4 text-body-sm text-secondary">
+                                Oct 22, 2023
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+<span class="text-xs font-bold uppercase">Pending</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors">
+                                    View Details
+                                </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary font-bold">
+                                        MF
+                                    </div>
+<div>
+<p class="text-body-md font-bold">The Met Foundation</p>
+<p class="text-body-sm text-secondary">registrations@metfoundation.org</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-medium py-1 px-3 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full">Museum/Foundation</span>
+</td>
+<td class="px-6 py-4 text-body-sm text-secondary">
+                                Oct 21, 2023
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-orange-600"></span>
+<span class="text-xs font-bold uppercase">Under Review</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors">
+                                    View Details
+                                </button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary font-bold">
+                                        JS
+                                    </div>
+<div>
+<p class="text-body-md font-bold">Julien Sommelier</p>
+<p class="text-body-sm text-secondary">j.sommelier@protonmail.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-medium py-1 px-3 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full">Collector</span>
+</td>
+<td class="px-6 py-4 text-body-sm text-secondary">
+                                Oct 21, 2023
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+<span class="text-xs font-bold uppercase">Pending</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors">
+                                    View Details
+                                </button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-[#f9fafb] border-t border-slate-200 flex items-center justify-between">
+<p class="text-body-sm text-secondary">Showing 1 to 5 of 36 requests</p>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-400 hover:text-on-surface disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-on-primary text-sm font-bold">1</button>
+<button class="w-8 h-8 rounded hover:bg-slate-100 text-sm font-medium">2</button>
+<button class="w-8 h-8 rounded hover:bg-slate-100 text-sm font-medium">3</button>
+<button class="p-2 text-slate-400 hover:text-on-surface">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

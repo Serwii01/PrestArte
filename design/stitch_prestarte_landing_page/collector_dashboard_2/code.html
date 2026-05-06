@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Collector Dashboard - ArtVault</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2230",
+                        "text-main-light": "#111318",
+                        "text-main-dark": "#ffffff",
+                        "text-secondary-light": "#616f89",
+                        "text-secondary-dark": "#9ca3af",
+                        "border-light": "#dbdfe6",
+                        "border-dark": "#2d3748",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<div class="flex min-h-screen w-full flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-4 lg:px-10 py-3 shadow-sm transition-colors duration-200">
+<div class="flex items-center justify-between gap-4 max-w-[1400px] mx-auto">
+<div class="flex items-center gap-8">
+<!-- Brand -->
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">museum</span>
+</div>
+<h2 class="text-text-main-light dark:text-white text-xl font-bold leading-tight tracking-tight">ArtVault</h2>
+</div>
+<!-- Desktop Nav -->
+<nav class="hidden lg:flex items-center gap-8 ml-4">
+<a class="text-text-main-light dark:text-white text-sm font-semibold hover:text-primary transition-colors" href="#">Portfolio</a>
+<a class="text-primary text-sm font-bold bg-primary/5 px-3 py-1.5 rounded-lg" href="#">Loans</a>
+<a class="text-text-main-light dark:text-white text-sm font-semibold hover:text-primary transition-colors" href="#">Messages</a>
+<a class="text-text-main-light dark:text-white text-sm font-semibold hover:text-primary transition-colors" href="#">Profile</a>
+</nav>
+</div>
+<!-- Right Actions -->
+<div class="flex flex-1 justify-end gap-4 md:gap-6 items-center">
+<!-- Search -->
+<div class="hidden md:flex w-full max-w-xs items-center bg-background-light dark:bg-background-dark rounded-lg px-3 h-10 border border-transparent focus-within:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[20px]">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm text-text-main-light dark:text-white placeholder-text-secondary-light ml-2" placeholder="Search collection..."/>
+</div>
+<!-- Upload Button -->
+<button class="hidden sm:flex items-center gap-2 bg-primary hover:bg-blue-700 text-white text-sm font-bold h-10 px-4 rounded-lg transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">upload</span>
+<span>Upload Artwork</span>
+</button>
+<!-- User Avatar -->
+<div class="size-10 rounded-full bg-gray-200 dark:bg-gray-700 bg-center bg-cover border border-border-light dark:border-border-dark cursor-pointer" data-alt="Profile picture of the collector Arthur" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8tm30oztsOEfLGUM9yRFhTbfEGKuETePM_NfL0Gu6SD2WMSaWsC-eqSYKBmdYrjQl0RwjeUBCptdwXGNCT0xMLNBv4dyeccgBry_oKHVGLVlq_pmrThxZQ2f3yreBsQWjvwYMXPEx4PJ8I-Diarlmq9M4F8Gp14x0gg8bPNuy5xuvYKF-LXHJaWNOlzZ3vZ_OhvZBFfsH2mW4jFxZm1V1PD6dTIoxFSvKr5JiyKMk7vGfsWRJs1Nu9v_nJHn5btmH62seUUn5b8DE");'>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-[1400px] mx-auto px-4 lg:px-10 py-8">
+<!-- Page Heading -->
+<div class="mb-8">
+<h1 class="text-3xl md:text-4xl font-black text-text-main-light dark:text-white tracking-tight mb-2">Welcome back, Arthur</h1>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-lg">Here is an overview of your collection and loan activity.</p>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+<!-- Stat 1 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Total Artworks</p>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-1 rounded text-[20px]">palette</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-3xl font-bold text-text-main-light dark:text-white">42</p>
+<span class="text-green-600 dark:text-green-400 text-xs font-bold bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded flex items-center">
+<span class="material-symbols-outlined text-[12px] mr-0.5">trending_up</span> 2%
+                        </span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Active Loans</p>
+<span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-1 rounded text-[20px]">handshake</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-3xl font-bold text-text-main-light dark:text-white">3</p>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Pending Requests</p>
+<span class="material-symbols-outlined text-purple-500 bg-purple-500/10 p-1 rounded text-[20px]">notification_important</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-3xl font-bold text-text-main-light dark:text-white">2</p>
+<span class="text-text-secondary-light dark:text-text-secondary-dark text-xs">Action required</span>
+</div>
+</div>
+<!-- Stat 4 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Total Insured Value</p>
+<span class="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 p-1 rounded text-[20px]">shield</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-3xl font-bold text-text-main-light dark:text-white">$12.5M</p>
+<span class="text-green-600 dark:text-green-400 text-xs font-bold bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded flex items-center">
+<span class="material-symbols-outlined text-[12px] mr-0.5">trending_up</span> 5%
+                        </span>
+</div>
+</div>
+</div>
+<!-- Content Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column (2/3 width) -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Active Loans Tracker -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm overflow-hidden">
+<div class="px-6 py-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white">Active Loans</h3>
+<a class="text-primary text-sm font-semibold hover:underline" href="#">View All</a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-background-light dark:bg-background-dark/50 text-text-secondary-light dark:text-text-secondary-dark text-xs uppercase font-semibold">
+<tr>
+<th class="px-6 py-4">Artwork</th>
+<th class="px-6 py-4">Institution</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Return Date</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark">
+<tr class="group hover:bg-background-light dark:hover:bg-background-dark/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-12 rounded-lg bg-gray-200 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Abstract painting with swirls" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUvFHpRwmQp9_k5FBNTPIMVqLYNHbe0IrhVqycXR9b1ZCyz1MQctt_CQ5ziEkh7nHDZ7KYbtuwM2cLj0nsUZ9-2XN0ZZ_mQndLTVKjeoCA77zYqjrTWFP8q2F8DIBTZrhAc0FP5yKKE0PSJ-oya5kdf8m79xA3ODtfukBzu9ZrZPUZ7yaeBU8_c8b-lbATPy_MlzgWqN8jlppeTLMOGf790vhLSUq-h--sqClOTm3K9wqSBG16P9bO_lpdW4wvxNlSs8j7QA_h5XHG"/>
+</div>
+<div>
+<p class="font-bold text-text-main-light dark:text-white text-sm">Starry Night Sketch</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs">Vincent van Gogh</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm font-medium text-text-main-light dark:text-white">The Met</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">New York, NY</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Exhibited
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<p class="text-sm font-medium text-text-main-light dark:text-white">Nov 12, 2024</p>
+</td>
+</tr>
+<tr class="group hover:bg-background-light dark:hover:bg-background-dark/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-12 rounded-lg bg-gray-200 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Modern sculpture photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1sLSBZsW4wgBFCDUtSJ3czTEMjHoEwM_-G3pGVGxTD-v0XU5OX57JMiVWw_LM7O2xuPlIYMeAV04mIXR728UxCbspOVduBRsvIP9euyfYaL5lSPrsQIXwEN-M4hnduvLckqbRP_3QKXWjzaWCD0GxiDbrsA5cS7g_pJBL5vgME4fgkV9z38whHtv30NdZ-Kjheq4gFVXcXJTLGluOR3frjY3Hc33Hw329cf_fIoO4mnMHBudfv-ePboNpi1GjR695LDhPsDs2oR5k"/>
+</div>
+<div>
+<p class="font-bold text-text-main-light dark:text-white text-sm">Blue Nude</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs">Henri Matisse</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm font-medium text-text-main-light dark:text-white">Centre Pompidou</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Paris, France</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+<span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5"></span> In Transit
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<p class="text-sm font-medium text-text-main-light dark:text-white">Oct 25, 2024</p>
+</td>
+</tr>
+<tr class="group hover:bg-background-light dark:hover:bg-background-dark/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-12 rounded-lg bg-gray-200 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Oil painting with vibrant colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2OzzzlGGOSKidSRW0oxAfjvxB5xuLTYWfmZBj_OCTU_QXIYDBZoLBrnMHM4hRWjiI2TtGyF64rqsm_bAMv6KkJN_sC57MwWtjRe8q0LV6ym7vTjGL5Bmh_AsgH50IJmEFGwtxQiUeQzNXou14mS-XSCsVVsdT7khTjIFoCes8JP4FeKZtJItLnmlKXgzw4QLdj01j85kCDn6shO0LpygLdL6i7ECYIqIqg9uEYuoO38ryI0cEtEEO5bT_5aNHpv5T23pdM8onwA7W"/>
+</div>
+<div>
+<p class="font-bold text-text-main-light dark:text-white text-sm">Composition VII</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs">Kandinsky</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm font-medium text-text-main-light dark:text-white">Tate Modern</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">London, UK</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Exhibited
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<p class="text-sm font-medium text-text-main-light dark:text-white">Jan 15, 2025</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Portfolio Preview Grid -->
+<div>
+<div class="flex justify-between items-center mb-4 px-1">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white">Recent Additions</h3>
+<a class="text-primary text-sm font-semibold hover:underline" href="#">View Portfolio</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="group relative rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark overflow-hidden shadow-sm hover:shadow-md transition-all">
+<div class="aspect-[4/3] w-full bg-gray-200 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Contemporary abstract painting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgwzeeTqahCAazRCAhxqdTJ6fUV6Z0Oeh9OUCdd2R6VTEz4sA3f2MEpXnjQldMqZeh4C32LnRsz1TmgcDw7X-QDqIguZxEV_2Ne_7gyxEh0XU2_G0fLmlwmvSXQcdB6aMrccctGOJcuhxzBl1EJyroLyBlGU8saNdtp-9RnRZ4x06VAAHG2cRVM_KY0LFNeLhSpAuHqyd6Fr7AIkUfzjInVwj4ldZlXdH0tOeM65xeqqW-wBxoyyX4S1adgSkddk9y4Ttij0xruQnJ"/>
+<div class="absolute top-3 right-3 bg-white/90 dark:bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-text-main-light dark:text-white flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">lock</span> Private
+                                    </div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-text-main-light dark:text-white truncate">Untitled (Red &amp; Blue)</h4>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Mark Rothko</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2">Added 2 days ago</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group relative rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark overflow-hidden shadow-sm hover:shadow-md transition-all">
+<div class="aspect-[4/3] w-full bg-gray-200 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Classical portrait painting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7zEDBimTkRNNUVf2Hjk7VU1O-2g2wcRL95X1S8MekCBB10hOXO4jvbUbV2TptIie-oQ4wHabgdwuw17A2N9HHeFKX-rE46WtsDnwLa3VpvMzus20Vfyl2NNw82DiXNl3p-O5EDdMhOg-0NS3OwWD3GJ-whYk1mJLuJ0J0yAC1mOuhVCWuFVd8wA7jDiMkgHed8Jg_0LiOufqIt4qnCUEF2TUHpZbyukq2a_tCaHpLynkUyffVdV6Q9un9BfqlNoVLmuRfFPSayqlg"/>
+<div class="absolute top-3 right-3 bg-primary/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-white flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">public</span> Public
+                                    </div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-text-main-light dark:text-white truncate">Portrait of a Gentleman</h4>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Unknown Artist</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2">Added 5 days ago</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark overflow-hidden shadow-sm hover:shadow-md transition-all">
+<div class="aspect-[4/3] w-full bg-gray-200 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Modern art installation view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATLm1XZR_d29srPjydPonC8yQxBLEpnvuwvkbNIuXQT-9L6nf3WwDlB0T5BLMi82y-oYw4tZwEzwzaOl0Tt-md6KKd0JF_H6w0rvaGFe5ysFIQCPdfMIWJSCk0EGQcUyBm71HkB38z8NZ7qlouF3GdwIrIKSGx-5L-wqgwbusgSo2xd1Sh2ilIHJXYnemj5xtF3nOAkiugoQibap5J5jycTIk2UEJzZfLQwOIpRQTriwqrk_a56bsOaiaZzujxe1iRzqbOtZa0yMNO"/>
+<div class="absolute top-3 right-3 bg-white/90 dark:bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-text-main-light dark:text-white flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">lock</span> Private
+                                    </div>
+</div>
+<div class="p-4">
+<h4 class="font-bold text-text-main-light dark:text-white truncate">Spatial Concept</h4>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Lucio Fontana</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2">Added 1 week ago</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (1/3 width) -->
+<div class="lg:col-span-1 space-y-8">
+<!-- Action Center -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="px-6 py-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white">Action Center</h3>
+<span class="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 text-xs font-bold px-2 py-1 rounded-full">3 pending</span>
+</div>
+<div class="p-4">
+<!-- Task 1 -->
+<label class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark/50 cursor-pointer transition-colors group">
+<div class="relative flex items-start mt-0.5">
+<input class="peer h-5 w-5 rounded border-border-light dark:border-border-dark border-2 bg-transparent text-primary checked:bg-primary focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer" type="checkbox"/>
+</div>
+<div class="flex-1">
+<p class="text-sm font-semibold text-text-main-light dark:text-white group-hover:text-primary transition-colors">Review loan request</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">MoMA requested 'Starry Night Sketch' for Spring 2025 Exhibition.</p>
+<button class="mt-2 text-xs font-bold text-primary hover:underline">View Details</button>
+</div>
+</label>
+<hr class="border-border-light dark:border-border-dark my-1"/>
+<!-- Task 2 -->
+<label class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark/50 cursor-pointer transition-colors group">
+<div class="relative flex items-start mt-0.5">
+<input class="peer h-5 w-5 rounded border-border-light dark:border-border-dark border-2 bg-transparent text-primary checked:bg-primary focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer" type="checkbox"/>
+</div>
+<div class="flex-1">
+<p class="text-sm font-semibold text-text-main-light dark:text-white group-hover:text-primary transition-colors">Sign insurance document</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Updated valuation for 'Blue Nude' requires signature.</p>
+</div>
+</label>
+<hr class="border-border-light dark:border-border-dark my-1"/>
+<!-- Task 3 -->
+<label class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark/50 cursor-pointer transition-colors group">
+<div class="relative flex items-start mt-0.5">
+<input class="peer h-5 w-5 rounded border-border-light dark:border-border-dark border-2 bg-transparent text-primary checked:bg-primary focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer" type="checkbox"/>
+</div>
+<div class="flex-1">
+<p class="text-sm font-semibold text-text-main-light dark:text-white group-hover:text-primary transition-colors">Update condition report</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Routine check needed for 'Abstract #5'.</p>
+</div>
+</label>
+</div>
+</div>
+<!-- Upcoming Events -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="px-6 py-5 border-b border-border-light dark:border-border-dark">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white">Upcoming Events</h3>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<!-- Event 1 -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center justify-center bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg w-14 h-14 shrink-0">
+<span class="text-xs font-bold text-red-500 uppercase">Oct</span>
+<span class="text-xl font-black text-text-main-light dark:text-white">20</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main-light dark:text-white">Guggenheim Gala</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> New York
+                                    </p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center justify-center bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg w-14 h-14 shrink-0">
+<span class="text-xs font-bold text-primary uppercase">Nov</span>
+<span class="text-xl font-black text-text-main-light dark:text-white">12</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main-light dark:text-white">Art Basel Miami</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> Miami Beach
+                                    </p>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center justify-center bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg w-14 h-14 shrink-0">
+<span class="text-xs font-bold text-primary uppercase">Dec</span>
+<span class="text-xl font-black text-text-main-light dark:text-white">05</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main-light dark:text-white">Private Collection Tour</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">videocam</span> Virtual
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

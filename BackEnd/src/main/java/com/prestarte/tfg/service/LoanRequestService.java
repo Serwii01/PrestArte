@@ -1,166 +1,313 @@
 package com.prestarte.tfg.service;
 
+import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.dto.LoanResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
+import com.prestarte.tfg.service.statemachine.LoanStateMachine;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class LoanRequestService {
 
+    private static final Logger log = LoggerFactory.getLogger(LoanRequestService.class);
+
     private final LoanRequestRepository loanRequestRepository;
     private final ArtworkRepository artworkRepository;
     private final FoundationRepository foundationRepository;
+    private final TransportCompanyRepository transportCompanyRepository;
 
-    // Inyecciones para la funcionalidad de Contrato y Email
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
     private final ShipmentService shipmentService;
+    private final LoanStateMachine stateMachine;
+
+    /* ========== CREACIÓN ========== */
 
     @Transactional
     public LoanResponse createRequest(CreateLoanRequest dto) {
         Artwork artwork = artworkRepository.findById(dto.getArtworkId())
-                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+                .orElseThrow(() -> ResourceNotFoundException.of("Obra", dto.getArtworkId()));
 
         Foundation foundation = foundationRepository.findById(dto.getFoundationId())
-                .orElseThrow(() -> new RuntimeException("Institución no encontrada"));
+                .orElseThrow(() -> ResourceNotFoundException.of("Fundación", dto.getFoundationId()));
 
         LoanRequest request = LoanRequest.builder()
                 .artwork(artwork)
                 .foundation(foundation)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
-                .status(LoanRequest.Status.PENDIENTE)
+                .agreedConditions(dto.getAgreedConditions())
+                .status(LoanRequest.Status.REQUESTED)
+                .transportCompanyMandatory(false)
                 .build();
 
-        LoanRequest saved = loanRequestRepository.save(request);
-
-        return convertToResponse(saved);
+        return convertToResponse(loanRequestRepository.save(request));
     }
 
-    public List<LoanRequest> getRequestsByFoundation(Long foundationId) {
-        return loanRequestRepository.findByFoundationId(foundationId);
-    }
+    /* ========== ACCIONES DEL FLUJO ========== */
 
-    public List<LoanRequest> getRequestsByCollector(Long collectorId) {
-        return loanRequestRepository.findByArtworkCollectorId(collectorId);
-    }
-
-
+    /**
+     * Coleccionista acepta la solicitud y elige empresa de transporte.
+     * Pasa el estado a ACCEPTED y crea inmediatamente el Shipment OUTBOUND
+     * en estado REQUESTED, lo que también deja al préstamo en QUOTE_PENDING.
+     */
     @Transactional
-    public LoanResponse updateStatus(Long loanId, LoanRequest.Status status) {
-        LoanRequest request = loanRequestRepository.findById(loanId)
-                .orElseThrow(() -> new RuntimeException("Loan request not found"));
+    public LoanResponse accept(Long loanId, Long transportCompanyId, boolean mandatory) {
+        LoanRequest loan = findOrThrow(loanId);
 
-        // VALIDATION: If the status is being changed to ACCEPTED
-        if (status == LoanRequest.Status.ACEPTADA) {
-            boolean isOverlapping = loanRequestRepository.existsOverlappingLoan(
-                    request.getArtwork().getId(),
-                    request.getStartDate(),
-                    request.getEndDate()
-            );
-
-            if (isOverlapping) {
-                // This will roll back the transaction and return an error to the user
-                throw new RuntimeException("CONFLICT: This artwork is already booked for the selected dates.");
-            }
-
-            // If not overlapping, proceed and notify parties
-            request.setStatus(status);
-            LoanRequest saved = loanRequestRepository.save(request);
-            notifyPartiesOnAcceptance(saved);
-            return convertToResponse(saved);
+        // Validación de fechas (regla de negocio: no solapar préstamos aceptados de la misma obra)
+        boolean overlapping = loanRequestRepository.existsOverlappingLoan(
+                loan.getArtwork().getId(), loan.getStartDate(), loan.getEndDate());
+        if (overlapping) {
+            throw new IllegalStateException(
+                    "Esta obra ya está reservada para las fechas seleccionadas.");
         }
 
-        // For other status changes (REJECTED, etc.)
-        request.setStatus(status);
-        LoanRequest saved = loanRequestRepository.save(request);
-        return convertToResponse(saved);
+        // Verificar que la empresa de transporte existe
+        TransportCompany company = transportCompanyRepository.findById(transportCompanyId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Empresa de transporte", transportCompanyId));
+
+        // Transición REQUESTED → ACCEPTED
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.ACCEPTED);
+        loan.setStatus(LoanRequest.Status.ACCEPTED);
+        loan.setTransportCompanyMandatory(mandatory);
+        loanRequestRepository.save(loan);
+
+        // Crea el shipment OUTBOUND en REQUESTED y avanza el préstamo a QUOTE_PENDING
+        shipmentService.createOutboundShipment(loan, company);
+        stateMachine.validate(LoanRequest.Status.ACCEPTED, LoanRequest.Status.QUOTE_PENDING);
+        loan.setStatus(LoanRequest.Status.QUOTE_PENDING);
+
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /** Coleccionista rechaza la solicitud (terminal). */
+    @Transactional
+    public LoanResponse reject(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.REJECTED);
+        loan.setStatus(LoanRequest.Status.REJECTED);
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /** Cualquier parte cancela el préstamo antes de que la obra esté en tránsito. */
+    @Transactional
+    public LoanResponse cancel(Long loanId, String reason) {
+        LoanRequest loan = findOrThrow(loanId);
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.CANCELLED);
+        loan.setStatus(LoanRequest.Status.CANCELLED);
+        loan.setCancelledAt(LocalDateTime.now());
+        loan.setCancellationReason(reason);
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /** Coleccionista marca la obra como lista para recoger (tras pago aprobado). */
+    @Transactional
+    public LoanResponse markReadyForPickup(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.READY_FOR_PICKUP);
+        loan.setStatus(LoanRequest.Status.READY_FOR_PICKUP);
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /** Museo inicia el retorno de la obra al final del préstamo. */
+    @Transactional
+    public LoanResponse startReturn(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNING);
+        loan.setStatus(LoanRequest.Status.RETURNING);
+        // El Shipment de RETURN se materializará en sub-fase 2.6.
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /* ========== ACCIONES DESDE ShipmentService (sincronización) ========== */
+
+    /**
+     * Llamado por ShipmentService cuando el transportista propone presupuesto.
+     * Transición QUOTE_PENDING → QUOTE_PROPOSED.
+     */
+    @Transactional
+    public void onShipmentQuoted(LoanRequest loan) {
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.QUOTE_PROPOSED);
+        loan.setStatus(LoanRequest.Status.QUOTE_PROPOSED);
+        loanRequestRepository.save(loan);
     }
 
     /**
-     * Lógica interna para generar el PDF y enviar el correo al Museo
+     * Llamado por PaymentService (sub-fase 2.4) cuando el museo aprueba y paga.
+     * Transición QUOTE_PROPOSED → PAID.
      */
+    @Transactional
+    public void onPaymentSucceeded(LoanRequest loan) {
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.PAID);
+        loan.setStatus(LoanRequest.Status.PAID);
+        loanRequestRepository.save(loan);
+        notifyPartiesOnAcceptance(loan);
+    }
+
     /**
-     * Notifies all three parties (Foundation, Collector, and Transport Company)
-     * by sending the formal contract via email.
+     * Llamado cuando el museo rechaza el presupuesto.
+     * Si la empresa era obligatoria → CANCELLED. Si no → vuelve a QUOTE_PENDING
+     * para pedir presupuesto a otra empresa.
      */
-    private void notifyPartiesOnAcceptance(LoanRequest loan) {
-        try {
-            // 1. Fetch shipment and generate the PDF document
-            Shipment shipment = shipmentService.getByLoanId(loan.getId());
-            byte[] pdfBytes = pdfGeneratorService.generateLoanContract(loan, shipment);
-
-            String fileName = "Contract_" + loan.getArtwork().getTitle().replace(" ", "_") + ".pdf";
-            String subject = "LOAN CONTRACT FORMALIZED: " + loan.getArtwork().getTitle();
-
-            // --- 1. NOTIFICATION TO THE FOUNDATION (MUSEUM) ---
-            String foundationEmail = loan.getFoundation().getEmail();
-            if (foundationEmail != null) {
-                String foundationBody = "<h3>Loan Contract - Recipient Copy</h3>" +
-                        "<p>Dear team at <b>" + loan.getFoundation().getName() + "</b>,</p>" +
-                        "<p>The loan request has been officially accepted. Please find the attached legal contract.</p>";
-                emailService.sendEmailWithAttachment(foundationEmail, subject, foundationBody, pdfBytes, fileName);
-            }
-
-            // --- 2. NOTIFICATION TO THE COLLECTOR (OWNER) ---
-            String collectorEmail = loan.getArtwork().getCollector().getEmail();
-            if (collectorEmail != null) {
-                String collectorBody = "<h3>Loan Contract - Owner Copy</h3>" +
-                        "<p>Hello <b>" + loan.getArtwork().getCollector().getName() + "</b>,</p>" +
-                        "<p>You have accepted the loan request for <i>" + loan.getArtwork().getTitle() + "</i>. " +
-                        "Attached is your copy of the signed agreement.</p>";
-                emailService.sendEmailWithAttachment(collectorEmail, subject, collectorBody, pdfBytes, fileName);
-            }
-
-            // --- 3. NOTIFICATION TO THE TRANSPORT COMPANY ---
-            if (shipment != null && shipment.getTransportCompany() != null) {
-                String transportEmail = shipment.getTransportCompany().getEmail();
-                if (transportEmail != null) {
-                    String transportBody = "<h3>Art Transport Order</h3>" +
-                            "<p>A new transport service has been assigned for: <b>" + loan.getArtwork().getTitle() + "</b>.</p>" +
-                            "<p>Please find the attached contract containing all safety and handling requirements.</p>";
-                    emailService.sendEmailWithAttachment(transportEmail, "NEW SERVICE: " + loan.getArtwork().getTitle(), transportBody, pdfBytes, fileName);
-                }
-            }
-
-            System.out.println("Multi-party notification flow completed successfully.");
-
-        } catch (Exception e) {
-            // We log the error but don't break the main transaction
-            System.err.println("Error sending multi-party notifications: " + e.getMessage());
+    @Transactional
+    public void onQuoteRejected(LoanRequest loan, String reason) {
+        if (loan.isTransportCompanyMandatory()) {
+            stateMachine.validate(loan.getStatus(), LoanRequest.Status.CANCELLED);
+            loan.setStatus(LoanRequest.Status.CANCELLED);
+            loan.setCancelledAt(LocalDateTime.now());
+            loan.setCancellationReason(reason != null ? reason
+                    : "Presupuesto rechazado y la empresa de transporte era obligatoria.");
+        } else {
+            stateMachine.validate(loan.getStatus(), LoanRequest.Status.QUOTE_PENDING);
+            loan.setStatus(LoanRequest.Status.QUOTE_PENDING);
         }
+        loanRequestRepository.save(loan);
+    }
+
+    /** Llamado por ShipmentService cuando el transportista marca recogida. */
+    @Transactional
+    public void onShipmentPickedUp(LoanRequest loan) {
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.IN_TRANSIT);
+        loan.setStatus(LoanRequest.Status.IN_TRANSIT);
+        loanRequestRepository.save(loan);
+    }
+
+    /** Llamado por ShipmentService cuando el museo confirma llegada. */
+    @Transactional
+    public void onShipmentDelivered(LoanRequest loan) {
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.DELIVERED);
+        loan.setStatus(LoanRequest.Status.DELIVERED);
+        loanRequestRepository.save(loan);
+        // Avance automático a ON_LOAN: el préstamo está activo en cuanto llega
+        stateMachine.validate(LoanRequest.Status.DELIVERED, LoanRequest.Status.ON_LOAN);
+        loan.setStatus(LoanRequest.Status.ON_LOAN);
+        loanRequestRepository.save(loan);
+    }
+
+    /* ========== LECTURAS ========== */
+
+    @Transactional(readOnly = true)
+    public LoanResponse getById(Long id) {
+        return convertToResponse(findOrThrow(id));
+    }
+
+    /**
+     * Devuelve la entidad cruda (no DTO). Uso interno para generación de PDF
+     * o flujos que necesitan acceso a relaciones lazy dentro de su transacción.
+     */
+    @Transactional(readOnly = true)
+    public LoanRequest getEntityById(Long id) {
+        LoanRequest loan = findOrThrow(id);
+        // Forzamos la carga de las relaciones que el PDF necesita,
+        // dentro de la transacción.
+        loan.getArtwork().getCollector().getName();
+        loan.getFoundation().getName();
+        return loan;
     }
 
     @Transactional(readOnly = true)
-    public LoanRequest getById(Long id) {
+    public List<LoanResponse> getRequestsByFoundation(Long foundationId) {
+        return loanRequestRepository.findByFoundationId(foundationId).stream()
+                .map(this::convertToResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getRequestsByCollector(Long collectorId) {
+        return loanRequestRepository.findByArtworkCollectorId(collectorId).stream()
+                .map(this::convertToResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getAllLoanRequests() {
+        return loanRequestRepository.findAll().stream()
+                .map(this::convertToResponse).toList();
+    }
+
+    /* ========== HELPERS ========== */
+
+    private LoanRequest findOrThrow(Long id) {
         return loanRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró la petición de préstamo con ID: " + id));
+                .orElseThrow(() -> ResourceNotFoundException.of("Préstamo", id));
     }
 
-    public List<LoanRequest> getAllLoanRequests() {
-        return loanRequestRepository.findAll();
+    /**
+     * Notifica a las tres partes (fundación, coleccionista y transportista)
+     * con el contrato formal en PDF al confirmarse el pago.
+     */
+    private void notifyPartiesOnAcceptance(LoanRequest loan) {
+        try {
+            Shipment shipment = shipmentService.getByLoanId(loan.getId());
+            byte[] pdfBytes = pdfGeneratorService.generateLoanContract(loan, shipment);
+
+            String fileName = "Contrato_" + loan.getArtwork().getTitle().replace(" ", "_") + ".pdf";
+            String subject = "CONTRATO DE PRÉSTAMO FORMALIZADO: " + loan.getArtwork().getTitle();
+
+            String foundationEmail = loan.getFoundation().getEmail();
+            if (foundationEmail != null) {
+                String body = "<h3>Contrato de préstamo - Copia para el receptor</h3>" +
+                        "<p>Estimado equipo de <b>" + loan.getFoundation().getName() + "</b>,</p>" +
+                        "<p>El presupuesto ha sido aprobado y el contrato está formalizado. " +
+                        "Adjuntamos el documento legal correspondiente.</p>";
+                emailService.sendEmailWithAttachment(foundationEmail, subject, body, pdfBytes, fileName);
+            }
+
+            String collectorEmail = loan.getArtwork().getCollector().getEmail();
+            if (collectorEmail != null) {
+                String body = "<h3>Contrato de préstamo - Copia para el propietario</h3>" +
+                        "<p>Hola <b>" + loan.getArtwork().getCollector().getName() + "</b>,</p>" +
+                        "<p>El museo ha aprobado el presupuesto del préstamo de <i>" +
+                        loan.getArtwork().getTitle() + "</i>. Adjuntamos tu copia del acuerdo firmado.</p>";
+                emailService.sendEmailWithAttachment(collectorEmail, subject, body, pdfBytes, fileName);
+            }
+
+            if (shipment != null && shipment.getTransportCompany() != null) {
+                String transportEmail = shipment.getTransportCompany().getEmail();
+                if (transportEmail != null) {
+                    String body = "<h3>Orden de transporte de obra de arte</h3>" +
+                            "<p>Tu presupuesto para el transporte de <b>" +
+                            loan.getArtwork().getTitle() + "</b> ha sido aprobado.</p>" +
+                            "<p>Adjuntamos el contrato con todos los requisitos de seguridad y manipulación.</p>";
+                    emailService.sendEmailWithAttachment(transportEmail,
+                            "NUEVO SERVICIO: " + loan.getArtwork().getTitle(),
+                            body, pdfBytes, fileName);
+                }
+            }
+
+            log.info("Notificaciones enviadas a las tres partes del préstamo {}.", loan.getId());
+
+        } catch (Exception e) {
+            log.error("Error enviando notificaciones del préstamo {}: {}", loan.getId(), e.getMessage(), e);
+        }
     }
 
-    @Transactional
-    public LoanRequest save(LoanRequest loanRequest) {
-        return loanRequestRepository.save(loanRequest);
-    }
-
-    // Método auxiliar para no repetir código de mapeo
-    private LoanResponse convertToResponse(LoanRequest saved) {
+    private LoanResponse convertToResponse(LoanRequest l) {
         return LoanResponse.builder()
-                .id(saved.getId())
-                .artworkTitle(saved.getArtwork().getTitle())
-                .foundationName(saved.getFoundation().getName())
-                .startDate(saved.getStartDate())
-                .endDate(saved.getEndDate())
-                .status(saved.getStatus().name())
+                .id(l.getId())
+                .artworkId(l.getArtwork().getId())
+                .artworkTitle(l.getArtwork().getTitle())
+                .artworkArtist(l.getArtwork().getArtist())
+                .collectorId(l.getArtwork().getCollector().getId())
+                .collectorName(l.getArtwork().getCollector().getName())
+                .foundationId(l.getFoundation().getId())
+                .foundationName(l.getFoundation().getName())
+                .startDate(l.getStartDate())
+                .endDate(l.getEndDate())
+                .agreedConditions(l.getAgreedConditions())
+                .status(l.getStatus().name())
+                .transportCompanyMandatory(l.isTransportCompanyMandatory())
+                .cancelledAt(l.getCancelledAt())
+                .cancellationReason(l.getCancellationReason())
                 .build();
     }
 }

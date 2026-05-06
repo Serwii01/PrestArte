@@ -48,7 +48,7 @@ public class EmailService {
             mailSender.send(message);
             System.out.println("Email with attachment sent successfully to: " + to);
         } catch (MessagingException e) {
-            throw new RuntimeException("Error sending email with attachment: " + e.getMessage());
+            throw new RuntimeException("Error al enviar el email con adjunto: " + e.getMessage());
         }
     }
 }

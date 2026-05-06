@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Upload Artwork - ArtLoan Exchange</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display transition-colors duration-200">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 lg:px-10 py-3">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">museum</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">ArtLoan Exchange</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden md:flex items-center gap-9">
+<a class="text-slate-900 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-900 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">My Collection</a>
+<a class="text-slate-900 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Loans</a>
+<a class="text-slate-900 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Messages</a>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-64px)] w-full">
+<aside class="hidden lg:flex w-80 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto">
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3 pb-6 border-b border-slate-100 dark:border-slate-800">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12" data-alt="Abstract art collection avatar with geometric shapes" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAb0enF0FAO-xBzdHmP1gh8B0LroTMHG8sKW_3bb5WZcDk-oSNS30IhPAjJzPAAaHPtuXZy0Rir_V00LWK8I9cLUXI0dZsTVSwxj92-nOmjv3F9dwoDuSaGgeI6UHaqX09IMDjzNUur-HNzG83v20YOmxWAtbGtCjB-zhMmIng4ZLehYTYtWDZ4MFB3yXbL6oL-DsyCYB4LojF3Quz824YDjwl_TipOIzJnW5ynqde71nSO3NvYXAatBQBRJ0CeERwcwN769x9NMfmg");'>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold">New Entry</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Step 1 of 4</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary/10 text-primary border-l-4 border-primary" href="#">
+<span class="material-symbols-outlined fill">info</span>
+<p class="text-sm font-bold">1. Artwork Identity</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">image</span>
+<p class="text-sm font-medium">2. Visual Documentation</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<p class="text-sm font-medium">3. Condition &amp; Logistics</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<p class="text-sm font-medium">4. Loan Parameters</p>
+</a>
+</nav>
+<div class="mt-auto bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-0.5">help</span>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white mb-1">Need Appraisal?</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Our experts can help value your artwork before listing.</p>
+<button class="text-xs font-bold text-primary mt-2 hover:underline">Contact Support</button>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex justify-center py-8 px-4 sm:px-8 lg:px-12">
+<div class="max-w-[800px] w-full flex flex-col gap-8">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h1 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Add New Artwork</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-2">Share your collection with museums worldwide.</p>
+</div>
+<div class="flex gap-3">
+<button class="h-10 px-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                            Save Draft
+                        </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 md:p-8 space-y-8">
+<div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">feed</span>
+                                Basic Information
+                            </h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Artist Name <span class="text-red-500">*</span></span>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person_search</span>
+<input class="w-full h-12 pl-10 pr-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="e.g. Pablo Picasso" type="text"/>
+</div>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Artwork Title <span class="text-red-500">*</span></span>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">label</span>
+<input class="w-full h-12 pl-10 pr-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="e.g. Guernica" type="text"/>
+</div>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Year</span>
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="e.g. 1937" type="number"/>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Medium</span>
+<select class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm appearance-none">
+<option disabled="" selected="" value="">Select medium</option>
+<option value="oil">Oil on Canvas</option>
+<option value="acrylic">Acrylic</option>
+<option value="sculpture">Sculpture (Bronze)</option>
+<option value="photography">Photography</option>
+<option value="mixed">Mixed Media</option>
+</select>
+</label>
+</div>
+<div class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Dimensions (Unframed)</span>
+<div class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+<div class="relative">
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="Height" type="number"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cm</span>
+</div>
+<div class="relative">
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="Width" type="number"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cm</span>
+</div>
+<div class="relative">
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="Depth" type="number"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cm</span>
+</div>
+<div class="col-span-3 sm:col-span-1">
+<select class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm">
+<option value="cm">cm</option>
+<option value="in">inches</option>
+</select>
+</div>
+</div>
+</div>
+<label class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Provenance &amp; Description</span>
+<span class="text-xs text-slate-400">Optional</span>
+</div>
+<textarea class="w-full p-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-none" placeholder="Describe the history and significance of the work..." rows="4"></textarea>
+</label>
+</div>
+<div class="bg-background-light dark:bg-black/20 p-6 md:p-8 border-t border-b border-slate-200 dark:border-slate-800">
+<div class="mb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">imagesmode</span>
+                                Visual Documentation
+                            </h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Upload high-resolution images. First image will be the cover.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="col-span-1 md:col-span-3 border-2 border-dashed border-primary/30 dark:border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors group">
+<div class="bg-white dark:bg-slate-800 p-3 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+</div>
+<p class="text-slate-900 dark:text-white font-bold mb-1">Click or drag images here</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">JPG, PNG, TIFF up to 50MB</p>
+</div>
+<div class="relative group rounded-lg overflow-hidden aspect-[4/3] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+<img alt="Detailed oil painting texture with abstract blue strokes" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUZ8O4Ba-HyZODMIvAwRxTZ7a-OMl3UJLdPzj4PBfYcqGMKat_qWzk4MYEyD83zFzocsJzoQ5bJI2KmpcTgl8Nzk73FLnswQs2yl2MRIVn5kWCqWawHwiz9c7cUU07U-Bs7CNX9JKE2BtGKGTTKY8BC_b9o8DxHzWmbWxZAFQkWserC3On6aeAP5kjWVimLgfJOQTsHN1maUl8gFnEkBVqViZLcnYIE6YOnmthExtM0nlPpnVyLUgBN3fWAzIEHCDWz9kSVVFrK4_Q"/>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+<button class="bg-white/20 hover:bg-white/40 text-white rounded-full p-2 backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+<button class="bg-red-500/80 hover:bg-red-500 text-white rounded-full p-2 backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm">delete</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded">COVER</div>
+</div>
+<div class="relative group rounded-lg overflow-hidden aspect-[4/3] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+<img alt="Close up macro shot of paint texture and brush strokes" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbKrGGrptMUQ0EdW_XZw3WDiYbARNVBa-ZC9ujWwfdQYkxi3wx6yqXSyjrcLBNwslm3xTaD7bXmeUgzuKmGAhj4mpzzRDhUQtUYcQikEirNARmRtHhadH4o3gXIS2dH8wV8_rEJEhgG9WPUNHj_4dAujd83R6RKI_EfWvG0hcQarVOlaGMrcw4qNQ3VvJXyKSS8fzbQU4PbBRZEY70iDmjIOeoPfo8K8wIoIPtOjAaCvZp9DxzbkqnaEwS9Q5WqYpdztxSV56oi8dd"/>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+<button class="bg-white/20 hover:bg-white/40 text-white rounded-full p-2 backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+<button class="bg-red-500/80 hover:bg-red-500 text-white rounded-full p-2 backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm">delete</span>
+</button>
+</div>
+</div>
+<div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg aspect-[4/3] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-2xl mb-1">add_photo_alternate</span>
+<span class="text-xs font-medium">Add more</span>
+</div>
+</div>
+</div>
+<div class="p-6 md:p-8 space-y-6 border-b border-slate-200 dark:border-slate-800">
+<div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">local_shipping</span>
+                                Condition &amp; Logistics
+                            </h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Current Location</span>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">location_on</span>
+<input class="w-full h-12 pl-10 pr-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="City, Country" type="text"/>
+</div>
+</label>
+<label class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Insurance Value</span>
+<span class="material-symbols-outlined text-slate-400 text-sm" title="Estimated market value for insurance purposes">info</span>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold">$</span>
+<input class="w-full h-12 pl-8 pr-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-mono" placeholder="0.00" type="text"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">USD</span>
+</div>
+</label>
+</div>
+<label class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">General Condition Note</span>
+<span class="text-xs text-slate-400">Optional</span>
+</div>
+<textarea class="w-full p-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-none" placeholder="Briefly describe the artwork condition (e.g. Excellent, Minor frame wear)..." rows="3"></textarea>
+</label>
+<div class="pt-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-3">Handling Requirements</span>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+<label class="cursor-pointer border border-primary bg-primary/5 rounded-lg p-4 flex items-start gap-3 transition-all relative ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-900">
+<input checked="" class="mt-1 rounded text-primary focus:ring-0" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Climate Control</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Requires regulated temp/humidity</span>
+</div>
+</label>
+<label class="cursor-pointer border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg p-4 flex items-start gap-3 transition-all">
+<input class="mt-1 rounded text-primary focus:ring-0 border-slate-300" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Original Crating</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Box available for transport</span>
+</div>
+</label>
+<label class="cursor-pointer border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg p-4 flex items-start gap-3 transition-all">
+<input class="mt-1 rounded text-primary focus:ring-0 border-slate-300" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Security Escort</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Mandatory for transit</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<div class="p-6 md:p-8 space-y-6">
+<div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">gavel</span>
+                                Loan Parameters &amp; Costs
+                            </h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Define your preferred terms for lending this artwork.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Available From</span>
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-slate-500" type="date"/>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Available Until</span>
+<input class="w-full h-12 px-4 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-slate-500" type="date"/>
+</label>
+</div>
+<div>
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-3">Cost Allocation Preferences</span>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-slate-400">security</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Insurance</span>
+</div>
+<select class="w-full h-10 px-3 rounded border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+<option>Borrower pays</option>
+<option>Lender pays</option>
+<option>Shared</option>
+</select>
+</div>
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-slate-400">local_shipping</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Transport</span>
+</div>
+<select class="w-full h-10 px-3 rounded border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+<option>Borrower pays</option>
+<option>Lender pays</option>
+<option>Shared</option>
+</select>
+</div>
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-slate-400">build</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Restoration</span>
+</div>
+<select class="w-full h-10 px-3 rounded border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary">
+<option>Borrower liable</option>
+<option>Lender liable</option>
+<option>Insurance claim</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-end gap-4 pb-12">
+<button class="h-12 px-6 rounded-lg text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                        Cancel
+                    </button>
+<button class="h-12 px-8 rounded-lg bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        Next Step
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

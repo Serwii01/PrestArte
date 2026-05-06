@@ -67,6 +67,6 @@ public class Artwork {
     private LocalDateTime updatedAt;
 
     public enum Condition {
-        EXCELENTE, BUENO, REGULAR, DEFECTUOSO, DAÑADO
+        EXCELLENT, GOOD, FAIR, POOR, DAMAGED
     }
 }

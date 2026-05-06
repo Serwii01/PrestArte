@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PrestArte - Art Loans &amp; Logistics Platform</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "primary-dark": "#0d3ca0",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white antialiased transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 w-full border-b border-[#f0f2f4] dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md">
+<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-2">
+<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">palette</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-[#111318] dark:text-white">PrestArte</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-[#111318] hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">For Collectors</a>
+<a class="text-sm font-medium text-[#111318] hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">For Museums</a>
+<a class="text-sm font-medium text-[#111318] hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors" href="#">Logistics Partners</a>
+</nav>
+<div class="flex items-center gap-3">
+<a class="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-sm font-bold text-[#111318] hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800 transition-colors" href="#portal-access">
+                    Login
+                </a>
+<a class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary-dark transition-colors shadow-sm hover:shadow-md" href="#portal-access">
+                    Get Started
+                </a>
+</div>
+</div>
+</header>
+<section class="relative overflow-hidden bg-background-light dark:bg-background-dark pt-12 pb-16 lg:pt-24 lg:pb-32">
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
+<div class="flex flex-col gap-6 max-w-2xl">
+<h1 class="font-display text-4xl font-black leading-[1.1] tracking-tight text-[#111318] dark:text-white sm:text-5xl lg:text-6xl">
+                        Bridging Private Collections with <span class="text-primary">Public Eyes</span>
+</h1>
+<p class="text-lg leading-relaxed text-[#616f89] dark:text-gray-400">
+                        The secure ecosystem for lending masterpieces. We connect collectors, museums, and certified transport companies to democratize art access safely.
+                    </p>
+<div class="mt-4 flex flex-wrap gap-4">
+<button class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-bold text-white shadow-lg transition-all hover:bg-primary-dark hover:shadow-primary/25">
+                            Start Lending
+                        </button>
+<button class="flex h-12 items-center justify-center rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 px-8 text-base font-bold text-[#111318] dark:text-white transition-all hover:bg-gray-50 dark:hover:bg-gray-700">
+                            View Catalog
+                        </button>
+</div>
+<div class="mt-6 flex items-center gap-4 text-sm text-[#616f89] dark:text-gray-500">
+<div class="flex -space-x-2">
+<div class="h-8 w-8 rounded-full border-2 border-white dark:border-background-dark bg-gray-200" data-alt="Avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB7WE0ftCzXjIVGWRhU4WA3i4Q-VWIXkUWvPeqM1657l8SkAKv-dYtHPKOwh2TCJ0FLEBYEKiXL0S83SllQuYrtKOuU9rl8IwB4w_vsjC4s4Fm1m5auYWwLY89RmWEKRoGu_6CdikBZ1vMUfGeojUBApZgFUsjtS3u2XhdndSsLWTr4rDIYzwscivK_7TCyMHF1JY_gFkVUkj-Nh0dX_bx5IdaF-1kdiQXBBeH3-NCwFbdNtqgihL6Jq-3_5SXgDNCC8H_kD0mVNyw6');"></div>
+<div class="h-8 w-8 rounded-full border-2 border-white dark:border-background-dark bg-gray-300" data-alt="Avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbKJac9UNT6G7WERzukrLEG5vFiS2hm-aVxB2C2WABuUNBSXArW50q1uXyKyQr5K72Xl8Pu67071Az-fNz1M_pbXO_gZBrs3pHOhR472o65WHoI4qCz070VjlCh97NEHwTUX9zq9_Rl8ut8OibPBV_nuo_hlmqa40w8ELgenqNse7_Gjrtpa7ttljBbBpu0qazE3tebUu1U8azmqy8FtCkjOsIcdRPpu9r_WcxKfDfF82yFU-vqe_wvnXRHuM9LYpiyy_lpSe1cP64');"></div>
+<div class="h-8 w-8 rounded-full border-2 border-white dark:border-background-dark bg-gray-400" data-alt="Avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCGlA0Oqyx23yS2BKOsyDDUoe94rheGwFrPKVcz2MW6tLrnfyeCxoqlM0zHsWeaGWSv2Ox14SINFUjxQp1DiHCo1Jhnaci7Vr22U_4I_kLGTytpvAAsep94wrT-OoGH5I3BJReZVDvQo-zWGdCfEsgpw1xCF4APQVKZTpecVuh-K-GgbbSvRMbb_9C0ujfSopYhJo0DCmxC0fcOALBHTs7RpQ83uoLNHzCrIgSN4pWIquj4186-Xtn9Pa-M_lWL2EYYsDOTd4E_Zkiu');"></div>
+</div>
+<p>Trusted by 500+ Institutions &amp; Partners</p>
+</div>
+</div>
+<div class="relative lg:ml-auto">
+<div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-2xl">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Close up of a classical oil painting showing intricate brushstrokes" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuANCN9wzCBGiltk2HNuZeaehSSCV1u4nE2khtKZPW7aO8PM-5H9_nG7kHXckchcvfQXqfpD2PMuRoAMjRv4FyBAYxX2OVm5S5cxVL-VZuZfKiy2eO1amTOpqseULjZrCCQz5nomurdKnnHFf55X07kBSRp5t_pxQLby3956bQ_SCwW4uY8REiIut5zSWoEbpPpZP-2U882m2O2L5buWiRZ35nWT6nyfi7dNzcHfe3dJzBFMWt4AdkZ66Xsm6RXLjOjeQu4d5VRXji1F');"></div>
+<div class="absolute -bottom-6 -left-6 hidden md:flex w-64 flex-col gap-2 rounded-xl bg-white dark:bg-gray-800 p-4 shadow-xl border border-gray-100 dark:border-gray-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-green-500">verified_user</span>
+<div>
+<p class="text-xs font-bold text-[#616f89] dark:text-gray-400">Status</p>
+<p class="text-sm font-bold text-[#111318] dark:text-white">Insured &amp; Verified</p>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute -top-12 -right-12 -z-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-16 bg-white dark:bg-gray-900/50">
+<div class="mx-auto max-w-3xl px-4 text-center">
+<span class="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">
+                Our Mission
+            </span>
+<h2 class="font-display text-2xl font-bold leading-tight text-[#111318] dark:text-white md:text-3xl lg:text-4xl">
+                "We are dedicated to democratizing access to hidden art, bringing private masterpieces into the public view safely through a network of trusted professionals."
+            </h2>
+</div>
+</section>
+<section class="py-20 bg-background-light dark:bg-background-dark">
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="mb-16 md:text-center max-w-3xl mx-auto">
+<h2 class="font-display text-3xl font-black tracking-tight text-[#111318] dark:text-white sm:text-4xl">
+                    Tailored for the Ecosystem
+                </h2>
+<p class="mt-4 text-lg text-[#616f89] dark:text-gray-400">
+                    Whether you own the art, curate it, or move it, PrestArte provides the secure infrastructure you need.
+                </p>
+</div>
+<div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-sm hover:shadow-md transition-shadow border border-[#dbdfe6] dark:border-gray-700 flex flex-col">
+<div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">verified_user</span>
+</div>
+<h3 class="mb-3 text-xl font-bold text-[#111318] dark:text-white">For Collectors</h3>
+<p class="text-[#616f89] dark:text-gray-400 mb-6 leading-relaxed flex-grow">
+                        Maximize asset value. Gain visibility, insurance coverage, and secure handling for your private collection while it travels.
+                    </p>
+<ul class="space-y-3 mt-auto">
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Value Appreciation
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Full-Spectrum Insurance
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Anonymous Lending
+                        </li>
+</ul>
+</div>
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-sm hover:shadow-md transition-shadow border border-[#dbdfe6] dark:border-gray-700 flex flex-col">
+<div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">museum</span>
+</div>
+<h3 class="mb-3 text-xl font-bold text-[#111318] dark:text-white">For Museums</h3>
+<p class="text-[#616f89] dark:text-gray-400 mb-6 leading-relaxed flex-grow">
+                        Curate without limits. Access a global inventory of previously inaccessible private masterpieces to complete your narratives.
+                    </p>
+<ul class="space-y-3 mt-auto">
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Global Inventory Access
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Direct Curator Comms
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Reduced Loan Fees
+                        </li>
+</ul>
+</div>
+<div class="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-sm hover:shadow-md transition-shadow border border-[#dbdfe6] dark:border-gray-700 flex flex-col">
+<div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">local_shipping</span>
+</div>
+<h3 class="mb-3 text-xl font-bold text-[#111318] dark:text-white">For Transport Partners</h3>
+<p class="text-[#616f89] dark:text-gray-400 mb-6 leading-relaxed flex-grow">
+                        Join our vetted logistics network. Access premium contracts for fine art transportation, crating, and storage.
+                    </p>
+<ul class="space-y-3 mt-auto">
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Verified Partner Status
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Direct Contract Bidding
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium text-[#111318] dark:text-gray-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Digital Waybills
+                        </li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-white dark:bg-gray-900">
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div>
+<h2 class="font-display text-3xl font-black text-[#111318] dark:text-white">Currently on Loan</h2>
+<p class="mt-2 text-[#616f89] dark:text-gray-400">Explore masterpieces currently circulating in top institutions.</p>
+</div>
+<button class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors">
+                    View Gallery <span class="material-symbols-outlined">arrow_right_alt</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="group cursor-pointer">
+<div class="overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] mb-4 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Classic portrait painting of a person in renaissance clothing" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCovgUElLzcEVRJB8N-vF3nDaoRNWiJC1n5UV_AALYs7jtu7GsXUgvhcc5h_cCXxZICSVdasw8-iPjNJ8fjss8cOMPi6jtQkpdbjT6c1OpNi3bd1yPbMZPurVIBu2QqnzGgarVS5mYHI5V1z0RCEn0k_Vof1aADE6V77sMJWPq-gyARE8QleLiOY80cijztj4XvwY8_9NjWhR2Zx6h5nFIULWngtwA739lmklDUnMYsqfdq9pRTzY9rqqD2MhKQYZVv_qwzPrdJaiUp');"></div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-[#111318] shadow-sm">Available</div>
+</div>
+<h4 class="text-lg font-bold text-[#111318] dark:text-white">Portrait of a Merchant</h4>
+<p class="text-sm text-[#616f89] dark:text-gray-400">17th Century • Oil on Canvas</p>
+<p class="mt-1 text-xs font-medium text-primary">Currently in London</p>
+</div>
+<div class="group cursor-pointer">
+<div class="overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] mb-4 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Abstract modern sculpture against a neutral background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBXzXTGLXILZKOnLJj0dsfNFIj9Pc-WuXFLWNEPV6u0i2p5BXPfp9zSv04IJR7SK0_oXnkNUD5arIpnlan0vYpgDn6qYrRw1-LUa2rpEYEv9rmw8ue2jA-nSn7Dfk2KS0v0nEU3IM2PNxYTB_NoQ8YTO8xAhnm8OcdKTBKLyolsEcf8Sq0RAeCWmuKYCiwTGvhdlhgj_zL3nFgj9hc0KgYRa7Ust4oDBqJ0N5n9CxJIcToyynD4OgZ7B1gykK5CdYbcTd58S3U4Ccj5');"></div>
+</div>
+<h4 class="text-lg font-bold text-[#111318] dark:text-white">Forms in Motion</h4>
+<p class="text-sm text-[#616f89] dark:text-gray-400">Contemporary • Bronze</p>
+<p class="mt-1 text-xs font-medium text-primary">On loan to MoMA</p>
+</div>
+<div class="group cursor-pointer">
+<div class="overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] mb-4 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Landscape painting showing a dramatic sunset over a valley" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBopS1fO1HlmKnPKIErGd45zS92LW50FXum5e9QM3_efuX3UKv03SnF3j_Fep-25VvTDo2twPKMP0S7k0TKWC5A3X50ew2dZIHyQqPWKH8CeCW9h0o82XIce3qbSPsNZA_PSkdhLoiYGMqf8hIacdkdNjNnsluquzPZ_GCeW3jC8P-Y5ijR6FRKHUj9IzVSM5zPNaF2ClOi_Ov-PWRrlGH2olZUL2qg3z38qgkggRIkxM_2W3NXBo7TXsrgeLi1umOqDFksLhxcaVFb');"></div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-[#111318] shadow-sm">Available</div>
+</div>
+<h4 class="text-lg font-bold text-[#111318] dark:text-white">Valley of Light</h4>
+<p class="text-sm text-[#616f89] dark:text-gray-400">19th Century • Oil on Panel</p>
+<p class="mt-1 text-xs font-medium text-primary">Currently in Paris</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-12 border-t border-gray-100 dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-4 text-center">
+<p class="text-sm font-semibold text-[#616f89] dark:text-gray-500 mb-8 uppercase tracking-wider">Trusted Partner Network</p>
+<div class="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex items-center gap-2 text-xl font-bold font-serif text-[#111318] dark:text-white"><span class="material-symbols-outlined">account_balance</span> The Royal Gallery</div>
+<div class="flex items-center gap-2 text-xl font-bold font-serif text-[#111318] dark:text-white"><span class="material-symbols-outlined">museum</span> Metropolitan Arts</div>
+<div class="flex items-center gap-2 text-xl font-bold font-serif text-[#111318] dark:text-white"><span class="material-symbols-outlined">gavel</span> Heritage Auction</div>
+<div class="flex items-center gap-2 text-xl font-bold font-serif text-[#111318] dark:text-white"><span class="material-symbols-outlined">security</span> SafeGuard Insurance</div>
+</div>
+</div>
+</section>
+<section class="relative py-24 bg-primary overflow-hidden" id="portal-access">
+<div class="absolute inset-0 opacity-10" data-alt="Subtle geometric pattern texture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-fne3DqYN-bBrlFgMPva4_EaD75r7yHpfb_r-hGiKFSBXC1tp0LfAQoaaFeYYRBCDJBvwxLWLxuvMuuJ0_gdPeak4i7DcXszo9nOOAXtIpD3p-PXjmMLsCBhila916HGVbFv_WbzyyRQfACP87trLdlz_fPk5lxRcWAM3ZXVKHsC2PysnQC0pLOquejPYNxN4TdlYTrb1YH3YCSKqi_xeA5C0T8KpeFGWzVm5QZTlT8APLzeAGrXxzXy_a2m_pmhcj8NEfeNpP6uC');"></div>
+<div class="relative mx-auto max-w-7xl px-4 text-center">
+<h2 class="font-display text-4xl font-black text-white sm:text-5xl mb-4">Choose Your Portal</h2>
+<p class="text-xl text-blue-100 max-w-2xl mx-auto mb-16">
+                Join the premier network for art lending, exhibition curation, and secure logistics.
+            </p>
+<div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+<div class="bg-white rounded-2xl p-8 shadow-xl flex flex-col items-center text-center">
+<div class="h-12 w-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">Collectors</h3>
+<p class="text-sm text-gray-500 mb-6">Manage your portfolio, track loans, and access insurance docs.</p>
+<div class="w-full space-y-3 mt-auto">
+<button class="w-full py-3 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark transition-colors">
+                            Collector Login
+                        </button>
+<a class="block text-sm font-semibold text-gray-500 hover:text-primary" href="#">Create Account</a>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-8 shadow-xl flex flex-col items-center text-center transform md:-translate-y-4 border-4 border-white/20">
+<div class="h-12 w-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-2xl">museum</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">Museums</h3>
+<p class="text-sm text-gray-500 mb-6">Browse the global inventory and submit loan requests securely.</p>
+<div class="w-full space-y-3 mt-auto">
+<button class="w-full py-3 rounded-lg bg-gray-900 text-white font-bold hover:bg-black transition-colors">
+                            Institution Login
+                        </button>
+<a class="block text-sm font-semibold text-gray-500 hover:text-primary" href="#">Apply for Access</a>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-8 shadow-xl flex flex-col items-center text-center">
+<div class="h-12 w-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-2xl">local_shipping</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-2">Transport Partners</h3>
+<p class="text-sm text-gray-500 mb-6">Bid on transport contracts and manage shipment tracking.</p>
+<div class="w-full space-y-3 mt-auto">
+<button class="w-full py-3 rounded-lg border-2 border-primary text-primary font-bold hover:bg-blue-50 transition-colors">
+                            Partner Login
+                        </button>
+<button class="w-full py-3 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark transition-colors">
+                            Register as Partner
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<footer class="bg-white dark:bg-background-dark pt-16 pb-8 border-t border-gray-100 dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+<div class="col-span-2 md:col-span-1">
+<div class="flex items-center gap-2 mb-4">
+<div class="flex h-6 w-6 items-center justify-center rounded bg-primary text-white">
+<span class="material-symbols-outlined text-[16px]">palette</span>
+</div>
+<span class="text-lg font-bold text-[#111318] dark:text-white">PrestArte</span>
+</div>
+<p class="text-sm text-[#616f89] dark:text-gray-400">
+                        Connecting the world's hidden masterpieces with the public eye.
+                    </p>
+</div>
+<div>
+<h4 class="font-bold text-[#111318] dark:text-white mb-4">Platform</h4>
+<ul class="space-y-2 text-sm text-[#616f89] dark:text-gray-400">
+<li><a class="hover:text-primary" href="#">Browse Art</a></li>
+<li><a class="hover:text-primary" href="#">Museum Partners</a></li>
+<li><a class="hover:text-primary" href="#">Transport Network</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-[#111318] dark:text-white mb-4">Resources</h4>
+<ul class="space-y-2 text-sm text-[#616f89] dark:text-gray-400">
+<li><a class="hover:text-primary" href="#">Insurance Guide</a></li>
+<li><a class="hover:text-primary" href="#">Logistics Support</a></li>
+<li><a class="hover:text-primary" href="#">Legal Framework</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-[#111318] dark:text-white mb-4">Company</h4>
+<ul class="space-y-2 text-sm text-[#616f89] dark:text-gray-400">
+<li><a class="hover:text-primary" href="#">About Us</a></li>
+<li><a class="hover:text-primary" href="#">Careers</a></li>
+<li><a class="hover:text-primary" href="#">Contact</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-8 border-t border-[#f0f2f4] dark:border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+<p class="text-sm text-[#616f89] dark:text-gray-500">© 2024 PrestArte Inc. All rights reserved.</p>
+<div class="flex gap-6 text-sm text-[#616f89] dark:text-gray-500">
+<a class="hover:text-[#111318] dark:hover:text-white" href="#">Privacy Policy</a>
+<a class="hover:text-[#111318] dark:hover:text-white" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+
+</body></html>

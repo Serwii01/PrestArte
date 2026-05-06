@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Browse Available Artworks - ArtLoan Exchange</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e5e7eb] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-6 lg:px-10 py-3 shadow-sm">
+<div class="flex items-center gap-4 text-[#111318] dark:text-white">
+<div class="size-8 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl">palette</span>
+</div>
+<h2 class="text-[#111318] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">ArtLoan Exchange</h2>
+</div>
+<div class="hidden lg:flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9">
+<a class="text-[#111318] dark:text-gray-200 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-[#111318] dark:text-gray-200 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">My Loans</a>
+<a class="text-[#111318] dark:text-gray-200 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Exhibitions</a>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary hover:bg-blue-700 transition-colors text-white text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Request Loan</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-gray-100 dark:ring-gray-700 cursor-pointer" data-alt="User profile picture showing a curator smiling" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBnR7z0eYGulr5vPQUmrvXx4Epvo5g92sLWyVfd4-NOQ5Hu0khurMVpVCr2b9FifWErT-8xarC-Rd_eDUXPGv1x9dDm_sQVtZmlyy57sqTDI2xuRZbHLS9NFcf721AXIPwVKMYmEAkB8Kl55E9RHa8OUbNPh_Y_rgNtk5SD6755hIJOBRVbd7rxgggkbfFB3ImXfuV9arW-P7NnZOkgz8WGC3R0bLNQ7FZ02Dxp6AmyfBb0jiHSjqVuxewPxJ2-yqMS5e8m6FIlNpiz");'></div>
+</div>
+<!-- Mobile Menu Icon -->
+<div class="lg:hidden text-[#111318] dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</div>
+</header>
+<div class="flex flex-1 flex-col lg:flex-row max-w-[1600px] mx-auto w-full px-4 lg:px-8 py-6 gap-8">
+<!-- Sidebar Filters -->
+<aside class="w-full lg:w-72 flex-shrink-0 flex flex-col gap-6">
+<!-- Mobile Header for Filters -->
+<div class="flex items-center justify-between lg:hidden mb-4">
+<h3 class="font-bold text-lg">Filters</h3>
+<span class="material-symbols-outlined cursor-pointer">filter_list</span>
+</div>
+<!-- Page Heading (Sidebar Placement on Desktop contextually) -->
+<div class="flex flex-col gap-2 mb-2">
+<h1 class="text-[#111318] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Browse Collection</h1>
+<p class="text-[#616f89] dark:text-gray-400 text-sm font-normal leading-normal">Discover artworks available for institutional loan.</p>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Filter Group: Search (Mobile/Sidebar alternate) -->
+<!-- Filter Group: Medium -->
+<details class="flex flex-col rounded-lg border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-[15px] py-[7px] group open:ring-1 open:ring-primary/20" open="">
+<summary class="flex cursor-pointer items-center justify-between gap-6 py-2 select-none">
+<p class="text-[#111318] dark:text-white text-sm font-bold leading-normal">Medium &amp; Style</p>
+<span class="material-symbols-outlined text-[#111318] dark:text-white group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-2 pb-3 flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Oil Paint</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Sculpture</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Photography</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Digital Art</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Mixed Media</span>
+</label>
+</div>
+</details>
+<!-- Filter Group: Loan Conditions -->
+<details class="flex flex-col rounded-lg border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-[15px] py-[7px] group">
+<summary class="flex cursor-pointer items-center justify-between gap-6 py-2 select-none">
+<p class="text-[#111318] dark:text-white text-sm font-bold leading-normal">Loan Conditions</p>
+<span class="material-symbols-outlined text-[#111318] dark:text-white group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-2 pb-3 flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Climate Control Required</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">High Security</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="form-checkbox rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-sm text-gray-600 dark:text-gray-300">Courier Accompaniment</span>
+</label>
+</div>
+</details>
+<!-- Filter Group: Dimensions -->
+<details class="flex flex-col rounded-lg border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-[15px] py-[7px] group">
+<summary class="flex cursor-pointer items-center justify-between gap-6 py-2 select-none">
+<p class="text-[#111318] dark:text-white text-sm font-bold leading-normal">Dimensions (cm)</p>
+<span class="material-symbols-outlined text-[#111318] dark:text-white group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-2 pb-3 grid grid-cols-2 gap-3">
+<div class="flex flex-col">
+<label class="text-xs text-gray-500 mb-1">Min Height</label>
+<input class="w-full rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm px-2 py-1 focus:ring-primary focus:border-primary" placeholder="0" type="number"/>
+</div>
+<div class="flex flex-col">
+<label class="text-xs text-gray-500 mb-1">Max Height</label>
+<input class="w-full rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm px-2 py-1 focus:ring-primary focus:border-primary" placeholder="300" type="number"/>
+</div>
+</div>
+</details>
+<!-- Filter Group: Year -->
+<details class="flex flex-col rounded-lg border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-[15px] py-[7px] group">
+<summary class="flex cursor-pointer items-center justify-between gap-6 py-2 select-none">
+<p class="text-[#111318] dark:text-white text-sm font-bold leading-normal">Year of Creation</p>
+<span class="material-symbols-outlined text-[#111318] dark:text-white group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-2 pb-3 flex flex-col gap-2">
+<input class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary" max="2024" min="1500" type="range" value="1800"/>
+<div class="flex justify-between text-xs text-gray-500">
+<span>1500</span>
+<span>2024</span>
+</div>
+</div>
+</details>
+</div>
+<button class="w-full py-2 text-primary font-bold text-sm hover:underline mt-2">Reset All Filters</button>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col gap-6">
+<!-- Search & Sort Bar -->
+<div class="flex flex-col md:flex-row gap-4 items-center bg-white dark:bg-[#1a202c] p-4 rounded-xl shadow-sm border border-[#e5e7eb] dark:border-[#2d3748]">
+<!-- Search Input -->
+<div class="flex-1 w-full relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#616f89]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 border-none bg-[#f0f2f4] dark:bg-gray-800 rounded-lg leading-5 placeholder-[#616f89] focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm transition-shadow dark:text-white" placeholder="Search by artist, title, or keyword..." type="text" value=""/>
+</div>
+<!-- Sort Dropdown -->
+<div class="w-full md:w-48 flex-shrink-0">
+<div class="relative">
+<select class="block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-lg bg-white dark:bg-gray-800 dark:text-white cursor-pointer shadow-sm border hover:border-gray-400">
+<option>Newest Added</option>
+<option>Most Popular</option>
+<option>Year (Ascending)</option>
+<option>Year (Descending)</option>
+<option>Insurance Value</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Filters Tags (Example) -->
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                    Oil Paint
+                    <button class="flex-shrink-0 ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-primary hover:bg-primary/20 focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</span>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                    Climate Control
+                    <button class="flex-shrink-0 ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-primary hover:bg-primary/20 focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</span>
+<span class="text-sm text-gray-500 self-center ml-2">24 results found</span>
+</div>
+<!-- Artwork Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Portrait painting of a woman with colorful abstract elements" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByqsLccwomtB8PJF2On9mpL8ZZJXvph2m-ofnvVg-16DkNALBwbIT2_db0k3dDHm-LwAWyYCvtJNoLr-5hIb3aGZySKIs0zpfyw4cPUApp5_AtpgAc0R8WexfPhtt8K5U-khFCY2nzmCLvX8_3DezV6xw_f7YfMEgGxAyrvY-RFTLNESVB5XcLTqsGcuO3zhZGOK2McxEntT_-7kDviFdlPuiAtGVy6DpAEO3awAPo2i_2_PNaFF6-90qoCh2cGAmpqRALF4VC1byC"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px] font-variation-settings-'FILL'1">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 backdrop-blur-md shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                Available Now
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">The Golden Portrait</h3>
+<p class="text-sm font-medium text-primary mb-2">Elena Varese</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>2019</span>
+<span>Oil on Canvas</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                120x80cm
+                            </span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                Climate Control
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Classical style sculpture bust of a man against dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs_qzFkwXZj1ddN2Nf-DsStIMkxA6qSX4pzzesJ8QmT1Wkbm_fsjuWsVzPGBg0PW2v31GP_AZ70RYKwqppFIQ6-FDcQBIJJDYtOOnKGAUb8wU6z5QhnZz2SepuFDJR_4Rvty5HgdsTyLiWvFoQGWpYaVzLsBst46rgydWM0Lj03BDdfVbXU6kL9bW0LKuzWD1cIIcgCvluXAw7aV86KFc8-3O5tRY5QLjXLPLHwogYGT7z86wRhZdLVhplGguy-WP6Ht7BKZk7um4w"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 backdrop-blur-md shadow-sm">
+<span class="material-symbols-outlined text-[14px] mr-1">history_toggle_off</span>
+                                Available Sep 2024
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">Roman Bust Replica</h3>
+<p class="text-sm font-medium text-primary mb-2">Unknown (18th Century)</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>1780</span>
+<span>Marble</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                45x30x30cm
+                            </span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                High Security
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Abstract modern art painting with splashes of red and yellow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8ePw4k7nEpq1y-ztx98CH8DNi_iaO9SQwny1h_rtQYWMI1BqEJj_DkIpnUjRycQbEEivwE-YIgJV1hchW9jgtY0o-4KzOpclq8Roj5b2wTQ2JP5E8s-1ONQqJ5O_vqldjKO5052XZBVsuvIIDMAqkFXI_1xUERV0V-7BhAd8SKw8Jr_UdlYEJ5-RJKr3BG6oQYzu5upe3KZprkD7LmUmKhKP3ff9sMFoQJCujALc9A7IOFWbrc-D5Jv_upxqhPZlx-PLQzw5OX3b7"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 backdrop-blur-md shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                Available Now
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">Chaos Theory</h3>
+<p class="text-sm font-medium text-primary mb-2">Marcus Chen</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>2021</span>
+<span>Acrylic on Panel</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                200x150cm
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Minimalist geometric shapes poster art" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtBD7IPwuv4IYqPYZzS4ktKHhA5L-L1yDas9RFsOLq03-nr2TRry91RedmsAsZfSiGBJHfROTGgp3qTe_q3CfhANTEQby3CTE9HlkeywgOSmsV7kJ-7-hd917yjg8qmwzLFVPW7Tsm6wOduVOquSQjp9UWKNu1z8pjK1geXrYo39CafsjL50YXnurYszw58_QmXPHI9IWquR9SGwlPQYFRwjho2B9tWOMrM9YpP2pFC4RMrqMeu-Y6N9HUTweSca59QWkMwMFRMOw8"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 backdrop-blur-md shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                Available Now
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">Structure #45</h3>
+<p class="text-sm font-medium text-primary mb-2">Sarah O'Connor</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>2023</span>
+<span>Digital Print</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                60x90cm
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Close up of impasto oil painting texture in blue and orange" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJULwi7LDuL8_yk8yz1PVh6yvL2rhr1XPMSQAeRx9iml_xtvh2ZNwz_SMgINweiUlAahPuVBYsctIsNIOdvuraSDhyFkIpz2V5Hvs2DVPdl1pnDmyspKw6J3-LX9r0xaYeOAEfwN2KBX-_X2I06Nu1FbSH-UPOD2WZJa_dcasJOweJRMxB4mxsMhuTGmkD3tT_U-WbxP8EIxSR38mssyeUEPhz8aa8wIeiB36gsdvtEy02lIgj9vvHq-xJjCsKy1rDEwouK4DRBKuH"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 backdrop-blur-md shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                Available Now
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">Oceanic Dreams</h3>
+<p class="text-sm font-medium text-primary mb-2">David Fisher</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>2015</span>
+<span>Oil on Canvas</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                150x150cm
+                            </span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                Climate Control
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+<div class="relative aspect-[4/5] overflow-hidden bg-gray-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Black and white fine art photography of a spiral staircase" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJfWBkg1kNOeh-FRIfRE89YhtLbfKk4WsNOat3Y-brS8A5Zy2KnU7VbxPejaHvXK3jwLfF0kOVvJO4jd6U3I___Y0F8gIfj4OIgK5DqZ6QHTolVySqz4VIyhkaKTfRarlfwNkdCwjiBDlzVsK-5lJsCpMM80b4FV3kIsDr2I8Ofqz84lM0qwCjCY26CEs0sNIXse2qiQ9h-qrHg_hlxHWBNbmtlj4hmFIlL7P_mQ9yBb6R8q4vQNfZB8QfPRWw-DkppSn4DAHjSnjs"/>
+<div class="absolute top-3 right-3 flex gap-2">
+<button class="bg-white/90 dark:bg-black/60 hover:bg-white dark:hover:bg-black text-gray-800 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors" title="Add to Shortlist">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 backdrop-blur-md shadow-sm">
+<span class="material-symbols-outlined text-[14px] mr-1">lock_clock</span>
+                                On Loan until Dec 2024
+                            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex-1">
+<h3 class="text-lg font-bold text-[#111318] dark:text-white mb-1 line-clamp-1">The Spiral</h3>
+<p class="text-sm font-medium text-primary mb-2">Ansel Adams (Estate)</p>
+<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-1">
+<span>1960</span>
+<span>Silver Gelatin Print</span>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                50x60cm
+                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More -->
+<div class="flex justify-center mt-8 pb-10">
+<button class="flex items-center gap-2 px-6 py-3 bg-white dark:bg-[#1a202c] border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+                    Load More Artworks
+                    <span class="material-symbols-outlined text-sm">arrow_downward</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

@@ -12,14 +12,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class TransportCompany extends User {
 
-    @Column(length = 20)
-    private String taxId;           // CIF empresa
+    // taxId se hereda de User (campo común a todos los usuarios).
 
     @Column(length = 200, nullable = false)
     private String companyName;
 
     @Column(length = 50)
-    private String coverageArea;    // "Nacional", "Europa", etc.
+    private String coverageArea;    // "Nacional", "Europa", etc. → en sub-fase 2.5 pasa a enum.
 
     @Column(length = 150)
     private String contactEmail;

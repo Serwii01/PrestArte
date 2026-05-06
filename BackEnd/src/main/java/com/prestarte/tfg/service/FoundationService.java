@@ -48,14 +48,13 @@ public class FoundationService {
      */
     @Transactional(readOnly = true)
     public FoundationDashboardDto getDashboard(Long foundationId) {
-        // 1. Peticiones enviadas por esta fundación que siguen PENDIENTES
+        // 1. Peticiones enviadas por esta fundación que siguen pendientes
         List<LoanRequest> pending = loanRequestRepository.findByFoundationIdAndStatus(
-                foundationId, LoanRequest.Status.PENDIENTE);
+                foundationId, LoanRequest.Status.REQUESTED);
 
-        // 2. Obras que la fundación ya tiene físicamente (Envío ENTREGADO)
-        // Buscamos envíos entregados asociados a peticiones de esta fundación
+        // 2. Obras que la fundación ya tiene físicamente (envío entregado)
         List<Shipment> activeShipments = shipmentRepository.findByLoanRequestFoundationIdAndStatus(
-                foundationId, Shipment.ShipmentStatus.ENTREGADO);
+                foundationId, Shipment.ShipmentStatus.DELIVERED);
 
         return FoundationDashboardDto.builder()
                 .pendingRequests(pending.stream()

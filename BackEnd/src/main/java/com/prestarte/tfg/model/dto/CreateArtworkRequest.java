@@ -13,7 +13,7 @@ public class CreateArtworkRequest {
     private Double widthCm;
     private Double heightCm;
     private Double depthCm;
-    private String condition; // Ejemplo: "EXCELENTE"
+    private String condition; // Valores: EXCELLENT, GOOD, FAIR, POOR, DAMAGED
     private String description;
     private Long collectorId; // Muy importante para asociar la obra al usuario
 }

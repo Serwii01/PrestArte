@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Museum Loan Applications</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a202c",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#2d3748",
+                        "text-main-light": "#111318",
+                        "text-main-dark": "#f7fafc",
+                        "text-sub-light": "#616f89",
+                        "text-sub-dark": "#a0aec0",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+<div class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark overflow-x-hidden transition-colors duration-200">
+<!-- Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-10 py-3 shadow-sm transition-colors duration-200">
+<div class="flex items-center gap-4">
+<div class="size-8 flex items-center justify-center text-primary">
+<svg class="w-8 h-8" fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight text-text-main-light dark:text-text-main-dark">ArtLoan Exchange</h2>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<!-- Search Bar -->
+<div class="hidden md:flex relative max-w-md w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-sub-light dark:text-text-sub-dark">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="block w-full rounded-lg border-none bg-background-light dark:bg-background-dark py-2 pl-10 pr-4 text-sm text-text-main-light dark:text-text-main-dark placeholder-text-sub-light dark:placeholder-text-sub-dark focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-surface-dark transition-all" placeholder="Search artworks, lenders, or dates..." type="text"/>
+</div>
+<!-- Icons -->
+<div class="flex gap-2">
+<button class="relative flex size-10 items-center justify-center rounded-lg bg-background-light dark:bg-background-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group">
+<span class="material-symbols-outlined text-text-main-light dark:text-text-main-dark group-hover:text-primary transition-colors">notifications</span>
+<span class="absolute top-2 right-2 size-2 rounded-full bg-red-500 border border-white dark:border-background-dark"></span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-lg bg-background-light dark:bg-background-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group">
+<span class="material-symbols-outlined text-text-main-light dark:text-text-main-dark group-hover:text-primary transition-colors">chat_bubble</span>
+</button>
+</div>
+<!-- Profile -->
+<div class="size-10 rounded-full bg-gray-200 bg-center bg-cover border-2 border-white dark:border-gray-700 shadow-sm cursor-pointer" data-alt="User profile avatar showing a professional curator" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAK-O4VhKsdh8fH1WJ3Bg3e_BEH9lJVmlePBoKASad8AGC44PLqNaSw_3i37MstO0aWwyyiuZsDqsdhCoPBTrqkbWpa9rxhWjBphhf4dKSSDb5c9jMIOWRtj5v9C7QtUDA6Rcu3KPVq5SfSigL82h8zEaSubQrMc1nKQ6AqKTjWRg8SGT641s6IG5Ga6x_nOJk5kCOw0opu52pHy8RicN317HFKW87iJP-9l5Nf87n1BsVwMbbcq3roiud2EJgbMmnhK-sIQ-QtpSR');"></div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col items-center py-8 px-6 lg:px-20">
+<div class="w-full max-w-7xl flex flex-col gap-8">
+<!-- Page Heading -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-text-main-light dark:text-text-main-dark">My Loan Applications</h1>
+<p class="text-text-sub-light dark:text-text-sub-dark text-lg">Manage and track all your submitted museum loan requests.</p>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>New Application</span>
+</button>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Stat Card 1 -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-text-sub-light dark:text-text-sub-dark font-medium">Pending Review</p>
+<span class="material-symbols-outlined text-amber-500">hourglass_empty</span>
+</div>
+<p class="text-3xl font-bold text-text-main-light dark:text-text-main-dark">3</p>
+</div>
+<!-- Stat Card 2 -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-text-sub-light dark:text-text-sub-dark font-medium">Approved</p>
+<span class="material-symbols-outlined text-emerald-500">check_circle</span>
+</div>
+<p class="text-3xl font-bold text-text-main-light dark:text-text-main-dark">1</p>
+</div>
+<!-- Stat Card 3 -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-text-sub-light dark:text-text-sub-dark font-medium">In Negotiation</p>
+<span class="material-symbols-outlined text-primary">forum</span>
+</div>
+<p class="text-3xl font-bold text-text-main-light dark:text-text-main-dark">5</p>
+</div>
+<!-- Stat Card 4 -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-text-sub-light dark:text-text-sub-dark font-medium">Action Required</p>
+<span class="material-symbols-outlined text-rose-500">priority_high</span>
+</div>
+<p class="text-3xl font-bold text-text-main-light dark:text-text-main-dark">2</p>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex flex-wrap gap-3 pb-2">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-text-main-light dark:text-text-main-dark text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+<span>Status: Any</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-text-main-light dark:text-text-main-dark text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+<span>Date Range: All Time</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-text-main-light dark:text-text-main-dark text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+<span>Lender: All</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<div class="flex-1"></div>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg text-text-sub-light dark:text-text-sub-dark text-sm font-medium hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">archive</span>
+<span>Show Archived</span>
+</button>
+</div>
+<!-- Data Table -->
+<div class="overflow-hidden rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm whitespace-nowrap">
+<thead class="bg-gray-50 dark:bg-gray-800/50 border-b border-border-light dark:border-border-dark">
+<tr>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider">Artwork</th>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider">Details</th>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider">Lender</th>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider">Loan Period</th>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider">Status</th>
+<th class="px-6 py-4 font-bold text-text-sub-light dark:text-text-sub-dark uppercase text-xs tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark">
+<!-- Row 1: Pending -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="size-16 rounded-lg bg-gray-200 bg-center bg-cover shadow-sm" data-alt="Oil painting of swirling night sky with stars and cypress tree" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBu7CB17ArHseP4QmnIE1cm-A7NXLg_oRZfFXCHgk9kcL3SaY8YLSCcWTBupcP3_VNIj0Xg7nHaQMeomSoAzEj5HF-9VbeZxs_xudNHHGHIghnp5jNeCAcPvoFSEk3DwN6rjDOF3ZCcWAGMqXJRV4ImcOzi9XBPjxvTP8D9rNEFwx3ZSNkrkk2bzVh_w0vJ7QbYcQsChxM3z7J-uPXZP3REzFhcTA8RN4L0x2lSHPjXWcjAVZ8FmqP65GJsfrgPyMbbshEHWDsZfI5_');"></div>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-text-main-light dark:text-text-main-dark text-base">The Starry Night</span>
+<span class="text-text-sub-light dark:text-text-sub-dark">Vincent van Gogh</span>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">Private Collection A</td>
+<td class="px-6 py-4 text-text-sub-light dark:text-text-sub-dark">Nov 2023 - Mar 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+<span class="size-1.5 rounded-full bg-amber-500"></span>
+                                            Pending Review
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 rounded-lg text-text-sub-light dark:text-text-sub-dark hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary transition-colors" title="Chat">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary dark:text-blue-400 font-bold text-xs py-2 px-4 rounded-lg transition-colors">
+                                                View Details
+                                            </button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Approved -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="size-16 rounded-lg bg-gray-200 bg-center bg-cover shadow-sm" data-alt="Vibrant painting of sunflowers in a vase on yellow background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCijY13LUAnA2fYEgNhqU8tBR3D7AWQEfLB5-Fe9qfg2RmbcMSoE9e316ZZPE1dZsCzKWTGTpg8Udx-M1LhQKjNcbZQgX3Ot1tdVbQPth-VKtNpV3r5pQD0wSZEVod4U7d-10FiMdRvz7y0PyB_6lLt0p1oIDCi3hQZplR06xFIL2jtWpPYRilfYdUjHJTd72CuIPoZGy_hIICTUrRXtKHuKHP_LYvsAJSTDvQ_xdOy0Qj8FJe6AxI9OiLG8fm1UsQ9mWM3nVfTRYOJ');"></div>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-text-main-light dark:text-text-main-dark text-base">Sunflowers</span>
+<span class="text-text-sub-light dark:text-text-sub-dark">Vincent van Gogh</span>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">MoMA NY</td>
+<td class="px-6 py-4 text-text-sub-light dark:text-text-sub-dark">Jan 2024 - Jun 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                            Approved
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 rounded-lg text-text-sub-light dark:text-text-sub-dark hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary transition-colors" title="Chat">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary dark:text-blue-400 font-bold text-xs py-2 px-4 rounded-lg transition-colors">
+                                                View Agreement
+                                            </button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Negotiation -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="size-16 rounded-lg bg-gray-200 bg-center bg-cover shadow-sm" data-alt="Impressionist painting of water lilies on a pond" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDZpSNBRinC9g3X0gCXoYu_f8yL1ffpTshFXglG9CBaBELvVkTCPLEvAxHaaEyqKOTIu0cuw5IHlpEXueOsgsuXPPR1NTmpSGbcPIdpQFNMl0R7AxYuBbLAl2QIpkeiVDMFcoOQlF3DXbpYnbz4wihs3lnFJGfvmrxNLiNxrv6AOhx9SUdEt7GlySVk6yiAGcegk_hL_EhpD7_JK89Uc5eTU_DLKpS9VQm0z25lApAx3XF3n15qSbWHRiiz6K_Q_47XPMY7RmqVDhrh');"></div>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-text-main-light dark:text-text-main-dark text-base">Water Lilies</span>
+<span class="text-text-sub-light dark:text-text-sub-dark">Claude Monet</span>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">Tate Modern</td>
+<td class="px-6 py-4 text-text-sub-light dark:text-text-sub-dark">Feb 2024 - Aug 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+<span class="size-1.5 rounded-full bg-blue-500"></span>
+                                            In Negotiation
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="relative p-2 rounded-lg text-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Chat">
+<span class="material-symbols-outlined text-[20px]">mark_chat_unread</span>
+<span class="absolute top-2 right-2 size-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-surface-dark"></span>
+</button>
+<button class="bg-primary hover:bg-blue-700 text-white font-bold text-xs py-2 px-4 rounded-lg transition-colors">
+                                                Review Offer
+                                            </button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Action Required -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4">
+<div class="size-16 rounded-lg bg-gray-200 bg-center bg-cover shadow-sm" data-alt="Abstract cubist sketch in black and white" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA88mjEj2cO-zPyESbP63kLp2m2CfJQ8yqQXghugCVp4kV6vmNRPU4JVb_vPHCW-EfGJGotdc616OoD8MLula64_lQIJ5PhIAm88zDlKLAKioopvQHTa0omx9IwXQVlAN_5qSQYXSefbiHWDmesCeVYlvO3nYAlfXQM3E37sbxonBanliyyn1pdk3sDlALbijr1014HmK35yIX4mPZ_E7wqCqeVU0AvRUfSFg1rR4V4M1NXZGCOLxBslQMKTj8erlOENmOozMCD8S6_');"></div>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-text-main-light dark:text-text-main-dark text-base">Study for Guernica</span>
+<span class="text-text-sub-light dark:text-text-sub-dark">Pablo Picasso</span>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">Reina Sofia</td>
+<td class="px-6 py-4 text-text-sub-light dark:text-text-sub-dark">Mar 2024 - Sep 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+<span class="size-1.5 rounded-full bg-rose-500"></span>
+                                            Action Required
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 rounded-lg text-text-sub-light dark:text-text-sub-dark hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary transition-colors" title="Chat">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="bg-primary hover:bg-blue-700 text-white font-bold text-xs py-2 px-4 rounded-lg transition-colors">
+                                                Update Info
+                                            </button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Withdrawn -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors opacity-75">
+<td class="px-6 py-4">
+<div class="size-16 rounded-lg bg-gray-200 bg-center bg-cover grayscale" data-alt="Golden painting of a couple embracing" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBlLbvi_5-gozM8r5NMfgcg71Z2hL1ch_kgiaSQ4EQLCQHyWjJRh6SEz-4_XSMojbqhxWyNY2RY-imWa8rl95yu0QkAEOuWrloln_DhvR3vOimkDrFzMOZNEt9XcvQqnb6fiY9t3JBTgQRlW0B9Z90NVT0vi9ciUULH5mEg74a_At08GjecH-8qfnj_ET-946n65fb1Kq47WmD2vvYCFhtI2ofZTyNu6iLCATmF2AJIudjAYK3GU3u7NGFfurI-Cr3rpk6SuA6KSabQ');"></div>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-text-main-light dark:text-text-main-dark text-base">The Kiss</span>
+<span class="text-text-sub-light dark:text-text-sub-dark">Gustav Klimt</span>
+</div>
+</td>
+<td class="px-6 py-4 text-text-main-light dark:text-text-main-dark">Belvedere Museum</td>
+<td class="px-6 py-4 text-text-sub-light dark:text-text-sub-dark">Apr 2024 - Oct 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-700/40 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+<span class="size-1.5 rounded-full bg-slate-500"></span>
+                                            Withdrawn
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 rounded-lg text-text-sub-light dark:text-text-sub-dark hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary transition-colors" title="Archive">
+<span class="material-symbols-outlined text-[20px]">archive</span>
+</button>
+<button class="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-text-sub-light dark:text-text-sub-dark font-bold text-xs py-2 px-4 rounded-lg border border-border-light dark:border-border-dark transition-colors">
+                                                View
+                                            </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between border-t border-border-light dark:border-border-dark bg-white dark:bg-surface-dark px-6 py-3">
+<div class="text-sm text-text-sub-light dark:text-text-sub-dark">
+                            Showing <span class="font-bold text-text-main-light dark:text-text-main-dark">1</span> to <span class="font-bold text-text-main-light dark:text-text-main-dark">5</span> of <span class="font-bold text-text-main-light dark:text-text-main-dark">12</span> results
+                        </div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center p-2 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark text-text-sub-light dark:text-text-sub-dark hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="flex items-center justify-center p-2 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark text-text-sub-light dark:text-text-sub-dark hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

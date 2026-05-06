@@ -17,27 +17,37 @@ public class Shipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_request_id", nullable = false)
     private LoanRequest loanRequest;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transport_company_id", nullable = false)
     private TransportCompany transportCompany;
 
     private String trackingNumber;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ShipmentStatus status;
 
-    // --- Nuevos campos para Negociación y Seguro ---
-    private Double price;                // Coste del transporte
-    private Double insuranceCost;        // Coste de la prima del seguro
-    private Double insuranceValue;       // Valor total asegurado (valor de la obra)
-    private String insurancePolicy;      // Número de póliza
+    /**
+     * Sentido del envío: ida (origen → museo) o vuelta (museo → coleccionista).
+     * Cada préstamo genera un OUTBOUND y, al terminar, un RETURN.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    @Builder.Default
+    private ShipmentDirection direction = ShipmentDirection.OUTBOUND;
+
+    // --- Campos económicos y de seguro ---
+    private Double price;
+    private Double insuranceCost;
+    private Double insuranceValue;
+    private String insurancePolicy;
 
     @Builder.Default
-    private boolean priceAccepted = false; // ¿Ha aceptado la Fundación el presupuesto?
+    private boolean priceAccepted = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -51,11 +61,17 @@ public class Shipment {
     private LocalDateTime deliveryDate;
 
     public enum ShipmentStatus {
-        SOLICITADO,    // La empresa aún no ha aceptado o enviado presupuesto
-        RECHAZADO,     // La empresa no puede realizar el servicio
-        PENDIENTE,     // Presupuesto aceptado, esperando recogida
-        RECOGIDO,
-        EN_TRANSITO,
-        ENTREGADO
+        REQUESTED,    // Asignado al transportista, sin presupuesto aún.
+        QUOTED,       // Presupuesto subido, esperando aprobación del museo.
+        REJECTED,     // El transportista no acepta el servicio.
+        APPROVED,     // Presupuesto aprobado, esperando recogida.
+        PICKED_UP,
+        IN_TRANSIT,
+        DELIVERED
+    }
+
+    public enum ShipmentDirection {
+        OUTBOUND,     // Origen (coleccionista) → destino (museo).
+        RETURN        // Museo → coleccionista, al terminar el préstamo.
     }
 }

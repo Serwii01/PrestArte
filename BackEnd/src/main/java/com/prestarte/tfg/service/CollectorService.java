@@ -38,10 +38,10 @@ public class CollectorService {
         // 1. Obtener todas las obras del coleccionista
         List<Artwork> myArtworks = artworkRepository.findByCollectorId(collectorId);
 
-        // 2. Préstamos pendientes (donde la obra es mía y el estado es PENDIENTE)
+        // 2. Préstamos pendientes (donde la obra es mía y el estado es REQUESTED)
         List<LoanResponse> pending = loanRequestRepository.findAll().stream()
                 .filter(l -> l.getArtwork().getCollector().getId().equals(collectorId))
-                .filter(l -> l.getStatus() == LoanRequest.Status.PENDIENTE)
+                .filter(l -> l.getStatus() == LoanRequest.Status.REQUESTED)
                 .map(this::mapToLoanResponse)
                 .toList();
 

@@ -1,10 +1,15 @@
 package com.prestarte.tfg.service;
 
+import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.ConfirmReceiptRequest;
+import com.prestarte.tfg.model.dto.ProposeQuoteRequest;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
+import com.prestarte.tfg.service.statemachine.LoanStateMachine;
+import com.prestarte.tfg.service.statemachine.ShipmentStateMachine;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,127 +18,174 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Lógica logística (envío de la obra). Cada operación valida la transición
+ * mediante {@link ShipmentStateMachine} y, cuando procede, sincroniza el
+ * préstamo asociado vía {@link LoanRequestService}.
+ */
 @Service
 @RequiredArgsConstructor
 public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final LoanRequestRepository loanRequestRepository;
-    private final TransportCompanyRepository transportCompanyRepository;
-    private final EmailService emailService;
-    private final PdfGeneratorService pdfGeneratorService;
+    private final ShipmentStateMachine shipmentStateMachine;
+
+    // @Lazy para romper el ciclo ShipmentService ↔ LoanRequestService
+    @Lazy
+    private final LoanRequestService loanRequestService;
+
+    /* ========== CREACIÓN DE SHIPMENT (llamada desde LoanRequestService.accept) ========== */
 
     @Transactional
-    public ShipmentResponse requestShipment(Long loanId, Long transportCompanyId) {
-        LoanRequest loan = loanRequestRepository.findById(loanId)
-                .orElseThrow(() -> new RuntimeException("Loan request not found"));
-
-        TransportCompany company = transportCompanyRepository.findById(transportCompanyId)
-                .orElseThrow(() -> new RuntimeException("Transport company not found"));
-
-        loan.setStatus(LoanRequest.Status.LOGISTICS_PENDING);
-        loanRequestRepository.save(loan);
-
+    public Shipment createOutboundShipment(LoanRequest loan, TransportCompany company) {
         Shipment shipment = Shipment.builder()
                 .loanRequest(loan)
                 .transportCompany(company)
-                .status(Shipment.ShipmentStatus.SOLICITADO)
+                .status(Shipment.ShipmentStatus.REQUESTED)
+                .direction(Shipment.ShipmentDirection.OUTBOUND)
                 .trackingNumber("REQ-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .priceAccepted(false)
                 .insuranceValue(loan.getArtwork().getEstimatedValue())
                 .build();
-
-        return mapToResponse(shipmentRepository.save(shipment));
+        return shipmentRepository.save(shipment);
     }
+
+    /* ========== ACCIONES DEL FLUJO ========== */
+
+    /**
+     * Transportista propone presupuesto. Shipment REQUESTED → QUOTED.
+     * Sincroniza el préstamo a QUOTE_PROPOSED.
+     */
+    @Transactional
+    public ShipmentResponse proposeQuote(Long shipmentId, ProposeQuoteRequest req) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.QUOTED);
+
+        shipment.setPrice(req.getPrice());
+        shipment.setInsuranceCost(req.getInsuranceCost());
+        shipment.setInsurancePolicy(req.getInsurancePolicy());
+        shipment.setStatus(Shipment.ShipmentStatus.QUOTED);
+        shipmentRepository.save(shipment);
+
+        loanRequestService.onShipmentQuoted(shipment.getLoanRequest());
+        return mapToResponse(shipment);
+    }
+
+    /**
+     * Museo aprueba el presupuesto. Shipment QUOTED → APPROVED.
+     * El avance del préstamo a PAID se hace en PaymentService (sub-fase 2.4).
+     * En esta sub-fase, dejamos el préstamo en QUOTE_PROPOSED hasta que el pago se ejecute.
+     *
+     * NOTA: temporalmente avanzamos también el préstamo a PAID aquí para que el
+     * flujo sea probable end-to-end. En 2.4 se moverá a PaymentService.
+     */
+    @Transactional
+    public ShipmentResponse approveQuote(Long shipmentId) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.APPROVED);
+
+        if (shipment.getPrice() == null || shipment.getPrice() <= 0) {
+            throw new IllegalStateException(
+                    "No se puede aprobar un envío sin una propuesta de precio.");
+        }
+
+        shipment.setPriceAccepted(true);
+        shipment.setStatus(Shipment.ShipmentStatus.APPROVED);
+        shipment.setTrackingNumber(shipment.getTrackingNumber().replace("REQ-", "TK-"));
+        shipmentRepository.save(shipment);
+
+        loanRequestService.onPaymentSucceeded(shipment.getLoanRequest());
+        return mapToResponse(shipment);
+    }
+
+    /**
+     * Museo rechaza el presupuesto. Shipment QUOTED → REJECTED.
+     * El préstamo va a CANCELLED si la empresa era obligatoria, o vuelve a
+     * QUOTE_PENDING para pedir presupuesto a otra empresa.
+     */
+    @Transactional
+    public ShipmentResponse rejectQuote(Long shipmentId, String reason) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.REJECTED);
+
+        shipment.setStatus(Shipment.ShipmentStatus.REJECTED);
+        shipmentRepository.save(shipment);
+
+        loanRequestService.onQuoteRejected(shipment.getLoanRequest(), reason);
+        return mapToResponse(shipment);
+    }
+
+    /** Transportista marca obra recogida. APPROVED → PICKED_UP, préstamo → IN_TRANSIT. */
+    @Transactional
+    public ShipmentResponse markPickedUp(Long shipmentId) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.PICKED_UP);
+
+        shipment.setStatus(Shipment.ShipmentStatus.PICKED_UP);
+        shipmentRepository.save(shipment);
+
+        loanRequestService.onShipmentPickedUp(shipment.getLoanRequest());
+        return mapToResponse(shipment);
+    }
+
+    /** Transportista marca obra en tránsito. PICKED_UP → IN_TRANSIT. */
+    @Transactional
+    public ShipmentResponse markInTransit(Long shipmentId) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.IN_TRANSIT);
+
+        shipment.setStatus(Shipment.ShipmentStatus.IN_TRANSIT);
+        shipmentRepository.save(shipment);
+        // El préstamo ya está en IN_TRANSIT desde markPickedUp, no se mueve.
+        return mapToResponse(shipment);
+    }
+
+    /** Museo confirma llegada. IN_TRANSIT → DELIVERED, préstamo → DELIVERED → ON_LOAN. */
+    @Transactional
+    public ShipmentResponse confirmDelivery(Long shipmentId, ConfirmReceiptRequest request) {
+        Shipment shipment = findOrThrow(shipmentId);
+        shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.DELIVERED);
+
+        shipment.setStatus(Shipment.ShipmentStatus.DELIVERED);
+        shipment.setReceivedBy(request.getReceivedBy());
+        shipment.setNotes(request.getNotes());
+        shipment.setDeliveryDate(LocalDateTime.now());
+        shipmentRepository.save(shipment);
+
+        loanRequestService.onShipmentDelivered(shipment.getLoanRequest());
+        return mapToResponse(shipment);
+    }
+
+    /* ========== LECTURAS ========== */
 
     @Transactional(readOnly = true)
     public Shipment getByLoanId(Long loanId) {
         return shipmentRepository.findByLoanRequestId(loanId).orElse(null);
     }
 
+    @Transactional(readOnly = true)
     public Shipment getByIdRaw(Long id) {
-        return shipmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Shipment not found"));
+        return findOrThrow(id);
     }
 
-    @Transactional
-    public ShipmentResponse proposeBudget(Long shipmentId, Double transportPrice, Double insuranceCost, String policy) {
-        Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
-
-        shipment.setPrice(transportPrice);
-        shipment.setInsuranceCost(insuranceCost);
-        shipment.setInsurancePolicy(policy);
-
-        return mapToResponse(shipmentRepository.save(shipment));
-    }
-
-    @Transactional
-    public ShipmentResponse approveBudget(Long shipmentId) {
-        Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
-
-        if (shipment.getPrice() == null || shipment.getPrice() <= 0) {
-            throw new RuntimeException("Cannot approve a shipment without a price proposal.");
-        }
-
-        shipment.setPriceAccepted(true);
-        shipment.setStatus(Shipment.ShipmentStatus.PENDIENTE);
-        shipment.setTrackingNumber(shipment.getTrackingNumber().replace("REQ-", "TK-"));
-
-        LoanRequest loan = shipment.getLoanRequest();
-        loan.setStatus(LoanRequest.Status.ACEPTADA);
-        loanRequestRepository.save(loan);
-
-        return mapToResponse(shipmentRepository.save(shipment));
-    }
-
-    /**
-     * Actualizar estado durante el tránsito (Acción del Transportista).
-     * SINCRONIZADO: Cambia el estado del préstamo a EN_TRANSITO.
-     */
-    @Transactional
-    public ShipmentResponse updateStatus(Long shipmentId, Shipment.ShipmentStatus newStatus) {
-        Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
-
-        shipment.setStatus(newStatus);
-
-        // Sincronización con el estado del préstamo[cite: 4, 7]
-        if (newStatus == Shipment.ShipmentStatus.RECOGIDO || newStatus == Shipment.ShipmentStatus.EN_TRANSITO) {
-            shipment.getLoanRequest().setStatus(LoanRequest.Status.EN_TRANSITO);
-            loanRequestRepository.save(shipment.getLoanRequest());
-        }
-
-        return mapToResponse(shipmentRepository.save(shipment));
-    }
-
-    /**
-     * Confirmar entrega (Acción del Museo).
-     * SINCRONIZADO: Cambia el estado del préstamo a RECIBIDA[cite: 4, 7].
-     */
-    @Transactional
-    public ShipmentResponse confirmArrival(Long shipmentId, ConfirmReceiptRequest request) {
-        Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
-
-        shipment.setStatus(Shipment.ShipmentStatus.ENTREGADO);
-        shipment.setReceivedBy(request.getReceivedBy());
-        shipment.setNotes(request.getNotes());
-        shipment.setDeliveryDate(LocalDateTime.now());
-
-        // Actualizamos el préstamo a RECIBIDA[cite: 4, 7]
-        shipment.getLoanRequest().setStatus(LoanRequest.Status.RECIBIDA);
-        loanRequestRepository.save(shipment.getLoanRequest());
-
-        return mapToResponse(shipmentRepository.save(shipment));
+    @Transactional(readOnly = true)
+    public ShipmentResponse getById(Long id) {
+        return mapToResponse(findOrThrow(id));
     }
 
     @Transactional(readOnly = true)
     public List<ShipmentResponse> getByTransportCompany(Long companyId) {
-        return shipmentRepository.findByTransportCompanyId(companyId)
-                .stream()
+        return shipmentRepository.findByTransportCompanyId(companyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    /* ========== HELPERS ========== */
+
+    private Shipment findOrThrow(Long id) {
+        return shipmentRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.of("Envío", id));
     }
 
     private ShipmentResponse mapToResponse(Shipment s) {
@@ -152,7 +204,6 @@ public class ShipmentService {
                 .notes(s.getNotes())
                 .deliveryDate(s.getDeliveryDate())
                 .createdAt(s.getCreatedAt())
-                // Asignación de fechas del préstamo para los Dashboards
                 .startDate(s.getLoanRequest().getStartDate() != null ?
                         s.getLoanRequest().getStartDate().atStartOfDay() : null)
                 .endDate(s.getLoanRequest().getEndDate() != null ?

@@ -1,0 +1,259 @@
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+  <!-- Navbar superior -->
+  <header class="sticky top-0 z-50 w-full border-b border-gray-soft bg-white/90 backdrop-blur-md">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <a routerLink="/" class="flex items-center gap-2">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
+          <span class="material-symbols-outlined">palette</span>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-text-main">Prestarte</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8">
+        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#how">
+          Cómo funciona
+        </a>
+        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#collectors">
+          Para Coleccionistas
+        </a>
+        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#museums">
+          Para Museos
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        @if (isLoggedIn()) {
+          <button
+            type="button"
+            (click)="goToApp()"
+            class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold
+                   text-white hover:bg-primary-hover transition-colors shadow-sm"
+          >
+            Ir a mi panel
+          </button>
+        } @else {
+          <a
+            routerLink="/login"
+            class="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-sm
+                   font-bold text-text-main hover:bg-gray-soft transition-colors"
+          >
+            Iniciar sesión
+          </a>
+          <a
+            routerLink="/register"
+            class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm
+                   font-bold text-white hover:bg-primary-hover transition-colors shadow-sm"
+          >
+            Registrarse
+          </a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden bg-background pt-12 pb-16 lg:pt-24 lg:pb-32">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
+        <div class="flex flex-col gap-6 max-w-2xl">
+          <h1 class="text-4xl font-black leading-[1.1] tracking-tight text-text-main sm:text-5xl lg:text-6xl">
+            Conectamos colecciones privadas con
+            <span class="text-primary">miradas públicas</span>
+          </h1>
+          <p class="text-lg leading-relaxed text-text-secondary">
+            La plataforma segura para el préstamo de obras de arte entre coleccionistas particulares
+            y museos de primer nivel. Democratiza el acceso al arte oculto, con todas las garantías.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-4">
+            <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
+               class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base
+                      font-bold text-white shadow-lg transition-all hover:bg-primary-hover hover:shadow-primary/25">
+              Empezar a prestar
+            </a>
+            <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
+               class="flex h-12 items-center justify-center rounded-lg border border-border bg-white
+                      px-8 text-base font-bold text-text-main transition-all hover:bg-gray-soft">
+              Buscar obras
+            </a>
+          </div>
+          <div class="mt-6 flex items-center gap-4 text-sm text-text-secondary">
+            <span class="material-symbols-outlined text-primary">workspace_premium</span>
+            <p>Diseñada para instituciones culturales</p>
+          </div>
+        </div>
+
+        <div class="relative lg:ml-auto">
+          <div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-2xl">
+            <div class="absolute inset-0 bg-cover bg-center"
+                 style="background-image: url('https://images.unsplash.com/photo-1580136579312-94651dfd596d?auto=format&fit=crop&w=1600&q=80');">
+            </div>
+            <!-- Tarjeta flotante -->
+            <div class="absolute -bottom-6 -left-6 hidden md:flex w-64 flex-col gap-2 rounded-xl
+                        bg-white p-4 shadow-xl border border-gray-soft">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-green-500">verified_user</span>
+                <div>
+                  <p class="text-xs font-bold text-text-secondary">Estado</p>
+                  <p class="text-sm font-bold text-text-main">Asegurada y verificada</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="absolute -top-12 -right-12 -z-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Misión -->
+  <section class="py-16 bg-white">
+    <div class="mx-auto max-w-3xl px-4 text-center">
+      <span class="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">
+        Nuestra misión
+      </span>
+      <h2 class="text-2xl font-bold leading-tight text-text-main md:text-3xl lg:text-4xl">
+        “Acercar al gran público obras de arte que normalmente están guardadas en colecciones
+        privadas, garantizando seguridad, trazabilidad y transparencia en cada préstamo.”
+      </h2>
+    </div>
+  </section>
+
+  <!-- Para Collectors / Museums -->
+  <section id="features" class="py-20 bg-background">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-16 md:text-center max-w-3xl mx-auto">
+        <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">
+          Pensado para el mundo del arte
+        </h2>
+        <p class="mt-4 text-lg text-text-secondary">
+          Tanto si eres coleccionista como si curas exposiciones, Prestarte te da la infraestructura
+          segura que necesitas.
+        </p>
+      </div>
+      <div class="grid gap-8 md:grid-cols-2">
+        <!-- Collector -->
+        <div id="collectors"
+             class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
+                    transition-shadow border border-border">
+          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
+                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <span class="material-symbols-outlined" style="font-size:32px;">verified_user</span>
+          </div>
+          <h3 class="mb-3 text-xl font-bold text-text-main">Para Coleccionistas</h3>
+          <p class="text-text-secondary mb-6 leading-relaxed">
+            Maximiza el valor de tus obras. Visibilidad, cobertura de seguro completa y
+            transporte de máxima calidad mientras tu pieza viaja.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Revalorización del activo
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Seguro nail-to-nail
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Préstamo anónimo opcional
+            </li>
+          </ul>
+        </div>
+
+        <!-- Museum -->
+        <div id="museums"
+             class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
+                    transition-shadow border border-border">
+          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
+                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <span class="material-symbols-outlined" style="font-size:32px;">museum</span>
+          </div>
+          <h3 class="mb-3 text-xl font-bold text-text-main">Para Museos y Fundaciones</h3>
+          <p class="text-text-secondary mb-6 leading-relaxed">
+            Cura sin límites. Accede a un inventario global de obras privadas que normalmente
+            estarían fuera de tu alcance para completar tus exposiciones.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Inventario global
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Logística simplificada
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Comunicación directa con el coleccionista
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section id="how" class="py-20 bg-white">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-12 text-center">
+        <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">Cómo funciona</h2>
+        <p class="mt-3 text-text-secondary">Un flujo claro y trazable para cada préstamo.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">1</div>
+          <h3 class="text-lg font-bold text-text-main mb-2">El museo solicita</h3>
+          <p class="text-sm text-text-secondary">La fundación encuentra una obra en el catálogo y envía una solicitud al coleccionista.</p>
+        </div>
+        <div class="text-center">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">2</div>
+          <h3 class="text-lg font-bold text-text-main mb-2">El coleccionista acepta</h3>
+          <p class="text-sm text-text-secondary">Acepta el préstamo y elige la empresa de transporte de su confianza.</p>
+        </div>
+        <div class="text-center">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">3</div>
+          <h3 class="text-lg font-bold text-text-main mb-2">La obra viaja</h3>
+          <p class="text-sm text-text-secondary">Presupuesto, contrato firmado y seguimiento en tiempo real hasta la entrega.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="relative py-24 bg-primary overflow-hidden">
+    <div class="relative mx-auto max-w-4xl px-4 text-center">
+      <h2 class="text-4xl font-black text-white sm:text-5xl">¿Listo para empezar?</h2>
+      <p class="mt-6 text-xl text-blue-100 max-w-2xl mx-auto">
+        Únete a la red profesional de préstamo y exposición de obras de arte.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
+           class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg bg-white px-8
+                  text-lg font-bold text-primary hover:bg-gray-50 transition-colors shadow-lg">
+          Registrarme como Coleccionista
+        </a>
+        <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
+           class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
+                  bg-primary-hover border border-white/20 px-8 text-lg font-bold text-white
+                  hover:bg-primary-hover/80 transition-colors">
+          Registrarme como Institución
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white pt-12 pb-8 border-t border-gray-soft">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <div class="flex h-6 w-6 items-center justify-center rounded bg-primary text-white">
+          <span class="material-symbols-outlined" style="font-size:16px;">palette</span>
+        </div>
+        <span class="text-lg font-bold text-text-main">Prestarte</span>
+      </div>
+      <p class="text-sm text-text-secondary">
+        © {{ year }} Prestarte · Trabajo de Fin de Grado
+      </p>
+    </div>
+  </footer>
+</div>

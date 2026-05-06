@@ -12,8 +12,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Foundation extends User {
 
-    @Column(length = 20)
-    private String taxId;        // CIF fundación
+    // taxId se hereda de User (campo común a todos los usuarios).
 
     @Column(length = 200, nullable = false)
     private String institutionName;

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Loan Tracking - Closed Loans</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#1152d4",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white font-display overflow-x-hidden transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] px-6 lg:px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clippath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clippath>
+</defs>
+</svg>
+</div>
+<h2 class="text-[#111318] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">ArtLoan Manager</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden md:flex items-center gap-9">
+<a class="text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Active Loans</a>
+<a class="text-primary text-sm font-bold leading-normal relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:-bottom-[1.2rem] after:left-0" href="#">Closed Loans</a>
+<a class="text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Inventory</a>
+<a class="text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Settings</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-background-light dark:bg-[#2d3748] text-[#111318] dark:text-white hover:bg-[#e2e4e9] dark:hover:bg-[#4a5568] transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 border-2 border-white dark:border-[#2d3748] shadow-sm" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCrBpV5J5kY7-6HXdZ34jJFc2ee6FkwsBFp-rxNgvSpngPzjivAgErX9Mu7sRLdpj9_u3b-4JEpHOnovrOs-CsEMurjVbbqmXRZIROUuFIm9J1byCCjV0QJmm_Q6fOTd_Sof9z3tRoGSy1lNY4VT3nkIYfB9pPzc4BEyQNvJu1cWofs9eXmifXHkMwJGXAlJcsxvgT93uo7eIgLxC2iqLXlzy_2WH2GcZF3HTFJ7oVJz-5JZiHMXNJgzUMxOFlROYkXULMyo60cBT4G");'></div>
+</div>
+</div>
+</header>
+<main class="layout-container flex h-full grow flex-col">
+<div class="px-4 md:px-10 lg:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between gap-3 p-4">
+<div class="flex min-w-72 flex-col gap-2">
+<h1 class="text-[#111318] dark:text-white tracking-tight text-[32px] font-bold leading-tight">Closed Loan Archive</h1>
+<p class="text-[#616f89] dark:text-gray-400 text-sm font-normal leading-normal">Historical record of returned artworks and concluded exhibitions.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d3748] border border-[#dbdfe6] dark:border-[#4a5568] rounded-lg text-sm font-medium text-[#111318] dark:text-white hover:bg-[#f3f4f6] dark:hover:bg-[#4a5568] transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+                    Export CSV
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    New Record
+                </button>
+</div>
+</div>
+<!-- Stats -->
+<div class="flex flex-wrap gap-4 p-4">
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] shadow-sm">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[#616f89] dark:text-gray-400">history_edu</span>
+<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium leading-normal">Total Closed Loans</p>
+</div>
+<p class="text-[#111318] dark:text-white tracking-tight text-3xl font-bold leading-tight">142</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] shadow-sm">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[#616f89] dark:text-gray-400">timelapse</span>
+<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium leading-normal">Avg. Duration</p>
+</div>
+<p class="text-[#111318] dark:text-white tracking-tight text-3xl font-bold leading-tight">8.5 <span class="text-lg font-medium text-[#616f89] dark:text-gray-400">Months</span></p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] shadow-sm">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[#616f89] dark:text-gray-400">account_balance</span>
+<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium leading-normal">Top Borrower</p>
+</div>
+<p class="text-[#111318] dark:text-white tracking-tight text-3xl font-bold leading-tight">MoMA NY</p>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex flex-wrap items-end gap-4 px-4 py-3 pb-6">
+<label class="flex flex-col min-w-40 flex-[2]">
+<p class="text-[#111318] dark:text-white text-sm font-medium leading-normal pb-2">Search</p>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#616f89] dark:text-gray-500 material-symbols-outlined">search</span>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#dbdfe6] dark:border-[#4a5568] bg-white dark:bg-[#1a202c] focus:border-primary h-12 placeholder:text-[#616f89] dark:placeholder:text-gray-500 pl-[40px] pr-[15px] text-sm font-normal leading-normal shadow-sm" placeholder="Search by Artwork, Artist or Borrower..." value=""/>
+</div>
+</label>
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-[#111318] dark:text-white text-sm font-medium leading-normal pb-2">Filter by Year</p>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#616f89] dark:text-gray-500 material-symbols-outlined">calendar_today</span>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#dbdfe6] dark:border-[#4a5568] bg-white dark:bg-[#1a202c] focus:border-primary h-12 placeholder:text-[#616f89] dark:placeholder:text-gray-500 pl-[40px] pr-[15px] text-sm font-normal leading-normal shadow-sm" placeholder="e.g. 2023" value=""/>
+</div>
+</label>
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-[#111318] dark:text-white text-sm font-medium leading-normal pb-2">Location</p>
+<div class="relative">
+<select class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#dbdfe6] dark:border-[#4a5568] bg-white dark:bg-[#1a202c] focus:border-primary h-12 p-[10px] pl-3 text-sm font-normal leading-normal shadow-sm appearance-none">
+<option value="">All Locations</option>
+<option value="storage_a">Storage A</option>
+<option value="vault_b">Vault B</option>
+<option value="gallery_2">Gallery 2</option>
+</select>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#616f89] dark:text-gray-500 material-symbols-outlined pointer-events-none">expand_more</span>
+</div>
+</label>
+</div>
+<!-- Table -->
+<div class="px-4 py-3 @container">
+<div class="flex overflow-hidden rounded-xl border border-[#dbdfe6] dark:border-[#2d3748] bg-white dark:bg-[#1a202c] shadow-sm">
+<table class="flex-1 w-full caption-bottom text-sm">
+<thead>
+<tr class="bg-[#f8fafc] dark:bg-[#2d3748]/50 border-b border-[#dbdfe6] dark:border-[#2d3748]">
+<th class="px-4 py-4 text-left text-[#616f89] dark:text-gray-400 font-medium w-16">Artwork</th>
+<th class="px-4 py-4 text-left text-[#616f89] dark:text-gray-400 font-medium">Borrower</th>
+<th class="px-4 py-4 text-left text-[#616f89] dark:text-gray-400 font-medium hidden sm:table-cell">Duration</th>
+<th class="px-4 py-4 text-left text-[#616f89] dark:text-gray-400 font-medium hidden md:table-cell">Dates</th>
+<th class="px-4 py-4 text-left text-[#616f89] dark:text-gray-400 font-medium hidden lg:table-cell">Current Location</th>
+<th class="px-4 py-4 text-right text-[#616f89] dark:text-gray-400 font-medium w-24">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#dbdfe6] dark:divide-[#2d3748]">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/30 transition-colors">
+<td class="px-4 py-4">
+<div class="relative group/image">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg w-12 h-12 shadow-sm border border-gray-100 dark:border-gray-700" data-alt="Abstract painting with blue swirls" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAoeWrBFv2FHZRnri33aMQYCa0bdr68lPxt3MLOe-3wERJSgKQ-FOBK3wx8S9eKEzlQowEWeKPgQK1oQSZ3ugsMuMO8lfrG79QzSTIMuW4nIBNgL1GiPYD587-D0MvE0jQu1I8HfEgEJhoinrE-pKRG6KJWhrdYW3r9DvRL-Tk5On3-_gPRgxmsy8LOEO8k0gP-xP0Trhq4tATczBdzqyOd2Jk2-fxx_f9Ym2zZ3NF2kUJB6mRd7YK_DI4-TsOGc8BYFXRS4CDZPIN_");'></div>
+</div>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-[#111318] dark:text-white font-semibold">MoMA NY</span>
+<span class="text-[#616f89] dark:text-gray-400 text-xs">The Blue Symphony</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden sm:table-cell">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+                          215 Days
+                        </span>
+</td>
+<td class="px-4 py-4 text-[#616f89] dark:text-gray-400 text-sm hidden md:table-cell">
+<div class="flex flex-col text-xs">
+<span>Out: Jan 12, 2023</span>
+<span>In: Aug 15, 2023</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden lg:table-cell">
+<div class="flex items-center gap-2 text-[#111318] dark:text-white text-sm">
+<span class="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                           Storage A
+                       </div>
+</td>
+<td class="px-4 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Generate Contract">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</button>
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-[#111318] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/30 transition-colors">
+<td class="px-4 py-4">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg w-12 h-12 shadow-sm border border-gray-100 dark:border-gray-700" data-alt="Modern geometric sculpture photo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAvKmCgatPJWAK7Xgk5qK-SuOhQ3baxbAa9iG20auGfpCjivn9R4yRFjadrpVxNzidOQEQPymfwfay1V3AlxQA6DJrUcrJSLUWnZ7vSFiJewR4erHuKlAAZY95qgIPRoeIZUTCs_slXq2cpO8aXGM1mC2ay-gF0ExiWc_oJB8al477OBTf4mciGCUENN6Co5dp7Id9pFqYoE5lTqIi6FOC3oIzz-uxuBTGOng1Bw0-9ANR-4VIdQihuk-eJ-qcGx_-M2m8YUEM3jpMF");'></div>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-[#111318] dark:text-white font-semibold">Munch Museum</span>
+<span class="text-[#616f89] dark:text-gray-400 text-xs">Geometric Dreams #4</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden sm:table-cell">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+                          170 Days
+                        </span>
+</td>
+<td class="px-4 py-4 text-[#616f89] dark:text-gray-400 text-sm hidden md:table-cell">
+<div class="flex flex-col text-xs">
+<span>Out: Feb 01, 2023</span>
+<span>In: Jul 20, 2023</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden lg:table-cell">
+<div class="flex items-center gap-2 text-[#111318] dark:text-white text-sm">
+<span class="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                           Vault B
+                       </div>
+</td>
+<td class="px-4 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Generate Contract">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</button>
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-[#111318] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/30 transition-colors">
+<td class="px-4 py-4">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg w-12 h-12 shadow-sm border border-gray-100 dark:border-gray-700" data-alt="Classic portrait painting" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBaBNPF1nTIgN3URqIEybwcEcFziwlRMN7yJp4yC_VJ_KFGJhLQEx_V6JwHE0MVb6TVuNlhYoE3G04BJPkDAxVK69FfQNDT4pj1IvMVo6Q4zpqgecuzV-A7rVqANt3IOF-cQlPrf4gLlnRN1aH2Q8lUhtpTpMk9u-4g2AU7KmLVEONfM-UzbvD4GHlXNOw1ZY7nq6ZJxfLMPcmGMWd3Q0laR90aTBnko9__0-jo6mBk6RcSF7j5PMrqzBklrc5PjB5WgmVR0rSoJTfl");'></div>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-[#111318] dark:text-white font-semibold">Orsay</span>
+<span class="text-[#616f89] dark:text-gray-400 text-xs">Portrait of Mme L.</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden sm:table-cell">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+                          179 Days
+                        </span>
+</td>
+<td class="px-4 py-4 text-[#616f89] dark:text-gray-400 text-sm hidden md:table-cell">
+<div class="flex flex-col text-xs">
+<span>Out: Mar 10, 2023</span>
+<span>In: Sep 05, 2023</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden lg:table-cell">
+<div class="flex items-center gap-2 text-[#111318] dark:text-white text-sm">
+<span class="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                           Gallery 2
+                       </div>
+</td>
+<td class="px-4 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Generate Contract">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</button>
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-[#111318] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/30 transition-colors">
+<td class="px-4 py-4">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg w-12 h-12 shadow-sm border border-gray-100 dark:border-gray-700" data-alt="Abstract red and black art" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDVr9KesAnypu0rjEBf8nwHhJjWv8bWqwtieqP_r9fvwDXIiXBHQY4p3-FXu3NMZmIM6JMyWsN6EPZfFBVDlMgIlRV8Yb1g-d67WJqYCuNlke31-pQoZITYwUTs6E7ynEysfmFIm-OndlN-pieXCBi4SaoS6ap3KbPIco_yu-NRIMg36rP38a7SMcQS982tCOjeFDAzYa0__2OFytUf6VIN1EZpfnnx6aHtbypAEgWiRLEVzKBY6zQdw8mM--zp6a_bdPSNFypKSmBD");'></div>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-[#111318] dark:text-white font-semibold">Reina Sofia</span>
+<span class="text-[#616f89] dark:text-gray-400 text-xs">Guernica Study</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden sm:table-cell">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+                          190 Days
+                        </span>
+</td>
+<td class="px-4 py-4 text-[#616f89] dark:text-gray-400 text-sm hidden md:table-cell">
+<div class="flex flex-col text-xs">
+<span>Out: Apr 05, 2023</span>
+<span>In: Oct 12, 2023</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden lg:table-cell">
+<div class="flex items-center gap-2 text-[#111318] dark:text-white text-sm">
+<span class="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                           Storage C
+                       </div>
+</td>
+<td class="px-4 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Generate Contract">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</button>
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-[#111318] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#2d3748]/30 transition-colors">
+<td class="px-4 py-4">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg w-12 h-12 shadow-sm border border-gray-100 dark:border-gray-700" data-alt="Dutch golden age painting" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWQ5ZXmGGlrsOaq6kayTvFsVBYDwExmQIBS6-IhtaY7ljv1JOC7rHZ7FIkWPi1zoliQ783lnv7FdcjHClOuM6T4TxDDcZMHUG0gQM1mi-vraaABMF1gBuKHoRTj3Ab9SJu7LN5UCqUDfXG6AosMlMt-XiT3t6NIEQwGa472OcPbus0SyAj94HzCPR3Rx_koiPttuoej08UlNm1cJ0DxT9PgLQQWLTQbX-pdSLxwJMzn1_0leWTVy-fL5Ysib6zHVoo4OSzaRCNB1nl");'></div>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-[#111318] dark:text-white font-semibold">Mauritshuis</span>
+<span class="text-[#616f89] dark:text-gray-400 text-xs">Girl with Pearl (Replica)</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden sm:table-cell">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+                          194 Days
+                        </span>
+</td>
+<td class="px-4 py-4 text-[#616f89] dark:text-gray-400 text-sm hidden md:table-cell">
+<div class="flex flex-col text-xs">
+<span>Out: May 20, 2023</span>
+<span>In: Nov 30, 2023</span>
+</div>
+</td>
+<td class="px-4 py-4 hidden lg:table-cell">
+<div class="flex items-center gap-2 text-[#111318] dark:text-white text-sm">
+<span class="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                           Vault A
+                       </div>
+</td>
+<td class="px-4 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Generate Contract">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</button>
+<button class="p-2 text-[#616f89] dark:text-gray-400 hover:text-[#111318] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="More Options">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between pt-4">
+<p class="text-sm text-[#616f89] dark:text-gray-400">Showing <span class="font-medium text-[#111318] dark:text-white">1</span> to <span class="font-medium text-[#111318] dark:text-white">5</span> of <span class="font-medium text-[#111318] dark:text-white">142</span> results</p>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg border border-[#dbdfe6] dark:border-[#4a5568] text-[#111318] dark:text-white hover:bg-[#f3f4f6] dark:hover:bg-[#2d3748] disabled:opacity-50 disabled:cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-2 rounded-lg border border-[#dbdfe6] dark:border-[#4a5568] text-[#111318] dark:text-white hover:bg-[#f3f4f6] dark:hover:bg-[#2d3748]">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

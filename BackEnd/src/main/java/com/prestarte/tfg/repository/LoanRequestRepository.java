@@ -19,7 +19,7 @@ public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> 
     // El método de validación de fechas que hicimos antes
     @Query("SELECT COUNT(l) > 0 FROM LoanRequest l " +
             "WHERE l.artwork.id = :artworkId " +
-            "AND l.status = 'ACEPTADA' " +
+            "AND l.status = 'ACCEPTED' " +
             "AND (:startDate < l.endDate AND :endDate > l.startDate)")
     boolean existsOverlappingLoan(@Param("artworkId") Long artworkId,
                                   @Param("startDate") LocalDate startDate,

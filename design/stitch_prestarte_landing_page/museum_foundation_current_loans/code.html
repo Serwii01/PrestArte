@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Current Loans - ArtFlow Manager</title>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1152d4",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              "display": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {
+                "DEFAULT": "0.25rem", 
+                "lg": "0.5rem", 
+                "xl": "0.75rem", 
+                "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display text-[#111318] dark:text-white overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 bg-white dark:bg-[#1A2235] border-b border-[#f0f2f4] dark:border-slate-800">
+<div class="px-6 lg:px-12 py-3 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em] text-slate-900 dark:text-white">ArtFlow Manager</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-white transition-colors" href="#">Dashboard</a>
+<a class="text-sm font-bold text-primary" href="#">Loans</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-white transition-colors" href="#">Collection</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-white transition-colors" href="#">Contacts</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-slate-100 dark:ring-slate-700" data-alt="Profile picture of the current user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbEjT3cV-6reFoKS-xH3FVJGGK0lTqaEreQkMJJPrxQYP-qZiC-Qau8sA61mKzBvAtDOjWYPt9CNaDbsV4GbbMUQjpxL6fFYWuEEeBdLIMUSa56cIysHvP97Jcql4Rcotxf36TRYSaFawwluzuDqaKaxNvheT3xxP8IxI2KSbEuvG_zhZSIN0iffbCbRGd9qe4gy8Tr_Bkcc2OvAxgS_GmUh3SDkGPKt0eN6JwsrQ7jcyDpt_H_b1uQq5905GtjbNKnpaC0CNbvPd-");'></div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex justify-center py-8 px-6 lg:px-12">
+<div class="w-full max-w-[1200px] flex flex-col gap-6">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Loans</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="font-medium text-slate-900 dark:text-white">Current</span>
+</div>
+<!-- Page Heading -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em] text-slate-900 dark:text-white">Current Loans</h1>
+<p class="text-base text-slate-500 dark:text-slate-400">Manage and track all artworks currently out on loan.</p>
+</div>
+<div class="flex gap-3">
+<button class="hidden sm:flex items-center justify-center h-10 px-4 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined mr-2 text-[20px]">download</span>
+                        Export Report
+                    </button>
+<button class="flex items-center justify-center h-10 px-4 bg-primary text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+<span class="material-symbols-outlined mr-2 text-[20px]">add</span>
+                        Add New Loan
+                    </button>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white dark:bg-[#1A2235] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Active Loans</p>
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+</div>
+<p class="text-3xl font-bold text-slate-900 dark:text-white">42</p>
+</div>
+<div class="bg-white dark:bg-[#1A2235] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Returns this Week</p>
+<span class="material-symbols-outlined text-amber-500">schedule</span>
+</div>
+<p class="text-3xl font-bold text-slate-900 dark:text-white">3</p>
+</div>
+<div class="bg-white dark:bg-[#1A2235] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Avg. Exposure</p>
+<span class="material-symbols-outlined text-emerald-500">timelapse</span>
+</div>
+<p class="text-3xl font-bold text-slate-900 dark:text-white">45 Days</p>
+</div>
+</div>
+<!-- Filters & Search Toolbar -->
+<div class="flex flex-col md:flex-row gap-4 bg-white dark:bg-[#1A2235] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex-1 relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 border-none rounded-lg bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary sm:text-sm" placeholder="Search by artist, artwork title, or accession number..." type="text"/>
+</div>
+<div class="flex gap-2 overflow-x-auto pb-2 md:pb-0">
+<select class="form-select bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:ring-primary py-2.5 px-4 pr-10 min-w-[140px]">
+<option>All Locations</option>
+<option>West Wing</option>
+<option>East Gallery</option>
+<option>Storage B</option>
+</select>
+<select class="form-select bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:ring-primary py-2.5 px-4 pr-10 min-w-[140px]">
+<option>Status: All</option>
+<option>On Display</option>
+<option>In Transit</option>
+<option>Pending Return</option>
+</select>
+</div>
+</div>
+<!-- Loan List -->
+<div class="space-y-4">
+<!-- Loan Item 1 -->
+<div class="bg-white dark:bg-[#1A2235] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+<!-- Image -->
+<div class="shrink-0 relative">
+<div class="w-full lg:w-32 h-48 lg:h-24 bg-cover bg-center rounded-lg" data-alt="Abstract painting with vivid orange and blue brushstrokes" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzJ3T15YarHVQL8JXCSmn60fzOQBXnxQz37Hvs8h0JasCJb2-26VfPp81amkK31BDMBKoOghmFWP_HtGLR6U4Wpnx3eTLOjYJrOlqINInfaF3Y-08yRS1Q33dkHTJytcC24G_CcBeGdX7cd9F0iADlHfnP-Q5zy2s9sO11CicIb7O0ae8aswC5rUYMI50gOrmD77eVUuNroUMEClym4svLZLRKcrb-rpp7vsVtYargn1o19AOrmUCrs7Zed98DuxkV1q9Y0G92HVNq');"></div>
+<span class="absolute top-2 left-2 lg:hidden bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold px-2 py-1 rounded">On Display</span>
+</div>
+<!-- Content -->
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 w-full">
+<!-- Artwork Details -->
+<div class="lg:col-span-4 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-mono text-slate-400 uppercase tracking-wide">LN-2023-042</span>
+<span class="hidden lg:inline-flex bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/50">ON DISPLAY</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Sunset at the Harbor</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">J.M.W. Turner • Oil on Canvas</p>
+</div>
+<!-- Logistics -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-1">
+<div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined text-[18px] text-slate-400">location_on</span>
+<span>West Wing, Room 4</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Jan 12, 2023 — Jan 12, 2024</span>
+</div>
+</div>
+<!-- Exposure -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-2">
+<div class="flex justify-between items-end">
+<span class="text-xs font-semibold uppercase text-slate-400">Exposure Time</span>
+<span class="text-sm font-bold text-primary">66%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 66%"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 text-right">8 months exposed</p>
+</div>
+<!-- Actions -->
+<div class="lg:col-span-2 flex items-center justify-end gap-3">
+<button class="flex items-center gap-2 text-primary hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="hidden md:inline">Contract</span>
+</button>
+<button class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Loan Item 2 -->
+<div class="bg-white dark:bg-[#1A2235] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+<!-- Image -->
+<div class="shrink-0 relative">
+<div class="w-full lg:w-32 h-48 lg:h-24 bg-cover bg-center rounded-lg" data-alt="Portrait painting of a lady from the 18th century style" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCggEoAj-iMGem652doSHhNWTX3pVSjzxddhRtUeEvsLOFPT1E-T7acKUySGgb73ag42kW4-6Lj4e_mMIXfBTGuPmtyqvkXeAVQnrcq90sqISdyg3VMWkS2lB1W-cFxyr2P6kwUDSVNP1WR_v-xFoSoqiWbbaQMnfeC4xSqVQYPL00zOdnyiixV1M3DzRyxP5OSVyT3UPWJ6VPedcu6cXEpkznHWEdeaCARDHhBBJnFTxUkaYK_Ls9M5EgSRioKRTRsrHYADdxTEekN');"></div>
+<span class="absolute top-2 left-2 lg:hidden bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold px-2 py-1 rounded">In Transit</span>
+</div>
+<!-- Content -->
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 w-full">
+<!-- Artwork Details -->
+<div class="lg:col-span-4 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-mono text-slate-400 uppercase tracking-wide">LN-2023-089</span>
+<span class="hidden lg:inline-flex bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/50">IN TRANSIT</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Portrait of a Noblewoman</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Unknown Artist • Oil on Panel</p>
+</div>
+<!-- Logistics -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-1">
+<div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined text-[18px] text-slate-400">local_shipping</span>
+<span>Traveling to NY</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Oct 01, 2023 — Dec 01, 2023</span>
+</div>
+</div>
+<!-- Exposure -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-2">
+<div class="flex justify-between items-end">
+<span class="text-xs font-semibold uppercase text-slate-400">Exposure Time</span>
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">12%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 12%"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 text-right">15 days exposed</p>
+</div>
+<!-- Actions -->
+<div class="lg:col-span-2 flex items-center justify-end gap-3">
+<button class="flex items-center gap-2 text-primary hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="hidden md:inline">Contract</span>
+</button>
+<button class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Loan Item 3 -->
+<div class="bg-white dark:bg-[#1A2235] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+<!-- Image -->
+<div class="shrink-0 relative">
+<div class="w-full lg:w-32 h-48 lg:h-24 bg-cover bg-center rounded-lg" data-alt="Modern abstract sculpture shape on neutral background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCSQuvgh9reixn42X-zAAFbQ4Wu4A0ziUMvLC6FMGX4frVAKu9kzrJjVU59r7YA8JobtIE6NlLzirbahAweEOJFgYd_YHVb0JwzCIecb_hvPmF_GujFkKT6YiYjcCkvH6HviQ0g0Y3KJ-8lyvEu0r5QQyATcaSa4-K7yBKrFeH-oA56ANyQrUFgz4R8N649sv55mZMY300vLXSbNybiG6iBYiNndIN646_tzMefgMPpvsgqMq0detfKpF5SSHRBs81N3vO_xjSeueg_');"></div>
+<span class="absolute top-2 left-2 lg:hidden bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-bold px-2 py-1 rounded">Overdue</span>
+</div>
+<!-- Content -->
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 w-full">
+<!-- Artwork Details -->
+<div class="lg:col-span-4 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-mono text-slate-400 uppercase tracking-wide">LN-2022-115</span>
+<span class="hidden lg:inline-flex bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 dark:border-red-800/50">RETURN PENDING</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Bronze Figure No. 5</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Henry Moore • Bronze Sculpture</p>
+</div>
+<!-- Logistics -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-1">
+<div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined text-[18px] text-slate-400">inventory</span>
+<span>Storage A, Shelf 12</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-red-600 dark:text-red-400 mt-1 font-semibold">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span>Return Due: Yesterday</span>
+</div>
+</div>
+<!-- Exposure -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-2">
+<div class="flex justify-between items-end">
+<span class="text-xs font-semibold uppercase text-slate-400">Exposure Time</span>
+<span class="text-sm font-bold text-red-600 dark:text-red-400">98%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+<div class="bg-red-500 h-2 rounded-full" style="width: 98%"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 text-right">360 days exposed</p>
+</div>
+<!-- Actions -->
+<div class="lg:col-span-2 flex items-center justify-end gap-3">
+<button class="flex items-center gap-2 text-primary hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="hidden md:inline">Contract</span>
+</button>
+<button class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Loan Item 4 -->
+<div class="bg-white dark:bg-[#1A2235] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+<!-- Image -->
+<div class="shrink-0 relative">
+<div class="w-full lg:w-32 h-48 lg:h-24 bg-cover bg-center rounded-lg" data-alt="Black and white minimalist geometric shapes" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAkEYrZw2k1_cfqAeXVdGTtqj6DjSUEDz2Zr4BH-Sq7sWKWneMEn0aROoCYxi_fyqzWOpQlxoqZp4KUPbHfx49XEwC4Xdb5IWK_UAteCR5GHjGa2AYuWXywpgKwZDxTrvz4BWGnGmujr8HBiQvCkfhEPffHmx_JKEwHBB2TWDhEDOTOgm0xDBLRZShqlsPfG-JP9DBVJXLfiA7F0CSchwVzlp7SGjppGXOoGWuussOpJplIAa8w5xh5TZQx_ft3sRcLO6eD5IisVBKt');"></div>
+<span class="absolute top-2 left-2 lg:hidden bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-1 rounded">Storage</span>
+</div>
+<!-- Content -->
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 w-full">
+<!-- Artwork Details -->
+<div class="lg:col-span-4 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-mono text-slate-400 uppercase tracking-wide">LN-2024-001</span>
+<span class="hidden lg:inline-flex bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-600">STORAGE</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Composition II</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Piet Mondrian • Oil on Canvas</p>
+</div>
+<!-- Logistics -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-1">
+<div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined text-[18px] text-slate-400">archive</span>
+<span>Main Vault, Bin 3</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Jan 10, 2024 — Jul 10, 2024</span>
+</div>
+</div>
+<!-- Exposure -->
+<div class="lg:col-span-3 flex flex-col justify-center gap-2">
+<div class="flex justify-between items-end">
+<span class="text-xs font-semibold uppercase text-slate-400">Exposure Time</span>
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">1%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 1%"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 text-right">2 days exposed</p>
+</div>
+<!-- Actions -->
+<div class="lg:col-span-2 flex items-center justify-end gap-3">
+<button class="flex items-center gap-2 text-primary hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="hidden md:inline">Contract</span>
+</button>
+<button class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="flex justify-between items-center mt-6 py-4">
+<p class="text-sm text-slate-500 dark:text-slate-400">Showing 1-4 of 42 active loans</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1A2235] border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50" disabled="">Previous</button>
+<button class="px-3 py-1 text-sm font-medium text-slate-700 dark:text-white bg-white dark:bg-[#1A2235] border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-800">Next</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

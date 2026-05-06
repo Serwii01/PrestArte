@@ -17,7 +17,7 @@ public class ArtworkDto {
     private Double widthCm;
     private Double heightCm;
     private Double depthCm;
-    private String condition;           // "EXCELENTE"
+    private String condition;           // EXCELLENT, GOOD, FAIR, POOR, DAMAGED
     private String description;
     private String loanConditions;      // JSON string
     private String collectorName;       // "Juan Pérez"
