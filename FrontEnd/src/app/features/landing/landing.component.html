@@ -1,12 +1,17 @@
 <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-  <!-- Navbar superior -->
-  <header class="sticky top-0 z-50 w-full border-b border-gray-soft bg-white/90 backdrop-blur-md">
+  <!-- Navbar -->
+  <header
+    class="fixed top-0 z-50 w-full transition-all duration-300"
+    [class.bg-white]="scrolled()"
+    [class.shadow-sm]="scrolled()"
+    [class.border-b]="scrolled()"
+    [class.border-gray-soft]="scrolled()"
+    [class.bg-white\/70]="!scrolled()"
+    [class.backdrop-blur-md]="!scrolled()"
+  >
     <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-      <a routerLink="/" class="flex items-center gap-2">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
-          <span class="material-symbols-outlined">palette</span>
-        </div>
-        <span class="text-xl font-bold tracking-tight text-text-main">Prestarte</span>
+      <a routerLink="/" class="flex items-center">
+        <img src="/assets/images/logo.png" alt="Prestarte" class="h-12 w-auto object-contain" />
       </a>
 
       <nav class="hidden md:flex items-center gap-8">
@@ -19,31 +24,27 @@
         <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#museums">
           Para Museos
         </a>
+        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#transport">
+          Para Transportistas
+        </a>
       </nav>
 
       <div class="flex items-center gap-3">
         @if (isLoggedIn()) {
-          <button
-            type="button"
-            (click)="goToApp()"
+          <button type="button" (click)="goToApp()"
             class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold
-                   text-white hover:bg-primary-hover transition-colors shadow-sm"
-          >
+                   text-white hover:bg-primary-hover transition-colors shadow-sm">
             Ir a mi panel
           </button>
         } @else {
-          <a
-            routerLink="/login"
+          <a routerLink="/login"
             class="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-sm
-                   font-bold text-text-main hover:bg-gray-soft transition-colors"
-          >
+                   font-bold text-text-main hover:bg-gray-soft transition-colors">
             Iniciar sesión
           </a>
-          <a
-            routerLink="/register"
+          <a routerLink="/register"
             class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm
-                   font-bold text-white hover:bg-primary-hover transition-colors shadow-sm"
-          >
+                   font-bold text-white hover:bg-primary-hover transition-colors shadow-sm">
             Registrarse
           </a>
         }
@@ -52,41 +53,50 @@
   </header>
 
   <!-- Hero -->
-  <section class="relative overflow-hidden bg-background pt-12 pb-16 lg:pt-24 lg:pb-32">
+  <section class="relative overflow-hidden bg-background pt-28 pb-16 lg:pt-32 lg:pb-32">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
-        <div class="flex flex-col gap-6 max-w-2xl">
+      <div class="grid gap-12 lg:grid-cols-2 lg:gap-12 items-center">
+        <!-- Texto izquierda -->
+        <div class="flex flex-col gap-6 max-w-2xl order-2 lg:order-1">
+          <span class="inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider">
+            <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
+            Plataforma profesional
+          </span>
           <h1 class="text-4xl font-black leading-[1.1] tracking-tight text-text-main sm:text-5xl lg:text-6xl">
             Conectamos colecciones privadas con
             <span class="text-primary">miradas públicas</span>
           </h1>
           <p class="text-lg leading-relaxed text-text-secondary">
-            La plataforma segura para el préstamo de obras de arte entre coleccionistas particulares
-            y museos de primer nivel. Democratiza el acceso al arte oculto, con todas las garantías.
+            Plataforma segura para el préstamo de obras de arte entre coleccionistas particulares,
+            museos de primer nivel y empresas de transporte especializadas. Democratizamos el acceso
+            al arte oculto, con todas las garantías.
           </p>
           <div class="mt-4 flex flex-wrap gap-4">
             <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
-               class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base
-                      font-bold text-white shadow-lg transition-all hover:bg-primary-hover hover:shadow-primary/25">
+              class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base
+                     font-bold text-white shadow-lg transition-all hover:bg-primary-hover hover:shadow-primary/25">
               Empezar a prestar
             </a>
             <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
-               class="flex h-12 items-center justify-center rounded-lg border border-border bg-white
-                      px-8 text-base font-bold text-text-main transition-all hover:bg-gray-soft">
+              class="flex h-12 items-center justify-center rounded-lg border border-border bg-white
+                     px-8 text-base font-bold text-text-main transition-all hover:bg-gray-soft">
               Buscar obras
             </a>
           </div>
-          <div class="mt-6 flex items-center gap-4 text-sm text-text-secondary">
+          <div class="mt-6 flex items-center gap-3 text-sm text-text-secondary">
             <span class="material-symbols-outlined text-primary">workspace_premium</span>
-            <p>Diseñada para instituciones culturales</p>
+            <p>Diseñad@ para instituciones culturales y coleccionistas serios</p>
           </div>
         </div>
 
-        <div class="relative lg:ml-auto">
+        <!-- Imagen derecha (Tríptico del Bosco) -->
+        <div class="relative order-1 lg:order-2">
           <div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-2xl">
-            <div class="absolute inset-0 bg-cover bg-center"
-                 style="background-image: url('https://images.unsplash.com/photo-1580136579312-94651dfd596d?auto=format&fit=crop&w=1600&q=80');">
-            </div>
+            <img
+              src="/assets/images/demo/jardin_delicias.jpg"
+              alt="El jardín de las delicias - Tríptico de El Bosco"
+              class="absolute inset-0 w-full h-full object-cover"
+            />
             <!-- Tarjeta flotante -->
             <div class="absolute -bottom-6 -left-6 hidden md:flex w-64 flex-col gap-2 rounded-xl
                         bg-white p-4 shadow-xl border border-gray-soft">
@@ -97,6 +107,10 @@
                   <p class="text-sm font-bold text-text-main">Asegurada y verificada</p>
                 </div>
               </div>
+            </div>
+            <!-- Pie de imagen sutil -->
+            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-text-main shadow-sm">
+              El Bosco · c. 1500
             </div>
           </div>
           <div class="absolute -top-12 -right-12 -z-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
@@ -118,36 +132,36 @@
     </div>
   </section>
 
-  <!-- Para Collectors / Museums -->
+  <!-- Para Collectors / Museums / Transport -->
   <section id="features" class="py-20 bg-background">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mb-16 md:text-center max-w-3xl mx-auto">
         <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">
-          Pensado para el mundo del arte
+          Pensado para todo el mundo del arte
         </h2>
         <p class="mt-4 text-lg text-text-secondary">
-          Tanto si eres coleccionista como si curas exposiciones, Prestarte te da la infraestructura
-          segura que necesitas.
+          Tres roles, tres herramientas conectadas. Cada actor entra en su flujo y la plataforma
+          orquesta el resto.
         </p>
       </div>
-      <div class="grid gap-8 md:grid-cols-2">
+      <div class="grid gap-8 md:grid-cols-3">
         <!-- Collector -->
         <div id="collectors"
-             class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
-                    transition-shadow border border-border">
+          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
+                 transition-shadow border border-border">
           <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
                       text-primary group-hover:bg-primary group-hover:text-white transition-colors">
             <span class="material-symbols-outlined" style="font-size:32px;">verified_user</span>
           </div>
-          <h3 class="mb-3 text-xl font-bold text-text-main">Para Coleccionistas</h3>
+          <h3 class="mb-3 text-xl font-bold text-text-main">Coleccionistas</h3>
           <p class="text-text-secondary mb-6 leading-relaxed">
-            Maximiza el valor de tus obras. Visibilidad, cobertura de seguro completa y
-            transporte de máxima calidad mientras tu pieza viaja.
+            Maximiza el valor de tus obras. Visibilidad, cobertura de seguro y transporte de máxima
+            calidad mientras tu pieza viaja.
           </p>
           <ul class="space-y-3">
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
-              Revalorización del activo
+              Eliges la empresa de transporte
             </li>
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
@@ -155,36 +169,65 @@
             </li>
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
-              Préstamo anónimo opcional
+              Contrato firmado y trazabilidad
             </li>
           </ul>
         </div>
 
         <!-- Museum -->
         <div id="museums"
-             class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
-                    transition-shadow border border-border">
+          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
+                 transition-shadow border border-border">
           <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
                       text-primary group-hover:bg-primary group-hover:text-white transition-colors">
             <span class="material-symbols-outlined" style="font-size:32px;">museum</span>
           </div>
-          <h3 class="mb-3 text-xl font-bold text-text-main">Para Museos y Fundaciones</h3>
+          <h3 class="mb-3 text-xl font-bold text-text-main">Museos y Fundaciones</h3>
           <p class="text-text-secondary mb-6 leading-relaxed">
             Cura sin límites. Accede a un inventario global de obras privadas que normalmente
-            estarían fuera de tu alcance para completar tus exposiciones.
+            estarían fuera de tu alcance.
           </p>
           <ul class="space-y-3">
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
-              Inventario global
+              Catálogo global de obras
             </li>
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
-              Logística simplificada
+              Aprueba presupuestos en un click
             </li>
             <li class="flex items-center gap-3 text-sm font-medium text-text-main">
               <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
-              Comunicación directa con el coleccionista
+              Condition reports digitales
+            </li>
+          </ul>
+        </div>
+
+        <!-- Transport -->
+        <div id="transport"
+          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
+                 transition-shadow border border-border">
+          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
+                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <span class="material-symbols-outlined" style="font-size:32px;">local_shipping</span>
+          </div>
+          <h3 class="mb-3 text-xl font-bold text-text-main">Empresas de Transporte</h3>
+          <p class="text-text-secondary mb-6 leading-relaxed">
+            Recibe servicios, sube presupuestos y gestiona la logística completa con tracking
+            actualizado por estado.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Servicios asignados directamente
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Presupuesto + póliza en un paso
+            </li>
+            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+              Estados sincronizados en tiempo real
             </li>
           </ul>
         </div>
@@ -192,68 +235,168 @@
     </div>
   </section>
 
-  <!-- Cómo funciona -->
+  <!-- Cómo funciona (formato tarjetas) -->
   <section id="how" class="py-20 bg-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-12 text-center">
+      <div class="mb-12 text-center max-w-2xl mx-auto">
         <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">Cómo funciona</h2>
-        <p class="mt-3 text-text-secondary">Un flujo claro y trazable para cada préstamo.</p>
+        <p class="mt-3 text-text-secondary">Un flujo claro y trazable para cada préstamo, paso a paso.</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="text-center">
-          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">1</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Card 1 -->
+        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">1</div>
+          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">forum</span>
           <h3 class="text-lg font-bold text-text-main mb-2">El museo solicita</h3>
-          <p class="text-sm text-text-secondary">La fundación encuentra una obra en el catálogo y envía una solicitud al coleccionista.</p>
+          <p class="text-sm text-text-secondary">
+            La fundación encuentra una obra en el catálogo y envía una solicitud al coleccionista.
+          </p>
         </div>
-        <div class="text-center">
-          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">2</div>
+        <!-- Card 2 -->
+        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">2</div>
+          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">handshake</span>
           <h3 class="text-lg font-bold text-text-main mb-2">El coleccionista acepta</h3>
-          <p class="text-sm text-text-secondary">Acepta el préstamo y elige la empresa de transporte de su confianza.</p>
+          <p class="text-sm text-text-secondary">
+            Acepta el préstamo y elige la empresa de transporte de su confianza.
+          </p>
         </div>
-        <div class="text-center">
-          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white text-lg font-black">3</div>
+        <!-- Card 3 -->
+        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">3</div>
+          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">request_quote</span>
+          <h3 class="text-lg font-bold text-text-main mb-2">Presupuesto y pago</h3>
+          <p class="text-sm text-text-secondary">
+            La empresa de transporte sube su presupuesto y el museo lo aprueba antes del envío.
+          </p>
+        </div>
+        <!-- Card 4 -->
+        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">4</div>
+          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">local_shipping</span>
           <h3 class="text-lg font-bold text-text-main mb-2">La obra viaja</h3>
-          <p class="text-sm text-text-secondary">Presupuesto, contrato firmado y seguimiento en tiempo real hasta la entrega.</p>
+          <p class="text-sm text-text-secondary">
+            Recogida, tránsito y entrega con condition report en cada hito. Trazabilidad completa.
+          </p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Obras en préstamo (demo) -->
+  <section class="py-20 bg-background">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+          <h2 class="text-3xl font-black text-text-main">Actualmente en préstamo</h2>
+          <p class="mt-2 text-text-secondary">Obras que circulan ahora mismo entre instituciones de la red.</p>
+        </div>
+        <a routerLink="/login"
+           class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-hover transition-colors">
+          Ver el catálogo completo
+          <span class="material-symbols-outlined">arrow_right_alt</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (a of demoArtworks; track a.title) {
+          <div class="group cursor-pointer">
+            <div class="overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] mb-4 relative">
+              <img [src]="a.img" [alt]="a.title"
+                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              @if (a.available) {
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-text-main shadow-sm">
+                  Disponible
+                </div>
+              } @else {
+                <div class="absolute top-4 right-4 bg-primary/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-white shadow-sm">
+                  En préstamo
+                </div>
+              }
+            </div>
+            <h4 class="text-lg font-bold text-text-main">{{ a.title }}</h4>
+            <p class="text-sm text-text-secondary">{{ a.subtitle }}</p>
+            <p class="mt-1 text-xs font-medium text-primary">{{ a.location }}</p>
+          </div>
+        }
       </div>
     </div>
   </section>
 
   <!-- CTA -->
   <section class="relative py-24 bg-primary overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_20%,white,transparent_60%)]"></div>
     <div class="relative mx-auto max-w-4xl px-4 text-center">
-      <h2 class="text-4xl font-black text-white sm:text-5xl">¿Listo para empezar?</h2>
+      <h2 class="text-4xl font-black text-white sm:text-5xl">¿List@ para empezar?</h2>
       <p class="mt-6 text-xl text-blue-100 max-w-2xl mx-auto">
         Únete a la red profesional de préstamo y exposición de obras de arte.
       </p>
       <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
         <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
-           class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg bg-white px-8
-                  text-lg font-bold text-primary hover:bg-gray-50 transition-colors shadow-lg">
-          Registrarme como Coleccionista
+          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg bg-white px-8
+                 text-lg font-bold text-primary hover:bg-gray-50 transition-colors shadow-lg">
+          Soy Coleccionista
         </a>
         <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
-           class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
-                  bg-primary-hover border border-white/20 px-8 text-lg font-bold text-white
-                  hover:bg-primary-hover/80 transition-colors">
-          Registrarme como Institución
+          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
+                 bg-primary-hover border border-white/20 px-8 text-lg font-bold text-white
+                 hover:bg-primary-hover/80 transition-colors">
+          Soy Museo / Fundación
+        </a>
+        <a routerLink="/register" [queryParams]="{ role: 'TRANSPORT' }"
+          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
+                 bg-transparent border border-white/40 px-8 text-lg font-bold text-white
+                 hover:bg-white/10 transition-colors">
+          Soy Transportista
         </a>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-white pt-12 pb-8 border-t border-gray-soft">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-      <div class="flex items-center justify-center gap-2 mb-4">
-        <div class="flex h-6 w-6 items-center justify-center rounded bg-primary text-white">
-          <span class="material-symbols-outlined" style="font-size:16px;">palette</span>
+  <footer class="bg-white pt-16 pb-8 border-t border-gray-soft">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div class="col-span-2 md:col-span-1">
+          <a routerLink="/" class="flex items-center mb-4">
+            <img src="/assets/images/logo.png" alt="Prestarte" class="h-10 w-auto object-contain" />
+          </a>
+          <p class="text-sm text-text-secondary leading-relaxed">
+            Conectamos las obras de arte privadas con la mirada del público, con todas las garantías.
+          </p>
         </div>
-        <span class="text-lg font-bold text-text-main">Prestarte</span>
+        <div>
+          <h4 class="font-bold text-text-main mb-4">Plataforma</h4>
+          <ul class="space-y-2 text-sm text-text-secondary">
+            <li><a class="hover:text-primary transition-colors" href="#collectors">Coleccionistas</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#museums">Museos y fundaciones</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#transport">Empresas de transporte</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#how">Cómo funciona</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-text-main mb-4">Recursos</h4>
+          <ul class="space-y-2 text-sm text-text-secondary">
+            <li><a class="hover:text-primary transition-colors" href="#">Guía del seguro</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Logística y embalaje</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Marco legal</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-text-main mb-4">Acceso</h4>
+          <ul class="space-y-2 text-sm text-text-secondary">
+            <li><a routerLink="/login" class="hover:text-primary transition-colors">Iniciar sesión</a></li>
+            <li><a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="hover:text-primary transition-colors">Registrarse</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Contacto</a></li>
+          </ul>
+        </div>
       </div>
-      <p class="text-sm text-text-secondary">
-        © {{ year }} Prestarte · Trabajo de Fin de Grado
-      </p>
+      <div class="pt-8 border-t border-gray-soft flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-text-secondary">© {{ year }} Prestarte · Trabajo de Fin de Grado</p>
+        <div class="flex gap-6 text-sm text-text-secondary">
+          <a class="hover:text-text-main transition-colors" href="#">Privacidad</a>
+          <a class="hover:text-text-main transition-colors" href="#">Términos</a>
+        </div>
+      </div>
     </div>
   </footer>
 </div>

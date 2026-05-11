@@ -126,7 +126,7 @@ public class UserService {
     }
 
     private void sendWelcomeEmail(User user) {
-        String subject = "Bienvenido a Prestarte - Registro recibido";
+        String subject = "Bienvenid@ a Prestarte - Registro recibido";
         String body = "Hola " + user.getName() + ",\n\n" +
                 "Gracias por registrarte. Tu perfil profesional está siendo revisado " +
                 "por nuestro equipo de administración.\n\n" +
@@ -140,7 +140,7 @@ public class UserService {
         String body = "Enhorabuena " + user.getName() + ",\n\n" +
                 "Tu cuenta ha sido verificada y activada. Ya puedes iniciar sesión " +
                 "y participar en la red de préstamos de obras de arte.\n\n" +
-                "¡Bienvenido a bordo!\nEl equipo de Prestarte.";
+                "¡Bienvenid@ a bordo!\nEl equipo de Prestarte.";
         emailService.sendSimpleEmail(user.getEmail(), subject, body);
     }
 }

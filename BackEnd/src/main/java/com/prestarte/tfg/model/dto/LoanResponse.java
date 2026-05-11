@@ -34,6 +34,9 @@ public class LoanResponse {
     /** Si es true, el coleccionista exigió específicamente la empresa de transporte. */
     private boolean transportCompanyMandatory;
 
+    /** Id del Shipment OUTBOUND vinculado, o null si aún no se ha creado. */
+    private Long shipmentId;
+
     private LocalDateTime cancelledAt;
     private String cancellationReason;
 }

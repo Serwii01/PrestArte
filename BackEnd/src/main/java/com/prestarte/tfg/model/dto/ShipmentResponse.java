@@ -9,8 +9,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ShipmentResponse {
     private Long id;
+    private Long loanRequestId;
+    private Long transportCompanyId;
     private String trackingNumber;
     private String status;
+    private String direction;
     private String transportCompanyName;
     private String artworkTitle;
 

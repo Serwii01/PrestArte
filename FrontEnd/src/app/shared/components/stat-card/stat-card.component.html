@@ -1,0 +1,17 @@
+<div class="stitch-card p-6 flex flex-col gap-2">
+  <div class="flex justify-between items-start">
+    <p class="text-text-secondary font-medium text-sm">{{ label() }}</p>
+    <span
+      class="material-symbols-outlined p-1 rounded text-[20px]"
+      [ngClass]="iconClasses()"
+    >
+      {{ icon() }}
+    </span>
+  </div>
+  <div class="flex items-baseline gap-2 mt-1">
+    <p class="text-3xl font-bold text-text-main">{{ value() }}</p>
+    @if (hint()) {
+      <span class="text-text-secondary text-xs">{{ hint() }}</span>
+    }
+  </div>
+</div>

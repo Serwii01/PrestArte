@@ -6,6 +6,7 @@ import com.prestarte.tfg.model.dto.ProposeQuoteRequest;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
+import com.prestarte.tfg.security.CurrentUser;
 import com.prestarte.tfg.service.statemachine.LoanStateMachine;
 import com.prestarte.tfg.service.statemachine.ShipmentStateMachine;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final LoanRequestRepository loanRequestRepository;
     private final ShipmentStateMachine shipmentStateMachine;
+    private final CurrentUser currentUser;
 
     // @Lazy para romper el ciclo ShipmentService ↔ LoanRequestService
     @Lazy
@@ -60,6 +62,8 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse proposeQuote(Long shipmentId, ProposeQuoteRequest req) {
         Shipment shipment = findOrThrow(shipmentId);
+        // Solo la empresa de transporte asignada puede subir el presupuesto.
+        currentUser.requireUserId(shipment.getTransportCompany().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.QUOTED);
 
         shipment.setPrice(req.getPrice());
@@ -83,6 +87,8 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse approveQuote(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
+        // Solo la fundación que solicitó el préstamo puede aprobar el presupuesto.
+        currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.APPROVED);
 
         if (shipment.getPrice() == null || shipment.getPrice() <= 0) {
@@ -107,6 +113,8 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse rejectQuote(Long shipmentId, String reason) {
         Shipment shipment = findOrThrow(shipmentId);
+        // Rechazar presupuesto es decisión exclusiva de la fundación.
+        currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.REJECTED);
 
         shipment.setStatus(Shipment.ShipmentStatus.REJECTED);
@@ -120,6 +128,7 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse markPickedUp(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
+        currentUser.requireUserId(shipment.getTransportCompany().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.PICKED_UP);
 
         shipment.setStatus(Shipment.ShipmentStatus.PICKED_UP);
@@ -133,6 +142,7 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse markInTransit(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
+        currentUser.requireUserId(shipment.getTransportCompany().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.IN_TRANSIT);
 
         shipment.setStatus(Shipment.ShipmentStatus.IN_TRANSIT);
@@ -145,6 +155,7 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponse confirmDelivery(Long shipmentId, ConfirmReceiptRequest request) {
         Shipment shipment = findOrThrow(shipmentId);
+        currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.DELIVERED);
 
         shipment.setStatus(Shipment.ShipmentStatus.DELIVERED);
@@ -191,8 +202,11 @@ public class ShipmentService {
     private ShipmentResponse mapToResponse(Shipment s) {
         return ShipmentResponse.builder()
                 .id(s.getId())
+                .loanRequestId(s.getLoanRequest() != null ? s.getLoanRequest().getId() : null)
+                .transportCompanyId(s.getTransportCompany() != null ? s.getTransportCompany().getId() : null)
                 .trackingNumber(s.getTrackingNumber())
                 .status(s.getStatus().name())
+                .direction(s.getDirection() != null ? s.getDirection().name() : null)
                 .transportCompanyName(s.getTransportCompany().getCompanyName())
                 .artworkTitle(s.getLoanRequest().getArtwork().getTitle())
                 .price(s.getPrice())

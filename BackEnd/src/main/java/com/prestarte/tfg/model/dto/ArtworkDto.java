@@ -19,8 +19,14 @@ public class ArtworkDto {
     private Double depthCm;
     private String condition;           // EXCELLENT, GOOD, FAIR, POOR, DAMAGED
     private String description;
-    private String loanConditions;      // JSON string
-    private String collectorName;       // "Juan Pérez"
-    private List<FileDto> files;        // URLs fotos
+    private Double estimatedValue;
+    private String loanConditions;
+    private String location;
+    private Long collectorId;
+    private String collectorName;
+    private Long preferredTransportCompanyId;
+    private String preferredTransportCompanyName;
+    private boolean preferredTransportMandatory;
+    private List<FileDto> files;
     private LocalDateTime createdAt;
 }

@@ -31,13 +31,13 @@ public class UserController {
     @PostMapping("/approve/{id}")
     public ResponseEntity<String> approve(@PathVariable Long id) {
         userService.approveUser(id);
-        return ResponseEntity.ok("Usuario aprobado correctamente");
+        return ResponseEntity.ok("Cuenta aprobada correctamente");
     }
 
     @PostMapping("/reject/{id}")
     public ResponseEntity<String> reject(@PathVariable Long id) {
         userService.rejectUser(id);
-        return ResponseEntity.ok("Usuario rechazado correctamente");
+        return ResponseEntity.ok("Cuenta rechazada correctamente");
     }
 
     private UserResponseDto toDto(User u) {

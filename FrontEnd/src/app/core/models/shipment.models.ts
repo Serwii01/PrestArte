@@ -11,8 +11,11 @@ export type ShipmentDirection = 'OUTBOUND' | 'RETURN';
 
 export interface ShipmentResponse {
   id: number;
+  loanRequestId?: number;
+  transportCompanyId?: number;
   trackingNumber: string;
   status: ShipmentStatus;
+  direction?: ShipmentDirection;
   transportCompanyName: string;
   artworkTitle: string;
   price?: number;

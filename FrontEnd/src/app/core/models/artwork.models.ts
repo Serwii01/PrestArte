@@ -10,8 +10,14 @@ export interface ArtworkResponse {
   depthCm?: number;
   condition: string;
   description?: string;
+  estimatedValue?: number;
   loanConditions?: string;
+  location?: string;
+  collectorId?: number;
   collectorName?: string;
+  preferredTransportCompanyId?: number | null;
+  preferredTransportCompanyName?: string | null;
+  preferredTransportMandatory?: boolean;
   files?: FileDto[];
   createdAt?: string;
 }
@@ -32,6 +38,11 @@ export interface CreateArtworkRequest {
   depthCm?: number;
   condition: Condition;
   description?: string;
+  estimatedValue: number;
+  loanConditions?: string;
+  location?: string;
+  preferredTransportCompanyId?: number | null;
+  preferredTransportMandatory?: boolean;
   collectorId: number;
 }
 
@@ -42,3 +53,11 @@ export const CONDITION_LABEL: Record<Condition, string> = {
   POOR: 'Defectuoso',
   DAMAGED: 'Dañado',
 };
+
+export const CONDITION_OPTIONS: Array<{ value: Condition; label: string; description: string }> = [
+  { value: 'EXCELLENT', label: 'Excelente', description: 'Como nueva, sin defectos visibles' },
+  { value: 'GOOD', label: 'Bueno', description: 'Marcas mínimas del paso del tiempo' },
+  { value: 'FAIR', label: 'Regular', description: 'Restauraciones puntuales documentadas' },
+  { value: 'POOR', label: 'Defectuoso', description: 'Daños visibles que requieren atención' },
+  { value: 'DAMAGED', label: 'Dañado', description: 'Necesita restauración antes de exponerse' },
+];

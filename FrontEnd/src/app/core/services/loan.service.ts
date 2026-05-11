@@ -59,6 +59,10 @@ export class LoanService {
     return this.http.post<LoanResponse>(`${this.base}/${id}/start-return`, {});
   }
 
+  completeReturn(id: number): Observable<LoanResponse> {
+    return this.http.post<LoanResponse>(`${this.base}/${id}/complete-return`, {});
+  }
+
   /* ===== Contrato PDF ===== */
 
   downloadContract(id: number): Observable<Blob> {

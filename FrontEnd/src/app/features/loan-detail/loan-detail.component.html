@@ -1,0 +1,525 @@
+<div class="mb-6">
+  <button type="button" (click)="goBack()"
+          class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    Volver
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="stitch-card p-12 text-center text-text-secondary">Cargando préstamo...</div>
+} @else if (errorMessage() && !loan()) {
+  <div class="stitch-card p-12 text-center">
+    <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>
+    <p class="text-text-main font-bold">{{ errorMessage() }}</p>
+  </div>
+} @else if (loan(); as l) {
+  <!-- Cabecera -->
+  <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <p class="text-sm font-medium text-text-secondary mb-1">Préstamo #{{ l.id }}</p>
+      <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight">
+        {{ l.artworkTitle }}
+        <span class="text-text-secondary font-normal">· {{ l.artworkArtist }}</span>
+      </h1>
+      <p class="text-text-secondary mt-1">
+        {{ l.foundationName }} ↔ {{ l.collectorName }} · {{ l.startDate }} → {{ l.endDate }}
+      </p>
+    </div>
+    <app-status-pill [status]="l.status" />
+  </div>
+
+  @if (actionMessage()) {
+    <div class="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+      <span class="material-symbols-outlined text-emerald-600 mt-0.5" style="font-size:18px;">check_circle</span>
+      <span>{{ actionMessage() }}</span>
+    </div>
+  }
+  @if (errorMessage()) {
+    <div class="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+      <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:18px;">error</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Timeline -->
+  <section class="stitch-card p-6 mb-8 overflow-x-auto">
+    <h2 class="text-lg font-bold text-text-main mb-4">Estado del préstamo</h2>
+    <ol class="flex items-start gap-2 min-w-max">
+      @for (step of timelineSteps(); let last = $last; track step.status) {
+        <li class="flex items-center gap-2">
+          <div class="flex flex-col items-center text-center w-28">
+            <div class="size-10 rounded-full flex items-center justify-center mb-2 transition-colors"
+                 [class.bg-primary]="step.state === 'past' || step.state === 'current'"
+                 [class.text-white]="step.state === 'past' || step.state === 'current'"
+                 [class.bg-gray-soft]="step.state === 'future'"
+                 [class.text-text-secondary]="step.state === 'future'"
+                 [class.bg-red-100]="step.state === 'aborted'"
+                 [class.text-red-400]="step.state === 'aborted'"
+                 [class.ring-4]="step.state === 'current'"
+                 [class.ring-primary\/20]="step.state === 'current'">
+              <span class="material-symbols-outlined" style="font-size:20px;">{{ step.icon }}</span>
+            </div>
+            <p class="text-xs font-medium leading-tight"
+               [class.text-text-main]="step.state !== 'future' && step.state !== 'aborted'"
+               [class.text-text-secondary]="step.state === 'future' || step.state === 'aborted'"
+               [class.font-bold]="step.state === 'current'">
+              {{ step.label }}
+            </p>
+          </div>
+          @if (!last) {
+            <div class="h-0.5 w-8 mt-5"
+                 [class.bg-primary]="step.state === 'past'"
+                 [class.bg-gray-soft]="step.state !== 'past'"></div>
+          }
+        </li>
+      }
+    </ol>
+
+    @if (l.status === 'CANCELLED' || l.status === 'REJECTED') {
+      <div class="mt-4 p-3 rounded-lg bg-red-50 border border-red-200">
+        <p class="text-sm font-bold text-red-800">
+          {{ l.status === 'CANCELLED' ? 'Préstamo cancelado' : 'Solicitud rechazada' }}
+        </p>
+        @if (l.cancellationReason) {
+          <p class="text-xs text-red-700 mt-1">Motivo: {{ l.cancellationReason }}</p>
+        }
+      </div>
+    }
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Columna principal: obra y datos -->
+    <div class="lg:col-span-2 space-y-6">
+      @if (artwork(); as a) {
+        <section class="stitch-card overflow-hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-3">
+            <div class="sm:col-span-1 aspect-square sm:aspect-auto bg-gray-100">
+              @if (heroImageUrl()) {
+                <img [src]="heroImageUrl()" [alt]="a.title" class="w-full h-full object-cover" />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center text-text-secondary">
+                  <span class="material-symbols-outlined" style="font-size:40px;">image_not_supported</span>
+                </div>
+              }
+            </div>
+            <div class="sm:col-span-2 p-5">
+              <h2 class="font-bold text-text-main text-lg">{{ a.title }}</h2>
+              <p class="text-sm text-text-secondary">{{ a.artist }}{{ a.year ? ' · ' + a.year : '' }}</p>
+              <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                @if (a.location) {
+                  <div>
+                    <p class="text-xs uppercase font-bold tracking-wider text-text-secondary">Ubicación</p>
+                    <p class="font-bold text-text-main">{{ a.location }}</p>
+                  </div>
+                }
+                <div>
+                  <p class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coleccionista</p>
+                  <p class="font-bold text-text-main">{{ a.collectorName }}</p>
+                </div>
+              </div>
+              <a [routerLink]="['/app/artworks', a.id]"
+                 class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
+                Ver detalle de la obra
+                <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (l.agreedConditions) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">description</span>
+            Condiciones acordadas
+          </h3>
+          <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ l.agreedConditions }}</p>
+        </section>
+      }
+
+      <!-- Shipment info -->
+      @if (shipment(); as s) {
+        <section class="stitch-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-text-main">Logística y transporte</h3>
+            <app-status-pill [status]="s.status" />
+          </div>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Empresa</dt>
+              <dd class="mt-1 font-bold text-text-main">{{ s.transportCompanyName }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Tracking</dt>
+              <dd class="mt-1 font-mono text-text-main">{{ s.trackingNumber }}</dd>
+            </div>
+            @if (s.price) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Precio del transporte</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ s.price | number:'1.2-2' }} €</dd>
+              </div>
+            }
+            @if (s.insuranceCost) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coste del seguro</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ s.insuranceCost | number:'1.2-2' }} €</dd>
+              </div>
+            }
+            @if (s.insuranceValue) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Valor asegurado</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ s.insuranceValue | number:'1.2-2' }} €</dd>
+              </div>
+            }
+            @if (s.insurancePolicy) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Póliza</dt>
+                <dd class="mt-1 font-mono text-text-main">{{ s.insurancePolicy }}</dd>
+              </div>
+            }
+            @if (s.deliveryDate) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Entregado</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ s.deliveryDate | date:'medium' }}</dd>
+              </div>
+            }
+            @if (s.receivedBy) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Recibido por</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ s.receivedBy }}</dd>
+              </div>
+            }
+          </dl>
+          @if (s.notes) {
+            <div class="mt-4 p-3 rounded-lg bg-background border border-border">
+              <p class="text-xs uppercase font-bold tracking-wider text-text-secondary mb-1">Notas</p>
+              <p class="text-sm text-text-main whitespace-pre-line">{{ s.notes }}</p>
+            </div>
+          }
+        </section>
+      }
+    </div>
+
+    <!-- Sidebar de acciones -->
+    <aside class="space-y-4">
+      <div class="stitch-card p-5 sticky top-24">
+        <h3 class="text-sm font-bold text-text-main mb-4">Acciones disponibles</h3>
+
+        @if (canAccept()) {
+          <button type="button" (click)="openAccept()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">handshake</span>
+            Aceptar préstamo
+          </button>
+        }
+        @if (canReject()) {
+          <button type="button" (click)="rejectLoan()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-white border border-red-300 text-red-600 hover:bg-red-50 text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+            Rechazar
+          </button>
+        }
+        @if (canQuote()) {
+          <button type="button" (click)="openQuote()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">request_quote</span>
+            Subir presupuesto
+          </button>
+        }
+        @if (canApproveQuote()) {
+          <button type="button" (click)="approveQuote()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">check</span>
+            Aprobar presupuesto
+          </button>
+        }
+        @if (canRejectQuote()) {
+          <button type="button" (click)="openRejectQuote()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-white border border-red-300 text-red-600 hover:bg-red-50 text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+            Rechazar presupuesto
+          </button>
+        }
+        @if (canMarkReady()) {
+          <button type="button" (click)="markReady()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">inventory_2</span>
+            Marcar listo para recoger
+          </button>
+        }
+        @if (canMarkPickedUp()) {
+          <button type="button" (click)="markPickedUp()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">inventory</span>
+            Confirmar recogida
+          </button>
+        }
+        @if (canMarkInTransit()) {
+          <button type="button" (click)="markInTransit()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>
+            Marcar en tránsito
+          </button>
+        }
+        @if (canConfirmDelivery()) {
+          <button type="button" (click)="openDelivery()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+            Confirmar entrega
+          </button>
+        }
+        @if (canStartReturn()) {
+          <button type="button" (click)="startReturn()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">undo</span>
+            Iniciar retorno
+          </button>
+        }
+        @if (canCompleteReturn()) {
+          <button type="button" (click)="completeReturn()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">task_alt</span>
+            Confirmar recepción y cerrar
+          </button>
+        }
+
+        @if (canDownloadContract()) {
+          <button type="button" (click)="downloadContract()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                   bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
+            <span class="material-symbols-outlined" style="font-size:18px;">picture_as_pdf</span>
+            Descargar contrato
+          </button>
+        }
+
+        @if (canCancel()) {
+          <button type="button" (click)="openCancel()" [disabled]="busy()"
+            class="flex w-full items-center justify-center gap-2 rounded-lg h-10 px-4 mt-3
+                   bg-transparent text-text-secondary hover:text-red-600 text-xs font-medium disabled:opacity-50">
+            Cancelar préstamo
+          </button>
+        }
+
+        @if (!canAccept() && !canReject() && !canQuote() && !canApproveQuote() && !canRejectQuote()
+              && !canMarkReady() && !canMarkPickedUp() && !canMarkInTransit() && !canConfirmDelivery()
+              && !canStartReturn() && !canCompleteReturn() && !canCancel() && !canDownloadContract()) {
+          <p class="text-text-secondary text-sm text-center py-2">
+            No hay acciones disponibles para tu rol en este estado.
+          </p>
+        }
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===== DIÁLOGOS INLINE ===== -->
+
+  <!-- Aceptar préstamo -->
+  @if (showAcceptDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Aceptar préstamo</h3>
+        <p class="text-sm text-text-secondary mb-4">Elige la empresa de transporte que se ocupará del envío.</p>
+
+        <form [formGroup]="acceptForm" (ngSubmit)="confirmAccept()">
+          @if (artwork()?.preferredTransportMandatory) {
+            <div class="mb-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              Esta obra exige una empresa de transporte concreta. No se puede cambiar.
+            </div>
+          }
+          <label class="block mb-3">
+            <p class="text-text-main text-sm font-medium pb-2">Empresa</p>
+            <select formControlName="transportCompanyId"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+              <option [ngValue]="null" disabled>Selecciona una empresa…</option>
+              @for (c of companies(); track c.id) {
+                <option [ngValue]="c.id">
+                  {{ c.companyName }}@if (c.coverageArea) { · {{ c.coverageArea }} }
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer mb-4">
+            <input type="checkbox" formControlName="transportCompanyMandatory"
+                   class="h-5 w-5 mt-0.5 rounded border-border text-primary focus:ring-primary" />
+            <div class="flex-1">
+              <p class="font-bold text-text-main text-sm">Hacer la elección obligatoria</p>
+              <p class="text-xs text-text-secondary mt-1">
+                Si el museo rechaza el presupuesto, el préstamo se cancela.
+              </p>
+            </div>
+          </label>
+
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showAcceptDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="acceptForm.invalid || busy()"
+              class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+              Aceptar préstamo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Cancelar préstamo -->
+  @if (showCancelDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Cancelar préstamo</h3>
+        <p class="text-sm text-text-secondary mb-4">Esta acción no se puede deshacer.</p>
+        <form [formGroup]="cancelForm" (ngSubmit)="confirmCancel()">
+          <label class="block mb-4">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Motivo <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
+            <textarea rows="3" formControlName="reason"
+              class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+          </label>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showCancelDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Volver
+            </button>
+            <button type="submit" [disabled]="busy()"
+              class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-50">
+              Cancelar préstamo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Subir presupuesto -->
+  @if (showQuoteDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Subir presupuesto</h3>
+        <p class="text-sm text-text-secondary mb-4">El museo verá estos importes para decidir si aprueba.</p>
+        <form [formGroup]="quoteForm" (ngSubmit)="confirmQuote()" class="space-y-3">
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Precio del transporte (€)</p>
+            <input type="number" step="0.01" formControlName="price"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Coste del seguro (€)</p>
+            <input type="number" step="0.01" formControlName="insuranceCost"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Número de póliza <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
+            <input formControlName="insurancePolicy"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showQuoteDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="quoteForm.invalid || busy()"
+              class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+              Enviar presupuesto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Rechazar presupuesto -->
+  @if (showRejectQuoteDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Rechazar presupuesto</h3>
+        @if (l.transportCompanyMandatory) {
+          <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mb-4">
+            La empresa era obligatoria · al rechazar, el préstamo se cancela.
+          </p>
+        } @else {
+          <p class="text-sm text-text-secondary mb-4">
+            La solicitud volverá al estado "esperando presupuesto". Podrás pedir presupuesto a otra empresa.
+          </p>
+        }
+        <form [formGroup]="rejectQuoteForm" (ngSubmit)="confirmRejectQuote()">
+          <label class="block mb-4">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Motivo <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
+            <textarea rows="3" formControlName="reason"
+              class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+          </label>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showRejectQuoteDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Volver
+            </button>
+            <button type="submit" [disabled]="busy()"
+              class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-50">
+              Rechazar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Confirmar entrega -->
+  @if (showDeliveryDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Confirmar entrega</h3>
+        <p class="text-sm text-text-secondary mb-4">Indica quién recibe la obra y cualquier observación.</p>
+        <form [formGroup]="deliveryForm" (ngSubmit)="confirmDelivery()" class="space-y-3">
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Recibido por</p>
+            <input formControlName="receivedBy" placeholder="Nombre de la persona que recibe"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Notas</p>
+            <textarea rows="3" formControlName="notes"
+              placeholder="Estado de la obra a la recepción, observaciones del transporte…"
+              class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showDeliveryDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="deliveryForm.invalid || busy()"
+              class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
+              Confirmar entrega
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+}

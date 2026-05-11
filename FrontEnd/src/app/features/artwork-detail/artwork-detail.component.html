@@ -1,0 +1,149 @@
+@if (loading()) {
+  <div class="stitch-card p-12 text-center">
+    <p class="text-text-secondary">Cargando obra...</p>
+  </div>
+} @else if (errorMessage()) {
+  <div class="stitch-card p-12 text-center">
+    <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>
+    <p class="text-text-main font-bold">{{ errorMessage() }}</p>
+    <a routerLink="/app" class="inline-block mt-4 text-primary font-semibold hover:underline">Volver al panel</a>
+  </div>
+} @else if (artwork(); as a) {
+  <!-- Cabecera con vuelta -->
+  <div class="mb-6">
+    <button type="button" (click)="goBack()"
+            class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+      Volver
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+    <!-- Galería -->
+    <div class="lg:col-span-3 space-y-4">
+      <div class="aspect-[4/3] w-full rounded-2xl bg-gray-100 overflow-hidden border border-border shadow-sm">
+        @if (mainImageUrl()) {
+          <img [src]="mainImageUrl()" [alt]="a.title" class="w-full h-full object-cover" />
+        } @else {
+          <div class="w-full h-full flex items-center justify-center text-text-secondary">
+            <span class="material-symbols-outlined" style="font-size:64px;">image_not_supported</span>
+          </div>
+        }
+      </div>
+
+      @if ((a.files?.length ?? 0) > 1) {
+        <div class="grid grid-cols-5 sm:grid-cols-6 gap-2">
+          @for (f of a.files; let i = $index; track f.id) {
+            <button type="button" (click)="selectImage(i)"
+                    class="aspect-square rounded-lg overflow-hidden border-2 transition-colors"
+                    [class.border-primary]="selectedFileIndex() === i"
+                    [class.border-transparent]="selectedFileIndex() !== i">
+              <img [src]="fileUrl(f.id)" [alt]="f.fileName" class="w-full h-full object-cover" />
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Datos laterales -->
+    <aside class="lg:col-span-2 space-y-6">
+      <section>
+        @if (isMine()) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
+            Tu obra
+          </span>
+        }
+        <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight leading-tight">
+          {{ a.title }}
+        </h1>
+        <p class="text-lg text-text-secondary mt-1">
+          {{ a.artist }}
+          @if (a.year) { · {{ a.year }} }
+        </p>
+        @if (a.location) {
+          <p class="mt-2 inline-flex items-center gap-1 text-sm text-text-secondary">
+            <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+            {{ a.location }}
+          </p>
+        }
+      </section>
+
+      <!-- Stats compactas -->
+      <section class="stitch-card p-5">
+        <dl class="grid grid-cols-2 gap-y-4 gap-x-6">
+          <div>
+            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Estado</dt>
+            <dd class="mt-1 text-sm font-bold text-text-main">{{ conditionLabel() }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Valor estimado</dt>
+            <dd class="mt-1 text-sm font-bold text-text-main">{{ formattedValue() }}</dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Dimensiones</dt>
+            <dd class="mt-1 text-sm font-bold text-text-main">{{ dimensionsLabel() }}</dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coleccionista</dt>
+            <dd class="mt-1 text-sm font-bold text-text-main">{{ a.collectorName || 'Anónim@' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Descripción -->
+      @if (a.description) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2">Descripción</h3>
+          <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.description }}</p>
+        </section>
+      }
+
+      <!-- Condiciones de préstamo -->
+      @if (a.loanConditions) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">rule</span>
+            Condiciones de préstamo
+          </h3>
+          <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.loanConditions }}</p>
+        </section>
+      }
+
+      <!-- Empresa preferida -->
+      @if (a.preferredTransportCompanyName) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">local_shipping</span>
+            Empresa de transporte preferida
+          </h3>
+          <p class="text-sm text-text-main font-bold">{{ a.preferredTransportCompanyName }}</p>
+          @if (a.preferredTransportMandatory) {
+            <div class="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+              <span class="material-symbols-outlined text-amber-700 mt-0.5" style="font-size:16px;">priority_high</span>
+              <p class="text-xs text-amber-900">
+                <span class="font-bold">Obligatoria.</span>
+                Si el museo rechaza el presupuesto de esta empresa, el préstamo se cancela.
+              </p>
+            </div>
+          } @else {
+            <p class="mt-2 text-xs text-text-secondary">
+              El museo podrá negociar con otra empresa si lo prefiere.
+            </p>
+          }
+        </section>
+      }
+
+      <!-- Acción FOUNDATION -->
+      @if (canRequestLoan()) {
+        <a [routerLink]="['/app/foundation/request-loan', a.id]"
+           class="flex w-full items-center justify-center gap-2 rounded-lg h-12 px-4
+                  bg-primary hover:bg-primary-hover transition-colors
+                  text-white text-base font-bold tracking-[0.015em] shadow-sm">
+          <span class="material-symbols-outlined" style="font-size:20px;">handshake</span>
+          Solicitar préstamo
+        </a>
+      }
+    </aside>
+  </div>
+}

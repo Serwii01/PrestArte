@@ -17,7 +17,9 @@ export const roleGuard = (allowed: Role[]): CanActivateFn => {
     const role = auth.role();
     if (role && allowed.includes(role)) return true;
 
-    router.navigate(['/']);
+    // Si está logueado pero el rol no aplica, lo mandamos al área autenticada
+    // (HomeRedirect lo dispara a su dashboard real).
+    router.navigate(['/app']);
     return false;
   };
 };

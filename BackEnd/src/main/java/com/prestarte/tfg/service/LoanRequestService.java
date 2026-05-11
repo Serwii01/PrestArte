@@ -5,6 +5,7 @@ import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.dto.LoanResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
+import com.prestarte.tfg.security.CurrentUser;
 import com.prestarte.tfg.service.statemachine.LoanStateMachine;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -30,11 +31,15 @@ public class LoanRequestService {
     private final EmailService emailService;
     private final ShipmentService shipmentService;
     private final LoanStateMachine stateMachine;
+    private final CurrentUser currentUser;
 
     /* ========== CREACIÓN ========== */
 
     @Transactional
     public LoanResponse createRequest(CreateLoanRequest dto) {
+        // Solo la propia fundación puede crear solicitudes a su nombre.
+        currentUser.requireUserId(dto.getFoundationId());
+
         Artwork artwork = artworkRepository.findById(dto.getArtworkId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", dto.getArtworkId()));
 
@@ -64,6 +69,8 @@ public class LoanRequestService {
     @Transactional
     public LoanResponse accept(Long loanId, Long transportCompanyId, boolean mandatory) {
         LoanRequest loan = findOrThrow(loanId);
+        // Solo el coleccionista dueño de la obra puede aceptar.
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
 
         // Validación de fechas (regla de negocio: no solapar préstamos aceptados de la misma obra)
         boolean overlapping = loanRequestRepository.existsOverlappingLoan(
@@ -95,15 +102,19 @@ public class LoanRequestService {
     @Transactional
     public LoanResponse reject(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.REJECTED);
         loan.setStatus(LoanRequest.Status.REJECTED);
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
-    /** Cualquier parte cancela el préstamo antes de que la obra esté en tránsito. */
+    /** Coleccionista o museo cancelan el préstamo antes de que la obra esté en tránsito. */
     @Transactional
     public LoanResponse cancel(Long loanId, String reason) {
         LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireAnyUserId(
+                loan.getArtwork().getCollector().getId(),
+                loan.getFoundation().getId());
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.CANCELLED);
         loan.setStatus(LoanRequest.Status.CANCELLED);
         loan.setCancelledAt(LocalDateTime.now());
@@ -115,6 +126,7 @@ public class LoanRequestService {
     @Transactional
     public LoanResponse markReadyForPickup(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.READY_FOR_PICKUP);
         loan.setStatus(LoanRequest.Status.READY_FOR_PICKUP);
         return convertToResponse(loanRequestRepository.save(loan));
@@ -124,9 +136,22 @@ public class LoanRequestService {
     @Transactional
     public LoanResponse startReturn(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getFoundation().getId());
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNING);
         loan.setStatus(LoanRequest.Status.RETURNING);
-        // El Shipment de RETURN se materializará en sub-fase 2.6.
+        return convertToResponse(loanRequestRepository.save(loan));
+    }
+
+    /**
+     * Cierra el ciclo: el coleccionista confirma que la obra está de vuelta en
+     * sus manos. Transición RETURNING → RETURNED (estado terminal).
+     */
+    @Transactional
+    public LoanResponse completeReturn(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
+        stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNED);
+        loan.setStatus(LoanRequest.Status.RETURNED);
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
@@ -255,8 +280,8 @@ public class LoanRequestService {
 
             String foundationEmail = loan.getFoundation().getEmail();
             if (foundationEmail != null) {
-                String body = "<h3>Contrato de préstamo - Copia para el receptor</h3>" +
-                        "<p>Estimado equipo de <b>" + loan.getFoundation().getName() + "</b>,</p>" +
+                String body = "<h3>Contrato de préstamo - Copia para la parte receptora</h3>" +
+                        "<p>Hola, equipo de <b>" + loan.getFoundation().getName() + "</b>,</p>" +
                         "<p>El presupuesto ha sido aprobado y el contrato está formalizado. " +
                         "Adjuntamos el documento legal correspondiente.</p>";
                 emailService.sendEmailWithAttachment(foundationEmail, subject, body, pdfBytes, fileName);
@@ -264,7 +289,7 @@ public class LoanRequestService {
 
             String collectorEmail = loan.getArtwork().getCollector().getEmail();
             if (collectorEmail != null) {
-                String body = "<h3>Contrato de préstamo - Copia para el propietario</h3>" +
+                String body = "<h3>Contrato de préstamo - Copia para la propiedad</h3>" +
                         "<p>Hola <b>" + loan.getArtwork().getCollector().getName() + "</b>,</p>" +
                         "<p>El museo ha aprobado el presupuesto del préstamo de <i>" +
                         loan.getArtwork().getTitle() + "</i>. Adjuntamos tu copia del acuerdo firmado.</p>";
@@ -292,6 +317,7 @@ public class LoanRequestService {
     }
 
     private LoanResponse convertToResponse(LoanRequest l) {
+        Shipment shipment = shipmentService.getByLoanId(l.getId());
         return LoanResponse.builder()
                 .id(l.getId())
                 .artworkId(l.getArtwork().getId())
@@ -306,6 +332,7 @@ public class LoanRequestService {
                 .agreedConditions(l.getAgreedConditions())
                 .status(l.getStatus().name())
                 .transportCompanyMandatory(l.isTransportCompanyMandatory())
+                .shipmentId(shipment != null ? shipment.getId() : null)
                 .cancelledAt(l.getCancelledAt())
                 .cancellationReason(l.getCancellationReason())
                 .build();

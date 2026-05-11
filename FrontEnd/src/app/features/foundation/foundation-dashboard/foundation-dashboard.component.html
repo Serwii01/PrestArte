@@ -1,0 +1,139 @@
+<div class="mb-8 flex items-start justify-between gap-4 flex-wrap">
+  <div>
+    <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight mb-2">
+      Hola, {{ auth.displayName() }}
+    </h1>
+    <p class="text-text-secondary text-lg">
+      Aquí tienes un resumen de tus solicitudes de préstamo y el inventario activo.
+    </p>
+  </div>
+  <a routerLink="/app/foundation/browse"
+     class="flex items-center gap-2 rounded-lg h-11 px-5
+            bg-primary hover:bg-primary-hover transition-colors
+            text-white text-sm font-bold shadow-sm">
+    <span class="material-symbols-outlined" style="font-size:20px;">collections_bookmark</span>
+    Explorar catálogo
+  </a>
+</div>
+
+<!-- Stat cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+  <app-stat-card label="Total solicitudes"
+                 [value]="totalLoansCount()"
+                 icon="library_books"
+                 accent="primary" />
+  <app-stat-card label="En el museo"
+                 [value]="inMuseumCount()"
+                 icon="museum"
+                 accent="emerald"
+                 hint="exhibición activa" />
+  <app-stat-card label="En camino"
+                 [value]="incomingCount()"
+                 icon="local_shipping"
+                 accent="orange"
+                 hint="trámite en curso" />
+  <app-stat-card label="Presupuestos por aprobar"
+                 [value]="awaitingMyApprovalCount()"
+                 icon="request_quote"
+                 accent="purple"
+                 [hint]="awaitingMyApprovalCount() > 0 ? 'Acción requerida' : undefined" />
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Tabla de solicitudes -->
+  <div class="lg:col-span-2 space-y-8">
+    <div class="stitch-card overflow-hidden">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Mis solicitudes</h3>
+        <span class="text-text-secondary text-sm">{{ totalLoansCount() }} en total</span>
+      </div>
+
+      @if (loading()) {
+        <div class="p-8 text-center text-text-secondary">Cargando...</div>
+      } @else if (loans().length === 0) {
+        <div class="p-12 text-center">
+          <span class="material-symbols-outlined text-text-secondary mb-2" style="font-size:40px;">inbox</span>
+          <p class="text-text-secondary">Aún no has enviado solicitudes.</p>
+          <p class="text-text-secondary text-xs mt-1">Explora el catálogo para empezar.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-background text-text-secondary text-xs uppercase font-semibold">
+              <tr>
+                <th class="px-6 py-4">Obra</th>
+                <th class="px-6 py-4">Coleccionista</th>
+                <th class="px-6 py-4">Estado</th>
+                <th class="px-6 py-4 text-right">Periodo</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (l of loans(); track l.id) {
+                <tr class="hover:bg-background transition-colors cursor-pointer"
+                    [routerLink]="['/app/loans', l.id]">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="size-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined">image</span>
+                      </div>
+                      <div>
+                        <p class="font-bold text-text-main text-sm">{{ l.artworkTitle }}</p>
+                        <p class="text-text-secondary text-xs">{{ l.artworkArtist }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <p class="text-sm font-medium text-text-main">{{ l.collectorName }}</p>
+                  </td>
+                  <td class="px-6 py-4">
+                    <app-status-pill [status]="l.status" />
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <p class="text-sm font-medium text-text-main">{{ l.startDate }} → {{ l.endDate }}</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Sidebar acción -->
+  <aside class="space-y-8">
+    <div class="stitch-card">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Centro de acción</h3>
+        @if (awaitingMyApprovalCount() > 0) {
+          <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">
+            {{ awaitingMyApprovalCount() }} pendiente{{ awaitingMyApprovalCount() === 1 ? '' : 's' }}
+          </span>
+        }
+      </div>
+      <div class="p-4">
+        @if (awaitingMyApproval().length === 0) {
+          <p class="text-text-secondary text-sm px-2 py-3">
+            No hay presupuestos esperando tu aprobación.
+          </p>
+        } @else {
+          @for (l of awaitingMyApproval(); track l.id) {
+            <div class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background transition-colors">
+              <span class="material-symbols-outlined text-purple-600 mt-0.5">request_quote</span>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-text-main">Aprobar presupuesto</p>
+                <p class="text-xs text-text-secondary mt-1">
+                  La empresa de transporte ha subido su presupuesto para
+                  <span class="font-medium">{{ l.artworkTitle }}</span>.
+                </p>
+                <button class="mt-2 text-xs font-bold text-primary hover:underline">
+                  Revisar y aprobar
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </aside>
+</div>

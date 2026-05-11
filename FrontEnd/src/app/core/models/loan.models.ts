@@ -27,6 +27,8 @@ export interface LoanResponse {
   agreedConditions?: string;
   status: LoanStatus;
   transportCompanyMandatory: boolean;
+  /** Id del Shipment OUTBOUND vinculado, o null si aún no se ha creado. */
+  shipmentId?: number | null;
   cancelledAt?: string | null;
   cancellationReason?: string | null;
 }

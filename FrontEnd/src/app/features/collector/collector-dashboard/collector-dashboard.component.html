@@ -1,0 +1,185 @@
+<div class="mb-8 flex items-start justify-between gap-4 flex-wrap">
+  <div>
+    <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight mb-2">
+      Hola, {{ auth.displayName() }}
+    </h1>
+    <p class="text-text-secondary text-lg">
+      Aquí tienes un resumen de tu colección y la actividad de préstamos.
+    </p>
+  </div>
+  <a routerLink="/app/collector/upload"
+     class="flex items-center gap-2 rounded-lg h-11 px-5
+            bg-primary hover:bg-primary-hover transition-colors
+            text-white text-sm font-bold shadow-sm">
+    <span class="material-symbols-outlined" style="font-size:20px;">add</span>
+    Subir nueva obra
+  </a>
+</div>
+
+<!-- Stat cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+  <app-stat-card label="Obras totales" [value]="totalArtworks()" icon="palette" accent="primary" />
+  <app-stat-card label="Préstamos activos" [value]="activeLoansCount()" icon="handshake" accent="orange" />
+  <app-stat-card label="Solicitudes pendientes"
+                 [value]="pendingRequestsCount()"
+                 icon="forum"
+                 accent="purple"
+                 [hint]="pendingRequestsCount() > 0 ? 'Acción requerida' : undefined" />
+  <app-stat-card label="Valor asegurado total"
+                 [value]="totalValueLabel()"
+                 icon="shield"
+                 accent="emerald" />
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Columna principal: tabla de préstamos -->
+  <div class="lg:col-span-2 space-y-8">
+    <div class="stitch-card overflow-hidden">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Tus préstamos</h3>
+        <span class="text-text-secondary text-sm">{{ loans().length }} en total</span>
+      </div>
+
+      @if (loading()) {
+        <div class="p-8 text-center text-text-secondary">Cargando...</div>
+      } @else if (loans().length === 0) {
+        <div class="p-8 text-center text-text-secondary">
+          Aún no has recibido solicitudes de préstamo.
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-background text-text-secondary text-xs uppercase font-semibold">
+              <tr>
+                <th class="px-6 py-4">Obra</th>
+                <th class="px-6 py-4">Fundación</th>
+                <th class="px-6 py-4">Estado</th>
+                <th class="px-6 py-4 text-right">Fecha fin</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (l of loans(); track l.id) {
+                <tr class="hover:bg-background transition-colors cursor-pointer"
+                    [routerLink]="['/app/loans', l.id]">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="size-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined">image</span>
+                      </div>
+                      <div>
+                        <p class="font-bold text-text-main text-sm">{{ l.artworkTitle }}</p>
+                        <p class="text-text-secondary text-xs">{{ l.artworkArtist }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <p class="text-sm font-medium text-text-main">{{ l.foundationName }}</p>
+                  </td>
+                  <td class="px-6 py-4">
+                    <app-status-pill [status]="l.status" />
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <p class="text-sm font-medium text-text-main">{{ l.endDate }}</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Sección "Mis obras" debajo de los préstamos -->
+  <div class="lg:col-span-2">
+    <div class="stitch-card overflow-hidden">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Mis obras</h3>
+        <a routerLink="/app/collector/upload"
+           class="text-primary text-sm font-semibold hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined" style="font-size:16px;">add</span>
+          Añadir obra
+        </a>
+      </div>
+
+      @if (artworks().length === 0) {
+        <div class="p-12 text-center">
+          <span class="material-symbols-outlined text-text-secondary mb-2" style="font-size:40px;">palette</span>
+          <p class="text-text-secondary">Aún no has subido ninguna obra.</p>
+          <a routerLink="/app/collector/upload"
+             class="inline-block mt-4 text-primary font-semibold hover:underline">
+            Sube tu primera obra
+          </a>
+        </div>
+      } @else {
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (a of artworks(); track a.id) {
+            <a [routerLink]="['/app/artworks', a.id]"
+               class="group relative rounded-xl bg-white border border-border overflow-hidden
+                      shadow-sm hover:shadow-md transition-all">
+              <div class="aspect-[4/3] w-full bg-gray-100 relative overflow-hidden">
+                @if (a.files && a.files.length > 0) {
+                  <img [src]="artworkService.fileUrl(a.files[0].id)" [alt]="a.title"
+                       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center text-text-secondary">
+                    <span class="material-symbols-outlined" style="font-size:40px;">image_not_supported</span>
+                  </div>
+                }
+              </div>
+              <div class="p-4">
+                <h4 class="font-bold text-text-main truncate">{{ a.title }}</h4>
+                <p class="text-sm text-text-secondary mt-1">{{ a.artist }}</p>
+                <p class="text-xs text-text-secondary mt-2 flex items-center gap-1">
+                  @if (a.location) {
+                    <span class="material-symbols-outlined" style="font-size:14px;">location_on</span>
+                    {{ a.location }}
+                  } @else {
+                    <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
+                    Añadida recientemente
+                  }
+                </p>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Sidebar: action center -->
+  <aside class="space-y-8">
+    <div class="stitch-card">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Centro de acción</h3>
+        @if (pendingRequestsCount() > 0) {
+          <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">
+            {{ pendingRequestsCount() }} pendiente{{ pendingRequestsCount() === 1 ? '' : 's' }}
+          </span>
+        }
+      </div>
+      <div class="p-4">
+        @if (pendingRequests().length === 0) {
+          <p class="text-text-secondary text-sm px-2 py-3">No hay nada pendiente. ¡Buen trabajo!</p>
+        } @else {
+          @for (l of pendingRequests(); track l.id) {
+            <div class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background transition-colors">
+              <span class="material-symbols-outlined text-primary mt-0.5">forum</span>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-text-main">Revisar solicitud</p>
+                <p class="text-xs text-text-secondary mt-1">
+                  {{ l.foundationName }} solicita
+                  <span class="font-medium">{{ l.artworkTitle }}</span>
+                  ({{ l.startDate }} → {{ l.endDate }})
+                </p>
+                <button class="mt-2 text-xs font-bold text-primary hover:underline">
+                  Ver solicitud
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </aside>
+</div>

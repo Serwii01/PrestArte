@@ -2,13 +2,16 @@ package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.AuthResponse;
+import com.prestarte.tfg.model.dto.ForgotPasswordRequest;
 import com.prestarte.tfg.model.dto.LoginRequest;
 import com.prestarte.tfg.model.dto.RegistrationRequest;
+import com.prestarte.tfg.model.dto.ResetPasswordRequest;
 import com.prestarte.tfg.model.dto.UserResponseDto;
 import com.prestarte.tfg.model.entity.User;
 import com.prestarte.tfg.model.entity.UserStatus;
 import com.prestarte.tfg.repository.UserRepository;
 import com.prestarte.tfg.security.JwtService;
+import com.prestarte.tfg.service.PasswordResetService;
 import com.prestarte.tfg.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final PasswordResetService passwordResetService;
 
     /**
      * Registro de un nuevo usuario (Coleccionista, Fundación o Empresa de Transporte).
@@ -61,7 +65,7 @@ public class AuthController {
             );
         } catch (DisabledException ex) {
             // Usuario existe y password OK pero no aprobado
-            throw new DisabledException("Tu cuenta está pendiente de aprobación por un administrador");
+            throw new DisabledException("Tu cuenta está pendiente de aprobación por el equipo de administración");
         } catch (BadCredentialsException ex) {
             throw new BadCredentialsException("Email o contraseña incorrectos");
         } catch (AuthenticationException ex) {
@@ -83,6 +87,23 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * Solicitud de "olvidé mi contraseña". Devuelve siempre 200 aunque el email
+     * no exista, para no revelar qué cuentas están registradas.
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        passwordResetService.forgotPassword(req);
+        return ResponseEntity.ok().build();
+    }
+
+    /** Reset efectivo: el usuario abre el enlace del email y elige nueva contraseña. */
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+        passwordResetService.resetPassword(req);
+        return ResponseEntity.ok().build();
     }
 
     private UserResponseDto toDto(User u) {

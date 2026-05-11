@@ -27,9 +27,15 @@ public class TransportCompanyService {
         return transportCompanyRepository.save(company);
     }
 
+    /**
+     * Lista de empresas aprobadas y activas, lo que se muestra en cualquier
+     * desplegable de selección (subida de obra, aceptar préstamo, etc.).
+     */
     @Transactional(readOnly = true)
     public List<TransportCompany> getAllCompanies() {
-        return transportCompanyRepository.findAll();
+        return transportCompanyRepository.findAll().stream()
+                .filter(c -> c.isEnabled() && c.getStatus() == com.prestarte.tfg.model.entity.UserStatus.APPROVED)
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -56,8 +56,8 @@ public class PdfGeneratorService {
             // --- 2. PARTES ---
             addSectionHeader(document, "I. IDENTIFICACIÓN DE LAS PARTES", sectionFont, accentColor);
             PdfPTable partiesTable = createTable(2);
-            addInfoRow(partiesTable, "PRESTADOR (COLECCIONISTA):", loan.getArtwork().getCollector().getName(), labelFont, valueFont);
-            addInfoRow(partiesTable, "RECEPTOR (FUNDACIÓN):", loan.getFoundation().getName(), labelFont, valueFont);
+            addInfoRow(partiesTable, "PARTE PRESTAMISTA (COLECCIONISTA):", loan.getArtwork().getCollector().getName(), labelFont, valueFont);
+            addInfoRow(partiesTable, "PARTE RECEPTORA (FUNDACIÓN):", loan.getFoundation().getName(), labelFont, valueFont);
             document.add(partiesTable);
 
             // --- 3. LA OBRA Y SU VALOR ---

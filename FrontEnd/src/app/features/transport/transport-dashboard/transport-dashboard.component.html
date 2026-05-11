@@ -1,0 +1,134 @@
+<div class="mb-8">
+  <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight mb-2">
+    Hola, {{ auth.displayName() }}
+  </h1>
+  <p class="text-text-secondary text-lg">
+    Tus servicios de transporte de obras de arte y su estado actual.
+  </p>
+</div>
+
+<!-- Stat cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+  <app-stat-card label="Por presupuestar"
+                 [value]="toQuoteCount()"
+                 icon="request_quote"
+                 accent="orange"
+                 [hint]="toQuoteCount() > 0 ? 'Acción requerida' : undefined" />
+  <app-stat-card label="Esperando aprobación"
+                 [value]="awaitingApprovalCount()"
+                 icon="hourglass_empty"
+                 accent="purple" />
+  <app-stat-card label="En curso"
+                 [value]="activeCount()"
+                 icon="local_shipping"
+                 accent="primary" />
+  <app-stat-card label="Entregados"
+                 [value]="deliveredCount()"
+                 icon="check_circle"
+                 accent="emerald" />
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Tabla de envíos -->
+  <div class="lg:col-span-2 space-y-8">
+    <div class="stitch-card overflow-hidden">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Mis envíos</h3>
+        <span class="text-text-secondary text-sm">{{ shipments().length }} en total</span>
+      </div>
+
+      @if (loading()) {
+        <div class="p-8 text-center text-text-secondary">Cargando...</div>
+      } @else if (shipments().length === 0) {
+        <div class="p-12 text-center">
+          <span class="material-symbols-outlined text-text-secondary mb-2" style="font-size:40px;">inventory_2</span>
+          <p class="text-text-secondary">No tienes envíos asignados.</p>
+          <p class="text-text-secondary text-xs mt-1">Cuando un coleccionista te elija aparecerán aquí.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-background text-text-secondary text-xs uppercase font-semibold">
+              <tr>
+                <th class="px-6 py-4">Tracking</th>
+                <th class="px-6 py-4">Obra</th>
+                <th class="px-6 py-4">Estado</th>
+                <th class="px-6 py-4 text-right">Precio</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (s of shipments(); track s.id) {
+                <tr class="hover:bg-background transition-colors cursor-pointer"
+                    [routerLink]="s.loanRequestId ? ['/app/loans', s.loanRequestId] : null">
+                  <td class="px-6 py-4">
+                    <p class="font-mono text-xs font-bold text-text-main">{{ s.trackingNumber }}</p>
+                    <p class="text-text-secondary text-xs">{{ s.startDate | date:'shortDate' }}</p>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="size-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined">image</span>
+                      </div>
+                      <p class="font-bold text-text-main text-sm">{{ s.artworkTitle }}</p>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <app-status-pill [status]="s.status" />
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <p class="text-sm font-bold text-text-main">
+                      {{ s.price ? (s.price | number:'1.2-2') + ' €' : '—' }}
+                    </p>
+                    @if (s.insuranceCost) {
+                      <p class="text-text-secondary text-xs">
+                        seguro {{ s.insuranceCost | number:'1.2-2' }} €
+                      </p>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Sidebar acción -->
+  <aside class="space-y-8">
+    <div class="stitch-card">
+      <div class="px-6 py-5 border-b border-border flex justify-between items-center">
+        <h3 class="text-lg font-bold text-text-main">Próximos pasos</h3>
+        @if (toQuoteCount() > 0) {
+          <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">
+            {{ toQuoteCount() }} por presupuestar
+          </span>
+        }
+      </div>
+      <div class="p-4">
+        @if (toQuote().length === 0) {
+          <p class="text-text-secondary text-sm px-2 py-3">
+            No hay servicios nuevos por presupuestar. ¡Estás al día!
+          </p>
+        } @else {
+          @for (s of toQuote(); track s.id) {
+            <div class="flex gap-3 py-3 px-2 rounded-lg hover:bg-background transition-colors">
+              <span class="material-symbols-outlined text-orange-500 mt-0.5">request_quote</span>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-text-main">Subir presupuesto</p>
+                <p class="text-xs text-text-secondary mt-1">
+                  Servicio para
+                  <span class="font-medium">{{ s.artworkTitle }}</span>
+                  · tracking {{ s.trackingNumber }}
+                </p>
+                <button class="mt-2 text-xs font-bold text-primary hover:underline">
+                  Crear presupuesto
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </aside>
+</div>

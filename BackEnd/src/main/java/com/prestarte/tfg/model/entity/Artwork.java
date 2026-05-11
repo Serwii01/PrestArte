@@ -50,11 +50,28 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String loanConditions;
 
+    /** Ciudad / pueblo donde se encuentra físicamente la obra. */
+    @Column(length = 150)
+    private String location;
+
     // UNIFICADO: Usamos collector como única referencia al dueño.
     // Marcamos nullable = false porque toda obra debe tener un dueño en el sistema.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "collector_id", nullable = false)
     private Collector collector;
+
+    /**
+     * Empresa de transporte que el coleccionista prefiere para esta obra.
+     * Se aplica al aceptar un préstamo: si está marcada como obligatoria,
+     * el museo no podrá pedir presupuesto a otra empresa.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "preferred_transport_company_id")
+    private TransportCompany preferredTransportCompany;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean preferredTransportMandatory = false;
 
     @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL)
     private List<ArtworkFile> files;

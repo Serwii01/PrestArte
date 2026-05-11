@@ -95,6 +95,12 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRequestService.startReturn(id));
     }
 
+    /** Coleccionista confirma que la obra ha vuelto a sus manos (cierre del ciclo). */
+    @PostMapping("/{id}/complete-return")
+    public ResponseEntity<LoanResponse> completeReturn(@PathVariable Long id) {
+        return ResponseEntity.ok(loanRequestService.completeReturn(id));
+    }
+
     /* ========== CONTRATO PDF ========== */
 
     @GetMapping("/{id}/contract")

@@ -21,6 +21,20 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
   },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
 
   // ===== Rutas autenticadas (bajo /app) =====
   {
@@ -48,20 +62,67 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'artworks/:id',
+        loadComponent: () =>
+          import('./features/artwork-detail/artwork-detail.component').then(
+            (m) => m.ArtworkDetailComponent,
+          ),
+      },
+      {
+        path: 'loans/:id',
+        loadComponent: () =>
+          import('./features/loan-detail/loan-detail.component').then(
+            (m) => m.LoanDetailComponent,
+          ),
+      },
+      {
         path: 'collector',
         canActivate: [roleGuard(['COLLECTOR'])],
-        loadComponent: () =>
-          import('./features/collector/collector-dashboard/collector-dashboard.component').then(
-            (m) => m.CollectorDashboardComponent,
-          ),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/collector/collector-dashboard/collector-dashboard.component').then(
+                (m) => m.CollectorDashboardComponent,
+              ),
+          },
+          {
+            path: 'upload',
+            loadComponent: () =>
+              import('./features/collector/upload-artwork/upload-artwork.component').then(
+                (m) => m.UploadArtworkComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'foundation',
         canActivate: [roleGuard(['FOUNDATION'])],
-        loadComponent: () =>
-          import('./features/foundation/foundation-dashboard/foundation-dashboard.component').then(
-            (m) => m.FoundationDashboardComponent,
-          ),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/foundation/foundation-dashboard/foundation-dashboard.component').then(
+                (m) => m.FoundationDashboardComponent,
+              ),
+          },
+          {
+            path: 'browse',
+            loadComponent: () =>
+              import('./features/foundation/browse-artworks/browse-artworks.component').then(
+                (m) => m.BrowseArtworksComponent,
+              ),
+          },
+          {
+            path: 'request-loan/:artworkId',
+            loadComponent: () =>
+              import('./features/foundation/request-loan/request-loan.component').then(
+                (m) => m.RequestLoanComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'transport',

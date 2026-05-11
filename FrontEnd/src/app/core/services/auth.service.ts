@@ -40,6 +40,17 @@ export class AuthService {
       .pipe(tap((res) => this.persist(res)));
   }
 
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/reset-password`, {
+      token,
+      newPassword,
+    });
+  }
+
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
     this._session.set(null);

@@ -1,54 +1,35 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/services/auth.service';
 import { UserResponse } from '../../../core/models/user.models';
+import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <h1 class="text-2xl font-semibold mb-6">Panel de administración</h1>
-
-    <section class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-medium mb-4">Usuarios pendientes de aprobación</h2>
-
-      @if (loading()) {
-        <p class="text-slate-500">Cargando...</p>
-      } @else if (pending().length === 0) {
-        <p class="text-slate-500">No hay usuarios pendientes.</p>
-      } @else {
-        <ul class="divide-y divide-slate-100">
-          @for (u of pending(); track u.id) {
-            <li class="py-3 flex items-center justify-between">
-              <div>
-                <p class="font-medium">{{ u.name }} <span class="text-xs text-slate-400">({{ u.role }})</span></p>
-                <p class="text-sm text-slate-500">{{ u.email }} · {{ u.taxId }}</p>
-              </div>
-              <div class="flex gap-2">
-                <button (click)="approve(u.id)"
-                        class="px-3 py-1.5 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700">
-                  Aprobar
-                </button>
-                <button (click)="reject(u.id)"
-                        class="px-3 py-1.5 rounded bg-red-600 text-white text-sm hover:bg-red-700">
-                  Rechazar
-                </button>
-              </div>
-            </li>
-          }
-        </ul>
-      }
-    </section>
-  `,
+  imports: [CommonModule, StatCardComponent],
+  templateUrl: './admin-dashboard.component.html',
+  styleUrl: './admin-dashboard.component.scss',
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly http = inject(HttpClient);
+  protected readonly auth = inject(AuthService);
 
   protected readonly pending = signal<UserResponse[]>([]);
   protected readonly loading = signal(true);
+
+  /** Reparto por rol para los stat cards. */
+  protected readonly pendingByRole = computed(() => {
+    const all = this.pending();
+    return {
+      collectors: all.filter((u) => u.role === 'COLLECTOR').length,
+      foundations: all.filter((u) => u.role === 'FOUNDATION').length,
+      transport: all.filter((u) => u.role === 'TRANSPORT').length,
+    };
+  });
 
   ngOnInit(): void {
     this.refresh();
@@ -75,5 +56,20 @@ export class AdminDashboardComponent implements OnInit {
     this.http
       .post(`${environment.apiBaseUrl}/admin/reject/${id}`, {}, { responseType: 'text' })
       .subscribe(() => this.refresh());
+  }
+
+  /** Inicial para el avatar circular. */
+  initial(name: string): string {
+    return name?.charAt(0).toUpperCase() ?? '?';
+  }
+
+  /** Etiqueta amigable del rol. */
+  roleLabel(role: UserResponse['role']): string {
+    return {
+      ADMIN: 'Administrador',
+      COLLECTOR: 'Coleccionista',
+      FOUNDATION: 'Fundación',
+      TRANSPORT: 'Transporte',
+    }[role];
   }
 }

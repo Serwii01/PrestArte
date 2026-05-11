@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -16,6 +16,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -40,9 +41,9 @@ export class LoginComponent {
     this.auth.login({ email, password }).subscribe({
       next: () => {
         this.loading.set(false);
-        // Tras login exitoso, vamos a la zona autenticada;
-        // HomeRedirect decide a qué dashboard según el rol.
-        this.router.navigate(['/app']);
+        // Si veníamos de un guard con returnUrl, lo respetamos. Si no, vamos al área autenticada.
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigateByUrl(returnUrl ?? '/app');
       },
       error: (err) => {
         this.loading.set(false);

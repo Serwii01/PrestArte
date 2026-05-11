@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 /**
- * Ruta '/' protegida: redirige al dashboard según el rol del usuario.
+ * Ruta '/app': componente vacío que redirige al dashboard del usuario según su rol.
  */
 @Component({
   selector: 'app-home-redirect',
@@ -16,19 +16,18 @@ export class HomeRedirectComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    const role = this.auth.role();
-    switch (role) {
+    switch (this.auth.role()) {
       case 'ADMIN':
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/app/admin']);
         break;
       case 'COLLECTOR':
-        this.router.navigate(['/collector']);
+        this.router.navigate(['/app/collector']);
         break;
       case 'FOUNDATION':
-        this.router.navigate(['/foundation']);
+        this.router.navigate(['/app/foundation']);
         break;
       case 'TRANSPORT':
-        this.router.navigate(['/transport']);
+        this.router.navigate(['/app/transport']);
         break;
       default:
         this.router.navigate(['/login']);
