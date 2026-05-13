@@ -199,6 +199,50 @@
           }
         </section>
       }
+
+      <!-- Shipment de retorno -->
+      @if (returnShipment(); as rs) {
+        <section class="stitch-card p-6 border-amber-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-600">undo</span>
+              <h3 class="text-lg font-bold text-text-main">Envío de retorno</h3>
+            </div>
+            <app-status-pill [status]="rs.status" />
+          </div>
+          <p class="text-sm text-text-secondary mb-4">
+            Devolución de la obra al coleccionista. El coste está incluido en el presupuesto original.
+          </p>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Empresa</dt>
+              <dd class="mt-1 font-bold text-text-main">{{ rs.transportCompanyName }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Tracking</dt>
+              <dd class="mt-1 font-mono text-text-main">{{ rs.trackingNumber }}</dd>
+            </div>
+            @if (rs.deliveryDate) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Recepción</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ rs.deliveryDate | date:'medium' }}</dd>
+              </div>
+            }
+            @if (rs.receivedBy) {
+              <div>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Recibido por</dt>
+                <dd class="mt-1 font-bold text-text-main">{{ rs.receivedBy }}</dd>
+              </div>
+            }
+          </dl>
+          @if (rs.notes) {
+            <div class="mt-4 p-3 rounded-lg bg-background border border-border">
+              <p class="text-xs uppercase font-bold tracking-wider text-text-secondary mb-1">Notas</p>
+              <p class="text-sm text-text-main whitespace-pre-line">{{ rs.notes }}</p>
+            </div>
+          }
+        </section>
+      }
     </div>
 
     <!-- Sidebar de acciones -->
@@ -286,14 +330,6 @@
             Iniciar retorno
           </button>
         }
-        @if (canCompleteReturn()) {
-          <button type="button" (click)="completeReturn()" [disabled]="busy()"
-            class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
-                   bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
-            <span class="material-symbols-outlined" style="font-size:18px;">task_alt</span>
-            Confirmar recepción y cerrar
-          </button>
-        }
 
         @if (canDownloadContract()) {
           <button type="button" (click)="downloadContract()"
@@ -314,7 +350,7 @@
 
         @if (!canAccept() && !canReject() && !canQuote() && !canApproveQuote() && !canRejectQuote()
               && !canMarkReady() && !canMarkPickedUp() && !canMarkInTransit() && !canConfirmDelivery()
-              && !canStartReturn() && !canCompleteReturn() && !canCancel() && !canDownloadContract()) {
+              && !canStartReturn() && !canCancel() && !canDownloadContract()) {
           <p class="text-text-secondary text-sm text-center py-2">
             No hay acciones disponibles para tu rol en este estado.
           </p>

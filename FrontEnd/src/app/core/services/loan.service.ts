@@ -58,10 +58,8 @@ export class LoanService {
   startReturn(id: number): Observable<LoanResponse> {
     return this.http.post<LoanResponse>(`${this.base}/${id}/start-return`, {});
   }
-
-  completeReturn(id: number): Observable<LoanResponse> {
-    return this.http.post<LoanResponse>(`${this.base}/${id}/complete-return`, {});
-  }
+  // El cierre del ciclo (RETURNED) se dispara automáticamente cuando el
+  // shipment de retorno se marca DELIVERED. No hay endpoint manual.
 
   /* ===== Contrato PDF ===== */
 

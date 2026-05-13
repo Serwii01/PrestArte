@@ -26,6 +26,7 @@ public class LoanRequestService {
     private final ArtworkRepository artworkRepository;
     private final FoundationRepository foundationRepository;
     private final TransportCompanyRepository transportCompanyRepository;
+    private final ShipmentRepository shipmentRepository;
 
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
@@ -132,27 +133,35 @@ public class LoanRequestService {
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
-    /** Museo inicia el retorno de la obra al final del préstamo. */
+    /**
+     * Museo inicia el retorno: el préstamo pasa a RETURNING y se genera
+     * automáticamente un Shipment de RETURN con la misma empresa de transporte
+     * que el OUTBOUND, en estado APPROVED (el coste del retorno se considera
+     * incluido en el presupuesto original).
+     */
     @Transactional
     public LoanResponse startReturn(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getFoundation().getId());
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNING);
         loan.setStatus(LoanRequest.Status.RETURNING);
-        return convertToResponse(loanRequestRepository.save(loan));
+        LoanRequest saved = loanRequestRepository.save(loan);
+
+        // Crear el Shipment de retorno asociado.
+        shipmentService.createReturnShipment(saved);
+
+        return convertToResponse(saved);
     }
 
     /**
-     * Cierra el ciclo: el coleccionista confirma que la obra está de vuelta en
-     * sus manos. Transición RETURNING → RETURNED (estado terminal).
+     * Cierre del ciclo cuando el Shipment de RETURN llega a DELIVERED.
+     * Llamado por ShipmentService.confirmDelivery cuando el shipment es de retorno.
      */
     @Transactional
-    public LoanResponse completeReturn(Long loanId) {
-        LoanRequest loan = findOrThrow(loanId);
-        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
+    public void onReturnDelivered(LoanRequest loan) {
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNED);
         loan.setStatus(LoanRequest.Status.RETURNED);
-        return convertToResponse(loanRequestRepository.save(loan));
+        loanRequestRepository.save(loan);
     }
 
     /* ========== ACCIONES DESDE ShipmentService (sincronización) ========== */
@@ -317,7 +326,13 @@ public class LoanRequestService {
     }
 
     private LoanResponse convertToResponse(LoanRequest l) {
-        Shipment shipment = shipmentService.getByLoanId(l.getId());
+        Shipment outbound = shipmentRepository
+                .findByLoanRequestIdAndDirection(l.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .orElse(null);
+        Shipment returnShip = shipmentRepository
+                .findByLoanRequestIdAndDirection(l.getId(), Shipment.ShipmentDirection.RETURN)
+                .orElse(null);
+
         return LoanResponse.builder()
                 .id(l.getId())
                 .artworkId(l.getArtwork().getId())
@@ -332,7 +347,8 @@ public class LoanRequestService {
                 .agreedConditions(l.getAgreedConditions())
                 .status(l.getStatus().name())
                 .transportCompanyMandatory(l.isTransportCompanyMandatory())
-                .shipmentId(shipment != null ? shipment.getId() : null)
+                .shipmentId(outbound != null ? outbound.getId() : null)
+                .returnShipmentId(returnShip != null ? returnShip.getId() : null)
                 .cancelledAt(l.getCancelledAt())
                 .cancellationReason(l.getCancellationReason())
                 .build();

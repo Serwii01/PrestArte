@@ -37,6 +37,9 @@ public class LoanResponse {
     /** Id del Shipment OUTBOUND vinculado, o null si aún no se ha creado. */
     private Long shipmentId;
 
+    /** Id del Shipment RETURN vinculado (solo a partir de RETURNING). */
+    private Long returnShipmentId;
+
     private LocalDateTime cancelledAt;
     private String cancellationReason;
 }

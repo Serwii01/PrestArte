@@ -53,6 +53,31 @@ public class ShipmentService {
         return shipmentRepository.save(shipment);
     }
 
+    /**
+     * Crea el Shipment de retorno al iniciar la devolución. Reutiliza la empresa
+     * de transporte del OUTBOUND y arranca en APPROVED (el coste del retorno se
+     * considera incluido en el presupuesto original, así que no se vuelve a pedir
+     * presupuesto ni aprobación al museo).
+     */
+    @Transactional
+    public Shipment createReturnShipment(LoanRequest loan) {
+        Shipment outbound = shipmentRepository
+                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No se puede crear el retorno sin un envío OUTBOUND previo."));
+
+        Shipment ret = Shipment.builder()
+                .loanRequest(loan)
+                .transportCompany(outbound.getTransportCompany())
+                .status(Shipment.ShipmentStatus.APPROVED)
+                .direction(Shipment.ShipmentDirection.RETURN)
+                .trackingNumber("RET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .priceAccepted(true)
+                .insuranceValue(loan.getArtwork().getEstimatedValue())
+                .build();
+        return shipmentRepository.save(ret);
+    }
+
     /* ========== ACCIONES DEL FLUJO ========== */
 
     /**
@@ -124,7 +149,11 @@ public class ShipmentService {
         return mapToResponse(shipment);
     }
 
-    /** Transportista marca obra recogida. APPROVED → PICKED_UP, préstamo → IN_TRANSIT. */
+    /**
+     * Transportista marca obra recogida. APPROVED → PICKED_UP.
+     * Solo el OUTBOUND mueve el préstamo a IN_TRANSIT; el shipment de RETURN
+     * deja el préstamo en RETURNING hasta que se entregue al coleccionista.
+     */
     @Transactional
     public ShipmentResponse markPickedUp(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
@@ -134,7 +163,9 @@ public class ShipmentService {
         shipment.setStatus(Shipment.ShipmentStatus.PICKED_UP);
         shipmentRepository.save(shipment);
 
-        loanRequestService.onShipmentPickedUp(shipment.getLoanRequest());
+        if (shipment.getDirection() == Shipment.ShipmentDirection.OUTBOUND) {
+            loanRequestService.onShipmentPickedUp(shipment.getLoanRequest());
+        }
         return mapToResponse(shipment);
     }
 
@@ -151,11 +182,21 @@ public class ShipmentService {
         return mapToResponse(shipment);
     }
 
-    /** Museo confirma llegada. IN_TRANSIT → DELIVERED, préstamo → DELIVERED → ON_LOAN. */
+    /**
+     * Confirma la llegada del envío. IN_TRANSIT → DELIVERED.
+     * - OUTBOUND: lo confirma el museo. Préstamo → DELIVERED → ON_LOAN.
+     * - RETURN: lo confirma el coleccionista. Préstamo → RETURNED (cierre del ciclo).
+     */
     @Transactional
     public ShipmentResponse confirmDelivery(Long shipmentId, ConfirmReceiptRequest request) {
         Shipment shipment = findOrThrow(shipmentId);
-        currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
+
+        boolean isReturn = shipment.getDirection() == Shipment.ShipmentDirection.RETURN;
+        Long expectedUserId = isReturn
+                ? shipment.getLoanRequest().getArtwork().getCollector().getId()
+                : shipment.getLoanRequest().getFoundation().getId();
+        currentUser.requireUserId(expectedUserId);
+
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.DELIVERED);
 
         shipment.setStatus(Shipment.ShipmentStatus.DELIVERED);
@@ -164,7 +205,11 @@ public class ShipmentService {
         shipment.setDeliveryDate(LocalDateTime.now());
         shipmentRepository.save(shipment);
 
-        loanRequestService.onShipmentDelivered(shipment.getLoanRequest());
+        if (isReturn) {
+            loanRequestService.onReturnDelivered(shipment.getLoanRequest());
+        } else {
+            loanRequestService.onShipmentDelivered(shipment.getLoanRequest());
+        }
         return mapToResponse(shipment);
     }
 

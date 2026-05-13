@@ -55,7 +55,19 @@ export class LoanDetailComponent implements OnInit {
   protected readonly loan = signal<LoanResponse | null>(null);
   protected readonly artwork = signal<ArtworkResponse | null>(null);
   protected readonly shipment = signal<ShipmentResponse | null>(null);
+  protected readonly returnShipment = signal<ShipmentResponse | null>(null);
   protected readonly companies = signal<TransportCompanyResponse[]>([]);
+
+  /**
+   * Devuelve el shipment "activo" según el estado del préstamo: si el loan está
+   * en RETURNING, las acciones del transportista y la confirmación de entrega
+   * operan sobre el shipment de retorno.
+   */
+  protected readonly activeShipment = computed(() => {
+    const l = this.loan();
+    if (l?.status === 'RETURNING') return this.returnShipment();
+    return this.shipment();
+  });
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
@@ -108,7 +120,7 @@ export class LoanDetailComponent implements OnInit {
     () => this.role() === 'FOUNDATION' && this.loan()?.foundationId === this.userId(),
   );
   protected readonly isTransport = computed(() => {
-    const s = this.shipment();
+    const s = this.activeShipment();
     if (!s || this.role() !== 'TRANSPORT') return false;
     return s.transportCompanyId === this.userId();
   });
@@ -137,9 +149,6 @@ export class LoanDetailComponent implements OnInit {
   protected readonly canStartReturn = computed(
     () => this.loan()?.status === 'ON_LOAN' && this.isFoundation(),
   );
-  protected readonly canCompleteReturn = computed(
-    () => this.loan()?.status === 'RETURNING' && this.isCollector(),
-  );
   protected readonly canQuote = computed(
     () => this.shipment()?.status === 'REQUESTED' && this.isTransport(),
   );
@@ -150,14 +159,20 @@ export class LoanDetailComponent implements OnInit {
     () => this.shipment()?.status === 'QUOTED' && this.isFoundation(),
   );
   protected readonly canMarkPickedUp = computed(
-    () => this.shipment()?.status === 'APPROVED' && this.isTransport(),
+    () => this.activeShipment()?.status === 'APPROVED' && this.isTransport(),
   );
   protected readonly canMarkInTransit = computed(
-    () => this.shipment()?.status === 'PICKED_UP' && this.isTransport(),
+    () => this.activeShipment()?.status === 'PICKED_UP' && this.isTransport(),
   );
-  protected readonly canConfirmDelivery = computed(
-    () => this.shipment()?.status === 'IN_TRANSIT' && this.isFoundation(),
-  );
+  /** En OUTBOUND la confirma el museo; en RETURN la confirma el coleccionista. */
+  protected readonly canConfirmDelivery = computed(() => {
+    const s = this.activeShipment();
+    if (!s || s.status !== 'IN_TRANSIT') return false;
+    
+    return this.loan()?.status === 'RETURNING' 
+      ? this.isCollector() 
+      : this.isFoundation();
+});
   protected readonly canDownloadContract = computed(() => {
     const s = this.loan()?.status;
     if (!s) return false;
@@ -231,15 +246,19 @@ export class LoanDetailComponent implements OnInit {
           ship: loan.shipmentId
             ? this.shipmentService.getById(loan.shipmentId)
             : of(null),
+          ret: loan.returnShipmentId
+            ? this.shipmentService.getById(loan.returnShipmentId)
+            : of(null),
           companies:
             loan.status === 'REQUESTED' && this.role() === 'COLLECTOR'
               ? this.companyService.getAll()
               : of([] as TransportCompanyResponse[]),
         });
         tasks.subscribe({
-          next: ({ art, ship, companies }) => {
+          next: ({ art, ship, ret, companies }) => {
             this.artwork.set(art);
             this.shipment.set(ship);
+            this.returnShipment.set(ret);
             this.companies.set(companies);
             this.applyPreferredCompanyToAcceptForm();
             this.loading.set(false);
@@ -328,15 +347,8 @@ export class LoanDetailComponent implements OnInit {
   startReturn(): void {
     const id = this.loan()?.id;
     if (!id) return;
-    if (!confirm('¿Iniciar el retorno de la obra al coleccionista?')) return;
-    this.run(this.loanService.startReturn(id), 'Retorno iniciado.');
-  }
-
-  completeReturn(): void {
-    const id = this.loan()?.id;
-    if (!id) return;
-    if (!confirm('¿Confirmas que la obra está de nuevo en tus manos? Esto cierra el préstamo.')) return;
-    this.run(this.loanService.completeReturn(id), 'Préstamo cerrado correctamente.');
+    if (!confirm('¿Iniciar el retorno? Se generará un envío de vuelta con la misma empresa de transporte.')) return;
+    this.run(this.loanService.startReturn(id), 'Retorno iniciado. La empresa de transporte recogerá la obra.');
   }
 
   openQuote(): void {
@@ -376,13 +388,13 @@ export class LoanDetailComponent implements OnInit {
   }
 
   markPickedUp(): void {
-    const sId = this.shipment()?.id;
+    const sId = this.activeShipment()?.id;
     if (!sId) return;
     this.run(this.shipmentService.markPickedUp(sId), 'Recogida confirmada.');
   }
 
   markInTransit(): void {
-    const sId = this.shipment()?.id;
+    const sId = this.activeShipment()?.id;
     if (!sId) return;
     this.run(this.shipmentService.markInTransit(sId), 'En tránsito.');
   }
@@ -393,13 +405,16 @@ export class LoanDetailComponent implements OnInit {
   }
 
   confirmDelivery(): void {
-    const sId = this.shipment()?.id;
+    const sId = this.activeShipment()?.id;
     if (!sId || this.deliveryForm.invalid) return;
+    const isReturn = this.loan()?.status === 'RETURNING';
     const v = this.deliveryForm.getRawValue();
     this.run(this.shipmentService.confirmDelivery(sId, {
       receivedBy: v.receivedBy,
       notes: v.notes || undefined,
-    }), 'Entrega confirmada.', () => this.showDeliveryDialog.set(false));
+    }),
+    isReturn ? 'Retorno completado. Préstamo cerrado.' : 'Entrega confirmada.',
+    () => this.showDeliveryDialog.set(false));
   }
 
   downloadContract(): void {

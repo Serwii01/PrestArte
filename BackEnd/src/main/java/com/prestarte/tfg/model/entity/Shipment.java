@@ -17,7 +17,12 @@ public class Shipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    /**
+     * @ManyToOne (no @OneToOne) porque un mismo préstamo puede tener varios
+     * shipments distinguidos por {@link ShipmentDirection}: un OUTBOUND (envío
+     * al museo) y, al iniciar el retorno, un RETURN (devolución al coleccionista).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_request_id", nullable = false)
     private LoanRequest loanRequest;
 

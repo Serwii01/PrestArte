@@ -29,6 +29,8 @@ export interface LoanResponse {
   transportCompanyMandatory: boolean;
   /** Id del Shipment OUTBOUND vinculado, o null si aún no se ha creado. */
   shipmentId?: number | null;
+  /** Id del Shipment RETURN vinculado (solo a partir de RETURNING). */
+  returnShipmentId?: number | null;
   cancelledAt?: string | null;
   cancellationReason?: string | null;
 }
