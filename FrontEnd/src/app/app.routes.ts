@@ -76,6 +76,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'loans/:id/chat',
+        loadComponent: () =>
+          import('./features/chat/chat.component').then((m) => m.ChatComponent),
+      },
+      {
         path: 'collector',
         canActivate: [roleGuard(['COLLECTOR'])],
         children: [

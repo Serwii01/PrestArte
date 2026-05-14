@@ -8,6 +8,23 @@
 
 @if (loading()) {
   <div class="stitch-card p-12 text-center text-text-secondary">Cargando préstamo...</div>
+} @else if (forbidden()) {
+  <div class="stitch-card p-12 text-center max-w-lg mx-auto">
+    <div class="size-20 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+      <span class="material-symbols-outlined text-amber-600" style="font-size:48px;">lock</span>
+    </div>
+    <h2 class="text-2xl font-black text-text-main mb-2">Ups… esto no es tuyo</h2>
+    <p class="text-text-secondary mb-6">
+      Este préstamo pertenece a otra persona o institución. Solo las partes
+      implicadas (coleccionista, museo y empresa de transporte asignada) pueden verlo.
+    </p>
+    <a routerLink="/app"
+       class="inline-flex items-center gap-2 rounded-lg h-11 px-5
+              bg-primary hover:bg-primary-hover text-white text-sm font-bold transition-colors">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+      Volver a mi panel
+    </a>
+  </div>
 } @else if (errorMessage() && !loan()) {
   <div class="stitch-card p-12 text-center">
     <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>

@@ -71,6 +71,7 @@ export class LoanDetailComponent implements OnInit {
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly forbidden = signal(false);
   protected readonly actionMessage = signal<string | null>(null);
   protected readonly busy = signal(false);
 
@@ -269,9 +270,13 @@ export class LoanDetailComponent implements OnInit {
           },
         });
       },
-      error: () => {
-        this.errorMessage.set('No se pudo cargar el préstamo.');
+      error: (err: any) => {
         this.loading.set(false);
+        if (err?.status === 403) {
+          this.forbidden.set(true);
+        } else {
+          this.errorMessage.set('No se pudo cargar el préstamo.');
+        }
       },
     });
   }

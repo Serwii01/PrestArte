@@ -222,16 +222,23 @@ public class ShipmentService {
 
     @Transactional(readOnly = true)
     public Shipment getByIdRaw(Long id) {
-        return findOrThrow(id);
+        Shipment s = findOrThrow(id);
+        requireShipmentAccess(s);
+        return s;
     }
 
     @Transactional(readOnly = true)
     public ShipmentResponse getById(Long id) {
-        return mapToResponse(findOrThrow(id));
+        Shipment s = findOrThrow(id);
+        requireShipmentAccess(s);
+        return mapToResponse(s);
     }
 
     @Transactional(readOnly = true)
     public List<ShipmentResponse> getByTransportCompany(Long companyId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(companyId);
+        }
         return shipmentRepository.findByTransportCompanyId(companyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -242,6 +249,21 @@ public class ShipmentService {
     private Shipment findOrThrow(Long id) {
         return shipmentRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Envío", id));
+    }
+
+    /**
+     * El usuario actual ha de ser parte del préstamo asociado al envío:
+     * coleccionista dueño, fundación solicitante, empresa de transporte o admin.
+     */
+    private void requireShipmentAccess(Shipment s) {
+        if (currentUser.isAdmin()) return;
+        Long collectorId = s.getLoanRequest().getArtwork().getCollector().getId();
+        Long foundationId = s.getLoanRequest().getFoundation().getId();
+        Long transportId = s.getTransportCompany().getId();
+        if (!currentUser.isAnyOf(collectorId, foundationId, transportId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No tienes acceso a este envío");
+        }
     }
 
     private ShipmentResponse mapToResponse(Shipment s) {

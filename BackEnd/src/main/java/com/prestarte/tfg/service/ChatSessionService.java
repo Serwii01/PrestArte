@@ -1,11 +1,16 @@
 package com.prestarte.tfg.service;
 
+import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.ChatSessionResponse;
 import com.prestarte.tfg.model.entity.ChatSession;
 import com.prestarte.tfg.model.entity.LoanRequest;
+import com.prestarte.tfg.model.entity.Shipment;
 import com.prestarte.tfg.repository.ChatSessionRepository;
-import com.prestarte.tfg.repository.LoanRequestRepository; // Necesitamos esto
+import com.prestarte.tfg.repository.LoanRequestRepository;
+import com.prestarte.tfg.repository.ShipmentRepository;
+import com.prestarte.tfg.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,33 +23,35 @@ import java.util.stream.Collectors;
 public class ChatSessionService {
 
     private final ChatSessionRepository chatSessionRepository;
-    private final LoanRequestRepository loanRequestRepository; // Añadido
+    private final LoanRequestRepository loanRequestRepository;
+    private final ShipmentRepository shipmentRepository;
+    private final CurrentUser currentUser;
 
+    /**
+     * Devuelve la sesión de chat del préstamo, creándola si no existe.
+     * Solo los participantes del préstamo (coleccionista, museo, transportista
+     * asignado) o un admin pueden invocarlo.
+     */
     @Transactional
-    public ChatSessionResponse createChatSession(Long loanRequestId) {
-        // 1. Validar que el ID no sea nulo
-        if (loanRequestId == null) {
-            throw new RuntimeException("El ID del LoanRequest es obligatorio para iniciar un chat");
-        }
+    public ChatSessionResponse getOrCreateForLoan(Long loanRequestId) {
+        LoanRequest loan = loanRequestRepository.findById(loanRequestId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Préstamo", loanRequestId));
+        requireParticipant(loan);
 
-        // 2. Buscar la solicitud de préstamo real en la DB
-        LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
-                .orElseThrow(() -> new RuntimeException("No existe una solicitud de préstamo con ID: " + loanRequestId));
+        ChatSession session = chatSessionRepository.findByLoanRequestId(loanRequestId)
+                .orElseGet(() -> chatSessionRepository.save(ChatSession.builder()
+                        .loanRequest(loan)
+                        .estado(ChatSession.EstadoChat.ACTIVO)
+                        .build()));
 
-        // 3. Opcional: Evitar crear dos chats para la misma solicitud
-        // if (chatSessionRepository.existsByLoanRequestId(loanRequestId)) { ... }
-
-        // 4. Construir la nueva sesión
-        ChatSession chatSession = ChatSession.builder()
-                .loanRequest(loanRequest)
-                .estado(ChatSession.EstadoChat.ACTIVO)
-                .build();
-
-        ChatSession saved = chatSessionRepository.save(chatSession);
-        return mapToResponse(saved);
+        return mapToResponse(session);
     }
 
     public List<ChatSessionResponse> getAllChatSessions() {
+        if (!currentUser.isAdmin()) {
+            throw new AccessDeniedException(
+                    "Solo los administradores pueden listar todas las sesiones de chat");
+        }
         return chatSessionRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -52,32 +59,56 @@ public class ChatSessionService {
 
     public ChatSessionResponse getChatSessionDtoById(Long id) {
         ChatSession chatSession = chatSessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sesión de chat no encontrada"));
+                .orElseThrow(() -> ResourceNotFoundException.of("Sesión de chat", id));
+        requireParticipant(chatSession.getLoanRequest());
         return mapToResponse(chatSession);
     }
 
     @Transactional
     public ChatSessionResponse closeChatSession(Long chatSessionId) {
         ChatSession chatSession = chatSessionRepository.findById(chatSessionId)
-                .orElseThrow(() -> new RuntimeException("ChatSession no encontrada"));
+                .orElseThrow(() -> ResourceNotFoundException.of("Sesión de chat", chatSessionId));
+        requireParticipant(chatSession.getLoanRequest());
 
         if (chatSession.getEstado() == ChatSession.EstadoChat.CERRADO) {
-            throw new RuntimeException("El chat ya está cerrado");
+            throw new IllegalStateException("El chat ya está cerrado");
         }
-
         chatSession.setEstado(ChatSession.EstadoChat.CERRADO);
         chatSession.setClosedAt(LocalDateTime.now());
-
         return mapToResponse(chatSessionRepository.save(chatSession));
     }
 
-    private ChatSessionResponse mapToResponse(ChatSession chatSession) {
+    /**
+     * Comprueba que el usuario actual es uno de los participantes del préstamo
+     * (collector dueño, foundation solicitante, transport del shipment, o admin).
+     * Reutilizado por MessageService.
+     */
+    public void requireParticipant(LoanRequest loan) {
+        if (currentUser.isAdmin()) return;
+        Long collectorId = loan.getArtwork().getCollector().getId();
+        Long foundationId = loan.getFoundation().getId();
+        if (currentUser.isAnyOf(collectorId, foundationId)) return;
+
+        boolean isTransport = shipmentRepository
+                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .map(s -> currentUser.isAnyOf(s.getTransportCompany().getId()))
+                .orElse(false)
+            || shipmentRepository
+                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.RETURN)
+                .map(s -> currentUser.isAnyOf(s.getTransportCompany().getId()))
+                .orElse(false);
+        if (!isTransport) {
+            throw new AccessDeniedException("No participas en este préstamo");
+        }
+    }
+
+    private ChatSessionResponse mapToResponse(ChatSession s) {
         return ChatSessionResponse.builder()
-                .id(chatSession.getId())
-                .loanRequestId(chatSession.getLoanRequest() != null ? chatSession.getLoanRequest().getId() : null)
-                .estado(chatSession.getEstado())
-                .createdAt(chatSession.getCreatedAt())
-                .closedAt(chatSession.getClosedAt())
+                .id(s.getId())
+                .loanRequestId(s.getLoanRequest() != null ? s.getLoanRequest().getId() : null)
+                .estado(s.getEstado())
+                .createdAt(s.getCreatedAt())
+                .closedAt(s.getClosedAt())
                 .build();
     }
 }

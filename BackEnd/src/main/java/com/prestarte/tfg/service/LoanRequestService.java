@@ -233,7 +233,9 @@ public class LoanRequestService {
 
     @Transactional(readOnly = true)
     public LoanResponse getById(Long id) {
-        return convertToResponse(findOrThrow(id));
+        LoanRequest loan = findOrThrow(id);
+        requireLoanAccess(loan);
+        return convertToResponse(loan);
     }
 
     /**
@@ -243,6 +245,7 @@ public class LoanRequestService {
     @Transactional(readOnly = true)
     public LoanRequest getEntityById(Long id) {
         LoanRequest loan = findOrThrow(id);
+        requireLoanAccess(loan);
         // Forzamos la carga de las relaciones que el PDF necesita,
         // dentro de la transacción.
         loan.getArtwork().getCollector().getName();
@@ -252,18 +255,29 @@ public class LoanRequestService {
 
     @Transactional(readOnly = true)
     public List<LoanResponse> getRequestsByFoundation(Long foundationId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(foundationId);
+        }
         return loanRequestRepository.findByFoundationId(foundationId).stream()
                 .map(this::convertToResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public List<LoanResponse> getRequestsByCollector(Long collectorId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(collectorId);
+        }
         return loanRequestRepository.findByArtworkCollectorId(collectorId).stream()
                 .map(this::convertToResponse).toList();
     }
 
+    /** Solo admin puede listar todos los préstamos. */
     @Transactional(readOnly = true)
     public List<LoanResponse> getAllLoanRequests() {
+        if (!currentUser.isAdmin()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Solo los administradores pueden listar todos los préstamos");
+        }
         return loanRequestRepository.findAll().stream()
                 .map(this::convertToResponse).toList();
     }
@@ -273,6 +287,33 @@ public class LoanRequestService {
     private LoanRequest findOrThrow(Long id) {
         return loanRequestRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Préstamo", id));
+    }
+
+    /**
+     * Comprueba que el usuario actual puede VER este préstamo: ha de ser el
+     * coleccionista dueño, la fundación solicitante, la empresa de transporte
+     * de alguno de los shipments asociados, o un administrador.
+     */
+    private void requireLoanAccess(LoanRequest loan) {
+        if (currentUser.isAdmin()) return;
+        Long collectorId = loan.getArtwork().getCollector().getId();
+        Long foundationId = loan.getFoundation().getId();
+        if (currentUser.isAnyOf(collectorId, foundationId)) return;
+        // Comprobamos los shipments (OUTBOUND y RETURN) por transport company.
+        boolean isTransport = shipmentRepository.findByLoanRequestIdAndDirection(
+                        loan.getId(), com.prestarte.tfg.model.entity.Shipment.ShipmentDirection.OUTBOUND)
+                .map(s -> s.getTransportCompany().getId())
+                .map(currentUser::isAnyOf)
+                .orElse(false)
+            || shipmentRepository.findByLoanRequestIdAndDirection(
+                        loan.getId(), com.prestarte.tfg.model.entity.Shipment.ShipmentDirection.RETURN)
+                .map(s -> s.getTransportCompany().getId())
+                .map(currentUser::isAnyOf)
+                .orElse(false);
+        if (!isTransport) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No tienes acceso a este préstamo");
+        }
     }
 
     /**

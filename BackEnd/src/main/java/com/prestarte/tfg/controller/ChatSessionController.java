@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat-sessions")
@@ -15,10 +14,13 @@ public class ChatSessionController {
 
     private final ChatSessionService chatSessionService;
 
-    @PostMapping
-    public ChatSessionResponse createChatSession(@RequestBody Map<String, Long> payload) {
-        // Extraemos el ID del JSON {"loanRequestId": 1}
-        return chatSessionService.createChatSession(payload.get("loanRequestId"));
+    /**
+     * Get-or-create: devuelve la sesión de chat del préstamo, creándola si no
+     * existe todavía. El front llama a este endpoint al abrir la pantalla.
+     */
+    @GetMapping("/loan/{loanId}")
+    public ChatSessionResponse getOrCreateForLoan(@PathVariable Long loanId) {
+        return chatSessionService.getOrCreateForLoan(loanId);
     }
 
     @GetMapping

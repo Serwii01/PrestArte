@@ -1,0 +1,112 @@
+<div class="mb-6">
+  <a [routerLink]="['/app/loans', id]"
+     class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    Volver al préstamo
+  </a>
+</div>
+
+@if (loading()) {
+  <div class="stitch-card p-12 text-center text-text-secondary">Cargando chat...</div>
+} @else if (forbidden()) {
+  <div class="stitch-card p-12 text-center max-w-lg mx-auto">
+    <div class="size-20 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+      <span class="material-symbols-outlined text-amber-600" style="font-size:48px;">lock</span>
+    </div>
+    <h2 class="text-2xl font-black text-text-main mb-2">Ups… esto no es tuyo</h2>
+    <p class="text-text-secondary mb-6">
+      Solo las partes implicadas en este préstamo pueden acceder al chat de negociación.
+    </p>
+    <a routerLink="/app"
+       class="inline-flex items-center gap-2 rounded-lg h-11 px-5
+              bg-primary hover:bg-primary-hover text-white text-sm font-bold transition-colors">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+      Volver a mi panel
+    </a>
+  </div>
+} @else if (errorMessage()) {
+  <div class="stitch-card p-12 text-center">
+    <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>
+    <p class="text-text-main font-bold">{{ errorMessage() }}</p>
+  </div>
+} @else {
+  <div class="stitch-card flex flex-col h-[calc(100vh-200px)] overflow-hidden">
+    <!-- Cabecera del chat -->
+    <header class="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <span class="material-symbols-outlined">forum</span>
+        </div>
+        <div>
+          <h2 class="font-bold text-text-main">Negociación del préstamo</h2>
+          <p class="text-xs text-text-secondary">
+            Coleccionista · Museo · Transportista
+          </p>
+        </div>
+      </div>
+      @if (chatClosed()) {
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+          <span class="material-symbols-outlined" style="font-size:14px;">lock</span>
+          Cerrado
+        </span>
+      }
+    </header>
+
+    <!-- Mensajes -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-3 bg-background/50">
+      @if (messages().length === 0) {
+        <div class="h-full flex flex-col items-center justify-center text-center">
+          <span class="material-symbols-outlined text-text-secondary mb-2" style="font-size:48px;">chat_bubble_outline</span>
+          <p class="text-text-secondary">Todavía no hay mensajes.</p>
+          <p class="text-xs text-text-secondary mt-1">Sé la primera persona en escribir.</p>
+        </div>
+      } @else {
+        @for (m of messages(); track m.id) {
+          @if (isMine(m)) {
+            <div class="flex items-end gap-2 justify-end">
+              <div class="max-w-[70%] bg-primary text-white rounded-2xl rounded-br-md px-4 py-2 shadow-sm">
+                <p class="text-sm whitespace-pre-wrap break-words">{{ m.content }}</p>
+                <p class="text-[10px] opacity-70 mt-1 text-right">{{ m.sentAt | date:'shortTime' }}</p>
+              </div>
+              <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-border shrink-0">
+                {{ avatarInitial(m.senderName) }}
+              </div>
+            </div>
+          } @else {
+            <div class="flex items-end gap-2 justify-start">
+              <div class="size-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold border border-border shrink-0">
+                {{ avatarInitial(m.senderName) }}
+              </div>
+              <div class="max-w-[70%] bg-white border border-border rounded-2xl rounded-bl-md px-4 py-2 shadow-sm">
+                <p class="text-[11px] font-bold text-primary mb-0.5">{{ m.senderName }}</p>
+                <p class="text-sm text-text-main whitespace-pre-wrap break-words">{{ m.content }}</p>
+                <p class="text-[10px] text-text-secondary mt-1">{{ m.sentAt | date:'shortTime' }}</p>
+              </div>
+            </div>
+          }
+        }
+        <div #messagesEnd></div>
+      }
+    </div>
+
+    <!-- Compositor -->
+    <form [formGroup]="form" (ngSubmit)="send()"
+          class="px-4 py-3 border-t border-border bg-white flex items-end gap-2">
+      <textarea
+        formControlName="content"
+        rows="1"
+        placeholder="{{ chatClosed() ? 'Chat cerrado' : 'Escribe un mensaje…' }}"
+        [disabled]="chatClosed()"
+        (keydown.enter)="$event.preventDefault(); send()"
+        class="flex-1 resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm
+               focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+               disabled:bg-gray-soft disabled:cursor-not-allowed"></textarea>
+      <button type="submit" [disabled]="form.invalid || sending() || chatClosed()"
+        class="flex items-center justify-center rounded-lg h-10 w-10 shrink-0
+               bg-primary hover:bg-primary-hover text-white shadow-sm
+               disabled:opacity-50 disabled:cursor-not-allowed">
+        <span class="material-symbols-outlined" style="font-size:20px;">send</span>
+      </button>
+    </form>
+  </div>
+}

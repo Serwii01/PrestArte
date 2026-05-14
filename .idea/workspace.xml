@@ -5,18 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c38460b3-49b5-40a9-a41d-d0a13d0f12ea" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/LoanRequestController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/LoanResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/dto/LoanResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Shipment.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/model/entity/Shipment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ShipmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ShipmentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ChatSessionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/controller/ChatSessionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ChatSessionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/repository/ChatSessionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/security/CurrentUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/security/CurrentUser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ChatSessionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ChatSessionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/LoanRequestService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/MessageService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/BackEnd/src/main/java/com/prestarte/tfg/service/ShipmentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/core/models/loan.models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/core/models/loan.models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/core/services/loan.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/core/services/loan.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/features/landing/landing.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/features/landing/landing.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/app.routes.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/features/loan-detail/loan-detail.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/features/loan-detail/loan-detail.component.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/features/loan-detail/loan-detail.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/features/loan-detail/loan-detail.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FrontEnd/src/app/shared/components/main-layout/main-layout.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/FrontEnd/src/app/shared/components/main-layout/main-layout.component.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +35,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -161,6 +166,10 @@
       <workItem from="1778485828417" duration="237000" />
       <workItem from="1778498054213" duration="2448000" />
       <workItem from="1778658252242" duration="1484000" />
+      <workItem from="1778660128432" duration="1891000" />
+      <workItem from="1778672552509" duration="667000" />
+      <workItem from="1778677896623" duration="783000" />
+      <workItem from="1778707511094" duration="1255000" />
     </task>
     <servers />
   </component>

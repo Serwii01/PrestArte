@@ -1,5 +1,6 @@
 package com.prestarte.tfg.security;
 
+import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.model.entity.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -57,5 +58,19 @@ public class CurrentUser {
             if (id != null && id.equals(me)) return;
         }
         throw new AccessDeniedException("No tienes permiso para esta operación");
+    }
+
+    /** True si el usuario actual tiene rol ADMIN. */
+    public boolean isAdmin() {
+        return getOrThrow().getRole() == Role.ADMIN;
+    }
+
+    /** True si el usuario actual coincide con alguno de los ids pasados. */
+    public boolean isAnyOf(Long... allowed) {
+        Long me = currentId();
+        for (Long id : allowed) {
+            if (id != null && id.equals(me)) return true;
+        }
+        return false;
     }
 }
