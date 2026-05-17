@@ -11,7 +11,11 @@ public class CreateMessageRequest {
     @NotNull(message = "chatSessionId es obligatorio")
     private Long chatSessionId;
 
-    @NotNull(message = "senderId es obligatorio")
+    /**
+     * Ignorado por el servidor: el remitente se resuelve siempre desde el JWT
+     * para evitar suplantación. Se mantiene el campo como opcional por
+     * compatibilidad con clientes existentes.
+     */
     private Long senderId;
 
     @NotBlank(message = "El contenido no puede estar vacío")

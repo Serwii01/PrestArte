@@ -27,6 +27,7 @@ public class ArtworkDto {
     private Long preferredTransportCompanyId;
     private String preferredTransportCompanyName;
     private boolean preferredTransportMandatory;
+    private boolean availableForLoan;
     private List<FileDto> files;
     private LocalDateTime createdAt;
 }

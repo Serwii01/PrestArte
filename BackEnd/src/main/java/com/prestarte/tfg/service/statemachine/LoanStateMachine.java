@@ -8,17 +8,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Tabla de transiciones permitidas para LoanRequest.Status.
- *
- *   REQUESTED ─┬→ ACCEPTED ─→ QUOTE_PENDING ─→ QUOTE_PROPOSED ─┬→ PAID ─→ READY_FOR_PICKUP ─→ IN_TRANSIT ─→ DELIVERED ─→ ON_LOAN ─→ RETURNING ─→ RETURNED
- *              │                                ↑              │
- *              ├→ REJECTED                      └─ negociar ───┘  (sólo si transportCompanyMandatory = false)
- *              └→ CANCELLED                                       (mandatory = true → CANCELLED en lugar de volver a QUOTE_PENDING)
- *
- *   En cualquier punto antes de IN_TRANSIT se puede pasar a CANCELLED.
- *   Estados terminales (sin salida): REJECTED, CANCELLED, RETURNED.
- */
 @Component
 public class LoanStateMachine {
 

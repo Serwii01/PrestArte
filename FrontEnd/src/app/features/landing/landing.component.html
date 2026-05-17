@@ -1,50 +1,33 @@
-<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<div class="landing-wrapper">
+
   <!-- Navbar -->
   <header
-    class="fixed top-0 z-50 w-full transition-all duration-300"
-    [class.bg-white]="scrolled()"
-    [class.shadow-sm]="scrolled()"
-    [class.border-b]="scrolled()"
-    [class.border-gray-soft]="scrolled()"
-    [class.bg-white\/70]="!scrolled()"
-    [class.backdrop-blur-md]="!scrolled()"
+    class="navbar"
+    [class.navbar--scrolled]="scrolled()"
+    [class.navbar--blur]="!scrolled()"
   >
-    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-      <a routerLink="/" class="flex items-center">
-        <img src="/assets/images/logo.png" alt="Prestarte" class="h-12 w-auto object-contain" />
+    <div class="navbar__inner">
+      <a routerLink="/" class="navbar__logo-link">
+        <img src="/assets/images/logo.png" alt="Prestarte" class="navbar__logo" />
       </a>
 
-      <nav class="hidden md:flex items-center gap-8">
-        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#how">
-          Cómo funciona
-        </a>
-        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#collectors">
-          Para Coleccionistas
-        </a>
-        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#museums">
-          Para Museos
-        </a>
-        <a class="text-sm font-medium text-text-main hover:text-primary transition-colors" href="#transport">
-          Para Transportistas
-        </a>
+      <nav class="navbar__nav">
+        <a class="navbar__link" href="#how">Cómo funciona</a>
+        <a class="navbar__link" href="#collectors">Para Coleccionistas</a>
+        <a class="navbar__link" href="#museums">Para Museos</a>
+        <a class="navbar__link" routerLink="/partners">Partners</a>
       </nav>
 
-      <div class="flex items-center gap-3">
+      <div class="navbar__actions">
         @if (isLoggedIn()) {
-          <button type="button" (click)="goToApp()"
-            class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold
-                   text-white hover:bg-primary-hover transition-colors shadow-sm">
+          <button type="button" (click)="goToApp()" class="btn btn--primary btn--sm">
             Ir a mi panel
           </button>
         } @else {
-          <a routerLink="/login"
-            class="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-sm
-                   font-bold text-text-main hover:bg-gray-soft transition-colors">
+          <a routerLink="/login" class="btn btn--ghost btn--sm navbar__login">
             Iniciar sesión
           </a>
-          <a routerLink="/register"
-            class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm
-                   font-bold text-white hover:bg-primary-hover transition-colors shadow-sm">
+          <a routerLink="/register" class="btn btn--primary btn--sm">
             Registrarse
           </a>
         }
@@ -52,352 +35,354 @@
     </div>
   </header>
 
+
   <!-- Hero -->
-  <section class="relative overflow-hidden bg-background pt-28 pb-16 lg:pt-32 lg:pb-32">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid gap-12 lg:grid-cols-2 lg:gap-12 items-center">
+  <section class="hero">
+    <div class="container">
+      <div class="hero__grid">
+
         <!-- Texto izquierda -->
-        <div class="flex flex-col gap-6 max-w-2xl order-2 lg:order-1">
-          <span class="inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider">
+        <div class="hero__content">
+          <span class="badge badge--primary">
             <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
             Plataforma profesional
           </span>
-          <h1 class="text-4xl font-black leading-[1.1] tracking-tight text-text-main sm:text-5xl lg:text-6xl">
+          <h1 class="hero__title">
             Conectamos colecciones privadas con
-            <span class="text-primary">miradas públicas</span>
+            <span class="hero__title--accent">miradas públicas</span>
           </h1>
-          <p class="text-lg leading-relaxed text-text-secondary">
+          <p class="hero__description">
             Plataforma segura para el préstamo de obras de arte entre coleccionistas particulares,
             museos de primer nivel y empresas de transporte especializadas. Democratizamos el acceso
             al arte oculto, con todas las garantías.
           </p>
-          <div class="mt-4 flex flex-wrap gap-4">
-            <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
-              class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base
-                     font-bold text-white shadow-lg transition-all hover:bg-primary-hover hover:shadow-primary/25">
+          <div class="hero__actions">
+            <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="btn btn--primary btn--lg">
               Empezar a prestar
             </a>
-            <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
-              class="flex h-12 items-center justify-center rounded-lg border border-border bg-white
-                     px-8 text-base font-bold text-text-main transition-all hover:bg-gray-soft">
+            <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }" class="btn btn--outline btn--lg">
               Buscar obras
             </a>
           </div>
-          <div class="mt-6 flex items-center gap-3 text-sm text-text-secondary">
-            <span class="material-symbols-outlined text-primary">workspace_premium</span>
+          <div class="hero__footer-note">
+            <span class="material-symbols-outlined hero__footer-icon">workspace_premium</span>
             <p>Diseñad@ para instituciones culturales y coleccionistas serios</p>
           </div>
         </div>
 
-        <!-- Imagen derecha (Tríptico del Bosco) -->
-        <div class="relative order-1 lg:order-2">
-          <div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-2xl">
+        <!-- Imagen derecha -->
+        <div class="hero__media">
+          <div class="hero__image-wrapper">
             <img
               src="/assets/images/demo/jardin_delicias.jpg"
               alt="El jardín de las delicias - Tríptico de El Bosco"
-              class="absolute inset-0 w-full h-full object-cover"
+              class="hero__image"
             />
             <!-- Tarjeta flotante -->
-            <div class="absolute -bottom-6 -left-6 hidden md:flex w-64 flex-col gap-2 rounded-xl
-                        bg-white p-4 shadow-xl border border-gray-soft">
-              <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-green-500">verified_user</span>
-                <div>
-                  <p class="text-xs font-bold text-text-secondary">Estado</p>
-                  <p class="text-sm font-bold text-text-main">Asegurada y verificada</p>
-                </div>
+            <div class="hero__float-card">
+              <span class="material-symbols-outlined hero__float-icon">verified_user</span>
+              <div>
+                <p class="hero__float-label">Estado</p>
+                <p class="hero__float-value">Asegurada y verificada</p>
               </div>
             </div>
-            <!-- Pie de imagen sutil -->
-            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-text-main shadow-sm">
-              El Bosco · c. 1500
-            </div>
+            <!-- Pie de imagen -->
+            <div class="hero__image-caption">El Bosco · c. 1500</div>
           </div>
-          <div class="absolute -top-12 -right-12 -z-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+          <div class="hero__glow"></div>
         </div>
+
       </div>
     </div>
   </section>
 
+
   <!-- Misión -->
-  <section class="py-16 bg-white">
-    <div class="mx-auto max-w-3xl px-4 text-center">
-      <span class="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">
-        Nuestra misión
-      </span>
-      <h2 class="text-2xl font-bold leading-tight text-text-main md:text-3xl lg:text-4xl">
-        “Acercar al gran público obras de arte que normalmente están guardadas en colecciones
-        privadas, garantizando seguridad, trazabilidad y transparencia en cada préstamo.”
+  <section class="mission">
+    <div class="container container--narrow">
+      <span class="badge badge--primary">Nuestra misión</span>
+      <h2 class="mission__text">
+        "Acercar al gran público obras de arte que normalmente están guardadas en colecciones
+        privadas, garantizando seguridad, trazabilidad y transparencia en cada préstamo."
       </h2>
     </div>
   </section>
 
-  <!-- Cómo funciona (formato tarjetas) -->
-  <section id="how" class="py-20 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-12 text-center max-w-2xl mx-auto">
-        <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">Cómo funciona</h2>
-        <p class="mt-3 text-text-secondary">Un flujo claro y trazable para cada préstamo, paso a paso.</p>
+
+  <!-- Cómo funciona -->
+  <section id="how" class="how">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Cómo funciona</h2>
+        <p class="section-subtitle">Un flujo claro y trazable para cada préstamo, paso a paso.</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Card 1 -->
-        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">1</div>
-          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">forum</span>
-          <h3 class="text-lg font-bold text-text-main mb-2">El museo solicita</h3>
-          <p class="text-sm text-text-secondary">
-            La fundación encuentra una obra en el catálogo y envía una solicitud al coleccionista.
-          </p>
+      <div class="how__grid">
+        <div class="step-card">
+          <div class="step-card__number">1</div>
+          <span class="material-symbols-outlined step-card__icon">forum</span>
+          <h3 class="step-card__title">El museo solicita</h3>
+          <p class="step-card__desc">La fundación encuentra una obra en el catálogo y envía una solicitud al coleccionista.</p>
         </div>
-        <!-- Card 2 -->
-        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">2</div>
-          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">handshake</span>
-          <h3 class="text-lg font-bold text-text-main mb-2">El coleccionista acepta</h3>
-          <p class="text-sm text-text-secondary">
-            Acepta el préstamo y elige la empresa de transporte de su confianza.
-          </p>
+        <div class="step-card">
+          <div class="step-card__number">2</div>
+          <span class="material-symbols-outlined step-card__icon">handshake</span>
+          <h3 class="step-card__title">El coleccionista acepta</h3>
+          <p class="step-card__desc">Acepta el préstamo y elige la empresa de transporte de su confianza.</p>
         </div>
-        <!-- Card 3 -->
-        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">3</div>
-          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">request_quote</span>
-          <h3 class="text-lg font-bold text-text-main mb-2">Presupuesto y pago</h3>
-          <p class="text-sm text-text-secondary">
-            La empresa de transporte sube su presupuesto y el museo lo aprueba antes del envío.
-          </p>
+        <div class="step-card">
+          <div class="step-card__number">3</div>
+          <span class="material-symbols-outlined step-card__icon">request_quote</span>
+          <h3 class="step-card__title">Presupuesto y pago</h3>
+          <p class="step-card__desc">La empresa de transporte sube su presupuesto y el museo lo aprueba antes del envío.</p>
         </div>
-        <!-- Card 4 -->
-        <div class="relative bg-background rounded-2xl border border-border p-6 hover:shadow-md transition-shadow">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white text-lg font-black mb-4">4</div>
-          <span class="material-symbols-outlined text-primary mb-3 block" style="font-size:28px;">local_shipping</span>
-          <h3 class="text-lg font-bold text-text-main mb-2">La obra viaja</h3>
-          <p class="text-sm text-text-secondary">
-            Recogida, tránsito y entrega con condition report en cada hito. Trazabilidad completa.
-          </p>
+        <div class="step-card">
+          <div class="step-card__number">4</div>
+          <span class="material-symbols-outlined step-card__icon">local_shipping</span>
+          <h3 class="step-card__title">La obra viaja</h3>
+          <p class="step-card__desc">Recogida, tránsito y entrega con condition report en cada hito. Trazabilidad completa.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Para Collectors / Museums / Transport -->
-  <section id="features" class="py-20 bg-background">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-16 md:text-center max-w-3xl mx-auto">
-        <h2 class="text-3xl font-black tracking-tight text-text-main sm:text-4xl">
-          Pensado para todo el mundo del arte
-        </h2>
-        <p class="mt-4 text-lg text-text-secondary">
-          Tres roles, tres herramientas conectadas. Cada actor entra en su flujo y la plataforma
-          orquesta el resto.
+
+  <!-- Features por rol -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header section-header--wide">
+        <h2 class="section-title">Pensado para todo el mundo del arte</h2>
+        <p class="section-subtitle section-subtitle--lg">
+          Tres roles, tres herramientas conectadas. Cada actor entra en su flujo y la plataforma orquesta el resto.
         </p>
       </div>
-      <div class="grid gap-8 md:grid-cols-3">
-        <!-- Collector -->
-        <div id="collectors"
-          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
-                 transition-shadow border border-border">
-          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
-                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+      <div class="features__grid">
+
+        <div id="collectors" class="feature-card">
+          <div class="feature-card__icon-wrapper">
             <span class="material-symbols-outlined" style="font-size:32px;">verified_user</span>
           </div>
-          <h3 class="mb-3 text-xl font-bold text-text-main">Coleccionistas</h3>
-          <p class="text-text-secondary mb-6 leading-relaxed">
+          <h3 class="feature-card__title">Coleccionistas</h3>
+          <p class="feature-card__desc">
             Maximiza el valor de tus obras. Visibilidad, cobertura de seguro y transporte de máxima
             calidad mientras tu pieza viaja.
           </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+          <ul class="feature-card__list">
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Eliges la empresa de transporte
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Seguro nail-to-nail
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Contrato firmado y trazabilidad
             </li>
           </ul>
         </div>
 
-        <!-- Museum -->
-        <div id="museums"
-          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
-                 transition-shadow border border-border">
-          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
-                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+        <div id="museums" class="feature-card">
+          <div class="feature-card__icon-wrapper">
             <span class="material-symbols-outlined" style="font-size:32px;">museum</span>
           </div>
-          <h3 class="mb-3 text-xl font-bold text-text-main">Museos y Fundaciones</h3>
-          <p class="text-text-secondary mb-6 leading-relaxed">
+          <h3 class="feature-card__title">Museos y Fundaciones</h3>
+          <p class="feature-card__desc">
             Cura sin límites. Accede a un inventario global de obras privadas que normalmente
             estarían fuera de tu alcance.
           </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+          <ul class="feature-card__list">
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Catálogo global de obras
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Aprueba presupuestos en un click
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Condition reports digitales
             </li>
           </ul>
         </div>
 
-        <!-- Transport -->
-        <div id="transport"
-          class="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-sm hover:shadow-md
-                 transition-shadow border border-border">
-          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10
-                      text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+        <div id="transport" class="feature-card">
+          <div class="feature-card__icon-wrapper">
             <span class="material-symbols-outlined" style="font-size:32px;">local_shipping</span>
           </div>
-          <h3 class="mb-3 text-xl font-bold text-text-main">Empresas de Transporte</h3>
-          <p class="text-text-secondary mb-6 leading-relaxed">
+          <h3 class="feature-card__title">Empresas de Transporte</h3>
+          <p class="feature-card__desc">
             Recibe servicios, sube presupuestos y gestiona la logística completa con tracking
             actualizado por estado.
           </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+          <ul class="feature-card__list">
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Servicios asignados directamente
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Presupuesto + póliza en un paso
             </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-text-main">
-              <span class="material-symbols-outlined text-primary" style="font-size:20px;">check_circle</span>
+            <li class="feature-card__item">
+              <span class="material-symbols-outlined feature-card__check">check_circle</span>
               Estados sincronizados en tiempo real
             </li>
           </ul>
         </div>
+
       </div>
     </div>
   </section>
 
 
   <!-- Obras en préstamo (demo) -->
-  <section class="py-20 bg-background">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+  <section class="artworks">
+    <div class="container">
+      <div class="artworks__header">
         <div>
-          <h2 class="text-3xl font-black text-text-main">Actualmente en préstamo</h2>
-          <p class="mt-2 text-text-secondary">Obras que circulan ahora mismo entre instituciones de la red.</p>
+          <h2 class="artworks__title">Actualmente en préstamo</h2>
+          <p class="artworks__subtitle">Obras que circulan ahora mismo entre instituciones de la red.</p>
         </div>
-        <a routerLink="/login"
-           class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-hover transition-colors">
+        <a routerLink="/catalog" class="artworks__link">
           Ver el catálogo completo
           <span class="material-symbols-outlined">arrow_right_alt</span>
         </a>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="artworks__grid">
         @for (a of demoArtworks; track a.title) {
-          <div class="group cursor-pointer">
-            <div class="overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] mb-4 relative">
-              <img [src]="a.img" [alt]="a.title"
-                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div class="artwork-card">
+            <div class="artwork-card__media">
+              <img [src]="a.img" [alt]="a.title" class="artwork-card__img" />
               @if (a.available) {
-                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-text-main shadow-sm">
-                  Disponible
-                </div>
+                <div class="artwork-card__badge artwork-card__badge--available">Disponible</div>
               } @else {
-                <div class="absolute top-4 right-4 bg-primary/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-white shadow-sm">
-                  En préstamo
-                </div>
+                <div class="artwork-card__badge artwork-card__badge--loan">En préstamo</div>
               }
             </div>
-            <h4 class="text-lg font-bold text-text-main">{{ a.title }}</h4>
-            <p class="text-sm text-text-secondary">{{ a.subtitle }}</p>
-            <p class="mt-1 text-xs font-medium text-primary">{{ a.location }}</p>
+            <h4 class="artwork-card__title">{{ a.title }}</h4>
+            <p class="artwork-card__subtitle">{{ a.subtitle }}</p>
+            <p class="artwork-card__location">{{ a.location }}</p>
           </div>
         }
       </div>
     </div>
   </section>
 
+
+  <!-- Partners (empresas de transporte) -->
+  @if (partners().length > 0) {
+    <section class="partners">
+      <div class="container">
+        <div class="partners__header">
+          <div>
+            <h2 class="partners__title">Empresas partners</h2>
+            <p class="partners__subtitle">
+              Especialistas en transporte de obras de arte que forman parte de la red.
+            </p>
+          </div>
+          <a routerLink="/partners" class="partners__link">
+            Ver todos los partners
+            <span class="material-symbols-outlined">arrow_right_alt</span>
+          </a>
+        </div>
+        <div class="partners__grid">
+          @for (p of partners(); track p.id) {
+            <a [routerLink]="['/partners', p.id]" class="partner-card">
+              <div class="partner-card__icon">
+                <span class="material-symbols-outlined">local_shipping</span>
+              </div>
+              <h3 class="partner-card__name">{{ p.companyName }}</h3>
+              @if (p.coverageArea) {
+                <p class="partner-card__area">{{ p.coverageArea }}</p>
+              }
+              @if (p.description) {
+                <p class="partner-card__desc">{{ p.description }}</p>
+              }
+              @if (splitSpecialties(p.specialties).length > 0) {
+                <div class="partner-card__chips">
+                  @for (s of splitSpecialties(p.specialties).slice(0, 3); track s) {
+                    <span class="partner-card__chip">{{ s }}</span>
+                  }
+                </div>
+              }
+              <p class="partner-card__cta">Ver ficha →</p>
+            </a>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+
   <!-- CTA -->
-  <section class="relative py-24 bg-primary overflow-hidden">
-    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_20%,white,transparent_60%)]"></div>
-    <div class="relative mx-auto max-w-4xl px-4 text-center">
-      <h2 class="text-4xl font-black text-white sm:text-5xl">¿List@ para empezar?</h2>
-      <p class="mt-6 text-xl text-blue-100 max-w-2xl mx-auto">
-        Únete a la red profesional de préstamo y exposición de obras de arte.
-      </p>
-      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }"
-          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg bg-white px-8
-                 text-lg font-bold text-primary hover:bg-gray-50 transition-colors shadow-lg">
+  <section class="cta">
+    <div class="cta__glow"></div>
+    <div class="container container--cta">
+      <h2 class="cta__title">¿List@ para empezar?</h2>
+      <p class="cta__desc">Únete a la red profesional de préstamo y exposición de obras de arte.</p>
+      <div class="cta__actions">
+        <a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="btn btn--cta-white">
           Soy Coleccionista
         </a>
-        <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }"
-          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
-                 bg-primary-hover border border-white/20 px-8 text-lg font-bold text-white
-                 hover:bg-primary-hover/80 transition-colors">
+        <a routerLink="/register" [queryParams]="{ role: 'FOUNDATION' }" class="btn btn--cta-dark">
           Soy Museo / Fundación
         </a>
-        <a routerLink="/register" [queryParams]="{ role: 'TRANSPORT' }"
-          class="w-full sm:w-auto h-14 flex items-center justify-center rounded-lg
-                 bg-transparent border border-white/40 px-8 text-lg font-bold text-white
-                 hover:bg-white/10 transition-colors">
+        <a routerLink="/register" [queryParams]="{ role: 'TRANSPORT' }" class="btn btn--cta-outline">
           Soy Transportista
         </a>
       </div>
     </div>
   </section>
 
+
   <!-- Footer -->
-  <footer class="bg-white pt-16 pb-8 border-t border-gray-soft">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-        <div class="col-span-2 md:col-span-1">
-          <a routerLink="/" class="flex items-center mb-4">
-            <img src="/assets/images/logo.png" alt="Prestarte" class="h-10 w-auto object-contain" />
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <a routerLink="/" class="footer__logo-link">
+            <img src="/assets/images/logo.png" alt="Prestarte" class="footer__logo" />
           </a>
-          <p class="text-sm text-text-secondary leading-relaxed">
+          <p class="footer__tagline">
             Conectamos las obras de arte privadas con la mirada del público, con todas las garantías.
           </p>
         </div>
-        <div>
-          <h4 class="font-bold text-text-main mb-4">Plataforma</h4>
-          <ul class="space-y-2 text-sm text-text-secondary">
-            <li><a class="hover:text-primary transition-colors" href="#collectors">Coleccionistas</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#museums">Museos y fundaciones</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#transport">Empresas de transporte</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#how">Cómo funciona</a></li>
+        <div class="footer__col">
+          <h4 class="footer__heading">Plataforma</h4>
+          <ul class="footer__list">
+            <li><a class="footer__link" href="#collectors">Coleccionistas</a></li>
+            <li><a class="footer__link" href="#museums">Museos y fundaciones</a></li>
+            <li><a class="footer__link" href="#transport">Empresas de transporte</a></li>
+            <li><a class="footer__link" href="#how">Cómo funciona</a></li>
           </ul>
         </div>
-        <div>
-          <h4 class="font-bold text-text-main mb-4">Recursos</h4>
-          <ul class="space-y-2 text-sm text-text-secondary">
-            <li><a class="hover:text-primary transition-colors" href="#">Guía del seguro</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#">Logística y embalaje</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#">Marco legal</a></li>
+        <div class="footer__col">
+          <h4 class="footer__heading">Recursos</h4>
+          <ul class="footer__list">
+            <li><a class="footer__link" href="#">Guía del seguro</a></li>
+            <li><a class="footer__link" href="#">Logística y embalaje</a></li>
+            <li><a class="footer__link" href="#">Marco legal</a></li>
           </ul>
         </div>
-        <div>
-          <h4 class="font-bold text-text-main mb-4">Acceso</h4>
-          <ul class="space-y-2 text-sm text-text-secondary">
-            <li><a routerLink="/login" class="hover:text-primary transition-colors">Iniciar sesión</a></li>
-            <li><a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="hover:text-primary transition-colors">Registrarse</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#">Contacto</a></li>
+        <div class="footer__col">
+          <h4 class="footer__heading">Acceso</h4>
+          <ul class="footer__list">
+            <li><a routerLink="/login" class="footer__link">Iniciar sesión</a></li>
+            <li><a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="footer__link">Registrarse</a></li>
+            <li><a class="footer__link" href="#">Contacto</a></li>
           </ul>
         </div>
       </div>
-      <div class="pt-8 border-t border-gray-soft flex flex-col md:flex-row items-center justify-between gap-4">
-        <p class="text-sm text-text-secondary">© {{ year }} Prestarte · Trabajo de Fin de Grado</p>
-        <div class="flex gap-6 text-sm text-text-secondary">
-          <a class="hover:text-text-main transition-colors" href="#">Privacidad</a>
-          <a class="hover:text-text-main transition-colors" href="#">Términos</a>
+      <div class="footer__bottom">
+        <p class="footer__copy">© {{ year }} Prestarte · Trabajo de Fin de Grado</p>
+        <div class="footer__legal">
+          <a class="footer__legal-link" href="#">Privacidad</a>
+          <a class="footer__legal-link" href="#">Términos</a>
         </div>
       </div>
     </div>
   </footer>
+
 </div>

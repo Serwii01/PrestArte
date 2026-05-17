@@ -44,6 +44,11 @@ public class LoanRequestService {
         Artwork artwork = artworkRepository.findById(dto.getArtworkId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", dto.getArtworkId()));
 
+        if (!artwork.isAvailableForLoan()) {
+            throw new IllegalStateException(
+                    "Esta obra no está disponible para préstamo en este momento.");
+        }
+
         Foundation foundation = foundationRepository.findById(dto.getFoundationId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Fundación", dto.getFoundationId()));
 

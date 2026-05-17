@@ -357,6 +357,13 @@
           </button>
         }
 
+        <a [routerLink]="['/app/loans', l.id, 'chat']"
+           class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
+                  bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
+          <span class="material-symbols-outlined" style="font-size:18px;">forum</span>
+          Mensajes
+        </a>
+
         @if (canCancel()) {
           <button type="button" (click)="openCancel()" [disabled]="busy()"
             class="flex w-full items-center justify-center gap-2 rounded-lg h-10 px-4 mt-3

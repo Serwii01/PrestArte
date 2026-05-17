@@ -215,9 +215,17 @@ public class ShipmentService {
 
     /* ========== LECTURAS ========== */
 
+    /**
+     * Devuelve el Shipment OUTBOUND del préstamo (el que se usa para el
+     * contrato y datos económicos). Antes existía un único shipment por loan,
+     * pero ahora hay también de RETURN: filtramos por dirección para evitar
+     * que Spring Data devuelva "non-unique result".
+     */
     @Transactional(readOnly = true)
     public Shipment getByLoanId(Long loanId) {
-        return shipmentRepository.findByLoanRequestId(loanId).orElse(null);
+        return shipmentRepository
+                .findByLoanRequestIdAndDirection(loanId, Shipment.ShipmentDirection.OUTBOUND)
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)

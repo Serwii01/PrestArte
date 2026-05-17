@@ -5,7 +5,9 @@
       <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
       Volver
     </a>
-    <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight">Subir nueva obra</h1>
+    <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight">
+      {{ isEditMode() ? 'Editar obra' : 'Subir nueva obra' }}
+    </h1>
     <p class="text-text-secondary text-lg mt-1">
       Añade una pieza a tu colección. Toda la información viaja en el contrato del préstamo.
     </p>
@@ -206,6 +208,7 @@
 
   <!-- Sidebar: imágenes + acción -->
   <aside class="space-y-6">
+    @if (!isEditMode()) {
     <section class="stitch-card p-6">
       <h2 class="text-lg font-bold text-text-main mb-2">Fotografías</h2>
       <p class="text-text-secondary text-sm mb-4">
@@ -235,6 +238,7 @@
         </div>
       }
     </section>
+    }
 
     <!-- Acción -->
     <section class="stitch-card p-6 sticky top-24">
@@ -247,7 +251,13 @@
       @if (success()) {
         <div class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-3 flex items-start gap-2">
           <span class="material-symbols-outlined text-emerald-600 mt-0.5" style="font-size:18px;">check_circle</span>
-          <span>Obra creada. Te llevamos a tu panel...</span>
+          <span>
+            @if (isEditMode()) {
+              Cambios guardados.
+            } @else {
+              Obra creada. Te llevamos a tu panel...
+            }
+          </span>
         </div>
       }
 
@@ -258,7 +268,11 @@
                      text-white text-base font-bold tracking-[0.015em] shadow-sm
                      disabled:opacity-50 disabled:cursor-not-allowed">
         <span class="material-symbols-outlined" style="font-size:20px;">cloud_upload</span>
-        {{ loading() ? 'Subiendo...' : 'Publicar obra' }}
+        @if (isEditMode()) {
+          {{ loading() ? 'Guardando...' : 'Guardar cambios' }}
+        } @else {
+          {{ loading() ? 'Subiendo...' : 'Publicar obra' }}
+        }
       </button>
 
       <a routerLink="/app/collector"

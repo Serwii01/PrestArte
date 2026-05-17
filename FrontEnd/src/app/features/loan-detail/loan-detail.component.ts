@@ -1,7 +1,7 @@
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, computed, inject, Input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 
 import { ArtworkService } from '../../core/services/artwork.service';
@@ -12,7 +12,7 @@ import { TransportCompanyService } from '../../core/services/transport-company.s
 import { ArtworkResponse } from '../../core/models/artwork.models';
 import { LoanResponse, LOAN_STATUS_LABEL, LoanStatus } from '../../core/models/loan.models';
 import { ShipmentResponse, SHIPMENT_STATUS_LABEL } from '../../core/models/shipment.models';
-import { TransportCompanyResponse } from '../../core/models/transport-company.models';
+import { TransportCompanyProfile } from '../../core/models/transport-company.models';
 import { StatusPillComponent } from '../../shared/components/status-pill/status-pill.component';
 
 /** Pasos del timeline en el orden visible al usuario. */
@@ -47,7 +47,7 @@ export class LoanDetailComponent implements OnInit {
   private readonly shipmentService = inject(ShipmentService);
   private readonly companyService = inject(TransportCompanyService);
   protected readonly auth = inject(AuthService);
-  private readonly location = inject(Location);
+  private readonly router = inject(Router);
 
   /** Vinculado a `:id` por withComponentInputBinding(). */
   @Input() id?: string;
@@ -56,7 +56,7 @@ export class LoanDetailComponent implements OnInit {
   protected readonly artwork = signal<ArtworkResponse | null>(null);
   protected readonly shipment = signal<ShipmentResponse | null>(null);
   protected readonly returnShipment = signal<ShipmentResponse | null>(null);
-  protected readonly companies = signal<TransportCompanyResponse[]>([]);
+  protected readonly companies = signal<TransportCompanyProfile[]>([]);
 
   /**
    * Devuelve el shipment "activo" según el estado del préstamo: si el loan está
@@ -253,7 +253,7 @@ export class LoanDetailComponent implements OnInit {
           companies:
             loan.status === 'REQUESTED' && this.role() === 'COLLECTOR'
               ? this.companyService.getAll()
-              : of([] as TransportCompanyResponse[]),
+              : of([] as TransportCompanyProfile[]),
         });
         tasks.subscribe({
           next: ({ art, ship, ret, companies }) => {
@@ -298,8 +298,13 @@ export class LoanDetailComponent implements OnInit {
 
   /* ===== Acciones ===== */
 
+  /**
+     * Vuelve al panel del usuario (HomeRedirect lo lleva al dashboard
+     * concreto del rol). Evitamos Location.back() porque después de visitar
+     * el chat el "Volver" rebotaría al chat de nuevo.
+     */
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/app']);
   }
 
   fileUrl(fileId: string): string {

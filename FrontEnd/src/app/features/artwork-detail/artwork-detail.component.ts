@@ -96,6 +96,10 @@ export class ArtworkDetailComponent implements OnInit {
     this.selectedFileIndex.set(index);
   }
 
+  protected readonly busy = signal(false);
+  protected readonly actionMessage = signal<string | null>(null);
+  protected readonly errorMessage = signal<string | null>(null);
+
   /** Vuelve a la pantalla anterior preservando el historial. */
   goBack(): void {
     this.location.back();
@@ -103,5 +107,44 @@ export class ArtworkDetailComponent implements OnInit {
 
   fileUrl(fileId: string): string {
     return this.artworkService.fileUrl(fileId);
+  }
+
+  toggleAvailability(): void {
+    const a = this.artwork();
+    if (!a) return;
+    const next = !(a.availableForLoan ?? true);
+    this.busy.set(true);
+    this.errorMessage.set(null);
+    this.artworkService.setAvailability(a.id, next).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        this.artwork.set(updated);
+        this.actionMessage.set(next
+          ? 'Obra publicada para préstamo.'
+          : 'Obra dada de baja. Sigue visible en el catálogo pero no se podrán pedir nuevos préstamos.');
+      },
+      error: (err) => {
+        this.busy.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'No se pudo cambiar la disponibilidad.');
+      },
+    });
+  }
+
+  deleteArtwork(): void {
+    const a = this.artwork();
+    if (!a) return;
+    if (!confirm(`¿Eliminar "${a.title}"? Esta acción no se puede deshacer.`)) return;
+    this.busy.set(true);
+    this.errorMessage.set(null);
+    this.artworkService.delete(a.id).subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.location.back();
+      },
+      error: (err) => {
+        this.busy.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'No se pudo eliminar la obra.');
+      },
+    });
   }
 }

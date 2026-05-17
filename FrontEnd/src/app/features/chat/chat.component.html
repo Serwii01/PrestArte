@@ -38,10 +38,18 @@
           <span class="material-symbols-outlined">forum</span>
         </div>
         <div>
-          <h2 class="font-bold text-text-main">Negociación del préstamo</h2>
-          <p class="text-xs text-text-secondary">
-            Coleccionista · Museo · Transportista
-          </p>
+          @if (loan(); as l) {
+            <h2 class="font-bold text-text-main">
+              {{ l.artworkTitle }}
+              <span class="text-text-secondary font-normal">· {{ l.artworkArtist }}</span>
+            </h2>
+            <p class="text-xs text-text-secondary">
+              {{ l.collectorName }} ↔ {{ l.foundationName }}
+            </p>
+          } @else {
+            <h2 class="font-bold text-text-main">Negociación del préstamo</h2>
+            <p class="text-xs text-text-secondary">Coleccionista · Museo · Transportista</p>
+          }
         </div>
       </div>
       @if (chatClosed()) {

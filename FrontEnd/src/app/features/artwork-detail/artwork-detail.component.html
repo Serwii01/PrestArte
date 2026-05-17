@@ -134,6 +134,62 @@
         </section>
       }
 
+      <!-- Acciones del dueño -->
+      @if (isMine()) {
+        @if (actionMessage()) {
+          <div class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+            <span class="material-symbols-outlined text-emerald-600 mt-0.5" style="font-size:18px;">check_circle</span>
+            <span>{{ actionMessage() }}</span>
+          </div>
+        }
+        @if (errorMessage()) {
+          <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+            <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:18px;">error</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <div class="stitch-card p-4 space-y-2">
+          <p class="text-xs uppercase font-bold tracking-wider text-text-secondary mb-2">Gestión</p>
+
+          <a [routerLink]="['/app/collector/edit', a.id]"
+             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                    bg-primary hover:bg-primary-hover transition-colors
+                    text-white text-sm font-bold">
+            <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+            Editar obra
+          </a>
+
+          <button type="button" (click)="toggleAvailability()" [disabled]="busy()"
+                  class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                         bg-white border border-border hover:bg-gray-soft transition-colors
+                         text-text-main text-sm font-medium disabled:opacity-50">
+            @if (a.availableForLoan ?? true) {
+              <span class="material-symbols-outlined" style="font-size:18px;">pause_circle</span>
+              Dar de baja
+            } @else {
+              <span class="material-symbols-outlined text-emerald-600" style="font-size:18px;">play_circle</span>
+              Publicar para préstamo
+            }
+          </button>
+
+          <button type="button" (click)="deleteArtwork()" [disabled]="busy()"
+                  class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                         bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-colors
+                         text-sm font-bold disabled:opacity-50">
+            <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+            Eliminar
+          </button>
+
+          @if (a.availableForLoan === false) {
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+              Esta obra está dada de baja. Sigue siendo visible en tu colección y en el catálogo
+              público pero los museos no pueden solicitar préstamo hasta que la vuelvas a publicar.
+            </p>
+          }
+        </div>
+      }
+
       <!-- Acción FOUNDATION -->
       @if (canRequestLoan()) {
         <a [routerLink]="['/app/foundation/request-loan', a.id]"
@@ -143,6 +199,26 @@
           <span class="material-symbols-outlined" style="font-size:20px;">handshake</span>
           Solicitar préstamo
         </a>
+      } @else if (!auth.isLoggedIn()) {
+        <div class="p-4 rounded-xl border border-primary/30 bg-primary/5">
+          <p class="text-sm text-text-main font-bold mb-1">¿Te interesa esta obra?</p>
+          <p class="text-xs text-text-secondary mb-3">
+            Solo los museos y fundaciones pueden solicitar préstamos. Si representas a una
+            institución, inicia sesión o regístrate.
+          </p>
+          <div class="flex gap-2">
+            <a routerLink="/login"
+               class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
+                      bg-primary hover:bg-primary-hover text-white text-sm font-bold">
+              Iniciar sesión
+            </a>
+            <a [routerLink]="['/register']" [queryParams]="{ role: 'FOUNDATION' }"
+               class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
+                      bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
+              Registrarse
+            </a>
+          </div>
+        </div>
       }
     </aside>
   </div>

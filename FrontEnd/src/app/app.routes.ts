@@ -35,6 +35,35 @@ export const routes: Routes = [
         (m) => m.ResetPasswordComponent,
       ),
   },
+  // ===== Catálogo público (sin sesión) =====
+  {
+    path: 'catalog',
+    loadComponent: () =>
+      import('./features/catalog/public-catalog.component').then(
+        (m) => m.PublicCatalogComponent,
+      ),
+  },
+  {
+    path: 'catalog/:id',
+    loadComponent: () =>
+      import('./features/artwork-detail/artwork-detail.component').then(
+        (m) => m.ArtworkDetailComponent,
+      ),
+  },
+  {
+    path: 'partners',
+    loadComponent: () =>
+      import('./features/partners/public-partners.component').then(
+        (m) => m.PublicPartnersComponent,
+      ),
+  },
+  {
+    path: 'partners/:id',
+    loadComponent: () =>
+      import('./features/partners/partner-detail.component').then(
+        (m) => m.PartnerDetailComponent,
+      ),
+  },
 
   // ===== Rutas autenticadas (bajo /app) =====
   {
@@ -99,6 +128,13 @@ export const routes: Routes = [
                 (m) => m.UploadArtworkComponent,
               ),
           },
+          {
+            path: 'edit/:editId',
+            loadComponent: () =>
+              import('./features/collector/upload-artwork/upload-artwork.component').then(
+                (m) => m.UploadArtworkComponent,
+              ),
+          },
         ],
       },
       {
@@ -132,10 +168,23 @@ export const routes: Routes = [
       {
         path: 'transport',
         canActivate: [roleGuard(['TRANSPORT'])],
-        loadComponent: () =>
-          import('./features/transport/transport-dashboard/transport-dashboard.component').then(
-            (m) => m.TransportDashboardComponent,
-          ),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/transport/transport-dashboard/transport-dashboard.component').then(
+                (m) => m.TransportDashboardComponent,
+              ),
+          },
+          {
+            path: 'profile',
+            loadComponent: () =>
+              import('./features/transport/profile/transport-profile.component').then(
+                (m) => m.TransportProfileComponent,
+              ),
+          },
+        ],
       },
     ],
   },

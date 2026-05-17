@@ -31,6 +31,7 @@ public class ShipmentStateMachine {
         ALLOWED.put(ShipmentStatus.APPROVED,   EnumSet.of(ShipmentStatus.PICKED_UP));
         ALLOWED.put(ShipmentStatus.PICKED_UP,  EnumSet.of(ShipmentStatus.IN_TRANSIT));
         ALLOWED.put(ShipmentStatus.IN_TRANSIT, EnumSet.of(ShipmentStatus.DELIVERED));
+
         // Estados terminales
         ALLOWED.put(ShipmentStatus.DELIVERED, EnumSet.noneOf(ShipmentStatus.class));
         ALLOWED.put(ShipmentStatus.REJECTED,  EnumSet.noneOf(ShipmentStatus.class));

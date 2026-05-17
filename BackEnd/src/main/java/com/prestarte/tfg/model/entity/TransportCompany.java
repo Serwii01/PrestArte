@@ -18,8 +18,30 @@ public class TransportCompany extends User {
     private String companyName;
 
     @Column(length = 50)
-    private String coverageArea;    // "Nacional", "Europa", etc. → en sub-fase 2.5 pasa a enum.
+    private String coverageArea;    // "Nacional", "Europa", etc.
 
     @Column(length = 150)
     private String contactEmail;
+
+    /** URL del sitio web público de la empresa. */
+    @Column(length = 200)
+    private String website;
+
+    /** Descripción visible en el perfil público. */
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    /**
+     * Especialidades (texto libre separado por comas).
+     * Ej. "Pintura, Escultura, Gran formato, Antigüedades".
+     */
+    @Column(length = 500)
+    private String specialties;
+
+    /**
+     * Sedes / oficinas. Texto multi-línea libre.
+     * Ej. "Madrid (HQ)\nBarcelona\nLisboa".
+     */
+    @Column(columnDefinition = "TEXT")
+    private String locations;
 }

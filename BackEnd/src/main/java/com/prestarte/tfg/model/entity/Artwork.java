@@ -73,6 +73,15 @@ public class Artwork {
     @Column(nullable = false)
     private boolean preferredTransportMandatory = false;
 
+    /**
+     * Si es false, la obra se sigue mostrando en el catálogo pero no se pueden
+     * crear nuevas solicitudes de préstamo sobre ella. Útil cuando el
+     * coleccionista la retira temporalmente sin querer borrarla.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean availableForLoan = true;
+
     @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL)
     private List<ArtworkFile> files;
 

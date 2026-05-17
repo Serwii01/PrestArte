@@ -2,6 +2,7 @@ package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.ArtworkDto;
 import com.prestarte.tfg.model.dto.CreateArtworkRequest;
+import com.prestarte.tfg.model.dto.UpdateArtworkRequest;
 import com.prestarte.tfg.service.ArtworkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,5 +37,24 @@ public class ArtworkController {
     @GetMapping("/collector/{collectorId}")
     public List<ArtworkDto> getArtworksByCollector(@PathVariable Long collectorId) {
         return artworkService.getArtworksByCollector(collectorId);
+    }
+
+    /** Editar obra (solo dueño o admin). */
+    @PutMapping("/{id}")
+    public ArtworkDto updateArtwork(@PathVariable Long id, @Valid @RequestBody UpdateArtworkRequest body) {
+        return artworkService.updateArtwork(id, body);
+    }
+
+    /** Dar de baja / volver a publicar para préstamo. */
+    @PatchMapping("/{id}/availability")
+    public ArtworkDto setAvailability(@PathVariable Long id, @RequestParam boolean available) {
+        return artworkService.setAvailability(id, available);
+    }
+
+    /** Eliminar obra (rechazado si tiene préstamos activos). */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteArtwork(@PathVariable Long id) {
+        artworkService.deleteArtwork(id);
+        return ResponseEntity.noContent().build();
     }
 }

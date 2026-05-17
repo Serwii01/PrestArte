@@ -51,6 +51,14 @@ public class SecurityConfig {
                         // Públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/files/*").permitAll()
+                        // Catálogo público: cualquiera puede ver listado y detalle de obras.
+                        // El sub-recurso /api/artworks/collector/* se protege antes
+                        // para que NO caiga en el permitAll del wildcard.
+                        .requestMatchers(HttpMethod.GET, "/api/artworks/collector/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/artworks", "/api/artworks/*").permitAll()
+                        // Partners (empresas de transporte) — perfil público
+                        .requestMatchers(HttpMethod.GET, "/api/transport-companies",
+                                "/api/transport-companies/*").permitAll()
                         // Admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // El resto requiere autenticación

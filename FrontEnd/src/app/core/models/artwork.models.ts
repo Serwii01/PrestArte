@@ -18,8 +18,25 @@ export interface ArtworkResponse {
   preferredTransportCompanyId?: number | null;
   preferredTransportCompanyName?: string | null;
   preferredTransportMandatory?: boolean;
+  availableForLoan?: boolean;
   files?: FileDto[];
   createdAt?: string;
+}
+
+export interface UpdateArtworkRequest {
+  title?: string;
+  artist?: string;
+  year?: number;
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
+  condition?: Condition;
+  description?: string;
+  estimatedValue?: number;
+  loanConditions?: string;
+  location?: string;
+  preferredTransportCompanyId?: number | null;
+  preferredTransportMandatory?: boolean;
 }
 
 export interface FileDto {

@@ -17,10 +17,12 @@ import { Subscription, interval, switchMap, of, catchError } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { ChatService } from '../../core/services/chat.service';
+import { LoanService } from '../../core/services/loan.service';
 import {
   ChatSessionResponse,
   MessageResponse,
 } from '../../core/models/chat.models';
+import { LoanResponse } from '../../core/models/loan.models';
 
 @Component({
   selector: 'app-chat',
@@ -31,6 +33,7 @@ import {
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private readonly chatService = inject(ChatService);
+  private readonly loanService = inject(LoanService);
   protected readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -40,6 +43,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesEnd') private messagesEnd?: ElementRef<HTMLDivElement>;
 
   protected readonly chat = signal<ChatSessionResponse | null>(null);
+  protected readonly loan = signal<LoanResponse | null>(null);
   protected readonly messages = signal<MessageResponse[]>([]);
   protected readonly loading = signal(true);
   protected readonly forbidden = signal(false);
@@ -77,6 +81,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.errorMessage.set('No se pudo abrir el chat.');
         }
       },
+    });
+
+    // Cargamos el préstamo en paralelo para mostrar el título de la obra y
+    // los nombres de las partes en la cabecera.
+    this.loanService.getById(loanId).subscribe({
+      next: (l) => this.loan.set(l),
+      // Si falla, dejamos el chat funcionando sin la cabecera enriquecida.
     });
   }
 

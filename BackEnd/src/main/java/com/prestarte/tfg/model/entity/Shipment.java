@@ -66,7 +66,7 @@ public class Shipment {
     private LocalDateTime deliveryDate;
 
     public enum ShipmentStatus {
-        REQUESTED,    // Asignado al transportista, sin presupuesto aún.
+        REQUESTED,    // Asignado pero sin presupuesto aún.
         QUOTED,       // Presupuesto subido, esperando aprobación del museo.
         REJECTED,     // El transportista no acepta el servicio.
         APPROVED,     // Presupuesto aprobado, esperando recogida.

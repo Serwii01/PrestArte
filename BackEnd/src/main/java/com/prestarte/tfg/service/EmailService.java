@@ -16,7 +16,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
 
     /**
-     * Sends a basic text email without attachments.
+     * mail sin archivos.
      */
     public void sendSimpleEmail(String to, String subject, String body) {
         try {

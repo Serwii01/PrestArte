@@ -1,6 +1,7 @@
 package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.UserResponseDto;
+import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.model.entity.User;
 import com.prestarte.tfg.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,18 @@ public class UserController {
         return ResponseEntity.ok(body);
     }
 
+    /**
+     * Listado completo de usuarios, opcionalmente filtrado por rol.
+     * Ejemplos: /api/admin/users, /api/admin/users?role=COLLECTOR
+     */
+    @GetMapping("/users")
+    public ResponseEntity<List<UserResponseDto>> getAllUsers(@RequestParam(required = false) Role role) {
+        List<UserResponseDto> body = userService.getAllUsers(role).stream()
+                .map(this::toDto)
+                .toList();
+        return ResponseEntity.ok(body);
+    }
+
     @PostMapping("/approve/{id}")
     public ResponseEntity<String> approve(@PathVariable Long id) {
         userService.approveUser(id);
@@ -38,6 +51,12 @@ public class UserController {
     public ResponseEntity<String> reject(@PathVariable Long id) {
         userService.rejectUser(id);
         return ResponseEntity.ok("Cuenta rechazada correctamente");
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("Cuenta eliminada correctamente");
     }
 
     private UserResponseDto toDto(User u) {

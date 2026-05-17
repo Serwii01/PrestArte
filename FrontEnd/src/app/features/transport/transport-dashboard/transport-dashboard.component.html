@@ -1,10 +1,19 @@
-<div class="mb-8">
-  <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight mb-2">
-    Hola, {{ auth.displayName() }}
-  </h1>
-  <p class="text-text-secondary text-lg">
-    Tus servicios de transporte de obras de arte y su estado actual.
-  </p>
+<div class="mb-8 flex items-start justify-between gap-4 flex-wrap">
+  <div>
+    <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight mb-2">
+      Hola, {{ auth.displayName() }}
+    </h1>
+    <p class="text-text-secondary text-lg">
+      Tus servicios de transporte de obras de arte y su estado actual.
+    </p>
+  </div>
+  <a routerLink="/app/transport/profile"
+     class="flex items-center gap-2 rounded-lg h-11 px-5
+            bg-white border border-border hover:bg-gray-soft transition-colors
+            text-text-main text-sm font-bold">
+    <span class="material-symbols-outlined" style="font-size:20px;">edit</span>
+    Editar mi perfil
+  </a>
 </div>
 
 <!-- Stat cards -->

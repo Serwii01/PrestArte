@@ -86,6 +86,30 @@ public class UserService {
         return userRepository.findByStatus(UserStatus.PENDING);
     }
 
+    /** Devuelve todos los usuarios opcionalmente filtrados por rol. */
+    public List<User> getAllUsers(Role role) {
+        return role == null ? userRepository.findAll() : userRepository.findByRole(role);
+    }
+
+    /**
+     * Elimina un usuario. Si tiene contenido asociado (obras, préstamos,
+     * envíos…) lanza una {@link IllegalStateException} traducida a 409 por el
+     * GlobalExceptionHandler para que el admin lo vea de forma clara.
+     */
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Usuario", userId));
+        try {
+            userRepository.delete(user);
+            userRepository.flush(); // fuerza el delete para capturar el FK error aquí
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new IllegalStateException(
+                    "No se puede eliminar el usuario porque tiene contenido asociado " +
+                    "(obras, préstamos o envíos). Rechaza o cancela su actividad antes de eliminarlo.");
+        }
+    }
+
     // --- Helpers privados ---
 
     private User buildUserBySubclass(RegistrationRequest request) {

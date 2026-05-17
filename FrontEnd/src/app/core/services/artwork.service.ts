@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   ArtworkResponse,
   CreateArtworkRequest,
+  UpdateArtworkRequest,
 } from '../models/artwork.models';
 
 @Injectable({ providedIn: 'root' })
@@ -29,6 +30,21 @@ export class ArtworkService {
 
   create(body: CreateArtworkRequest): Observable<ArtworkResponse> {
     return this.http.post<ArtworkResponse>(this.base, body);
+  }
+
+  update(id: number, body: UpdateArtworkRequest): Observable<ArtworkResponse> {
+    return this.http.put<ArtworkResponse>(`${this.base}/${id}`, body);
+  }
+
+  setAvailability(id: number, available: boolean): Observable<ArtworkResponse> {
+    return this.http.patch<ArtworkResponse>(
+      `${this.base}/${id}/availability?available=${available}`,
+      {},
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
   }
 
   /** Sube un archivo asociado a una obra. multipart/form-data. */
