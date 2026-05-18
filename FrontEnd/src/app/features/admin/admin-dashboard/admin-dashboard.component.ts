@@ -119,6 +119,16 @@ export class AdminDashboardComponent implements OnInit {
     return name?.charAt(0).toUpperCase() ?? '?';
   }
 
+  /** URL pública del adjunto de verificación (GET /api/files/{id} es permitAll). */
+  fileUrl(fileId: string): string {
+    return `${environment.apiBaseUrl}/files/${fileId}`;
+  }
+
+  /** Detecta si el adjunto es imagen para renderizar miniatura inline. */
+  isImage(mime?: string | null): boolean {
+    return !!mime && mime.startsWith('image/');
+  }
+
   /** Etiqueta amigable del rol. */
   roleLabel(role: UserResponse['role']): string {
     return {

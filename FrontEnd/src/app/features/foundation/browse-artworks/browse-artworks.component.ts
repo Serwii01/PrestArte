@@ -4,7 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ArtworkService } from '../../../core/services/artwork.service';
-import { ArtworkResponse, CONDITION_LABEL, Condition } from '../../../core/models/artwork.models';
+import {
+  ArtworkResponse,
+  CONDITION_LABEL,
+  Condition,
+  isArtworkImage,
+} from '../../../core/models/artwork.models';
 
 @Component({
   selector: 'app-browse-artworks',
@@ -65,5 +70,11 @@ export class BrowseArtworksComponent implements OnInit {
 
   fileUrl(fileId: string): string {
     return this.artworkService.fileUrl(fileId);
+  }
+
+  /** URL de la primera imagen (excluye documentos). */
+  mainImageUrl(a: ArtworkResponse): string | null {
+    const first = (a.files ?? []).find(isArtworkImage);
+    return first ? this.artworkService.fileUrl(first.id) : null;
   }
 }

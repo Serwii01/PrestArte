@@ -6,6 +6,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * Payload de registro. Todos los campos (excepto el rol, que viene
+ * forzado por la UI) son obligatorios; el documento KYB viaja aparte
+ * como `multipart/form-data` y se valida en {@code UserService}.
+ */
 @Data
 public class RegistrationRequest {
 
@@ -15,18 +20,20 @@ public class RegistrationRequest {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, max = 100, message = "La contraseña debe tener al menos 8 caracteres")
+    @Size(min = 6, max = 100, message = "La contraseña debe tener al menos 6 caracteres")
     private String password;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100)
     private String name;
 
-    @Size(max = 20)
+    @NotBlank(message = "El teléfono es obligatorio")
+    @Size(min = 6, max = 20, message = "El teléfono debe tener al menos 6 caracteres")
     private String phone;
 
-    @Size(max = 50)
-    private String taxId; // DNI, CIF o LEI
+    @NotBlank(message = "El DNI / CIF / LEI es obligatorio")
+    @Size(min = 4, max = 50, message = "El DNI / CIF / LEI no es válido")
+    private String taxId;
 
     /**
      * Solo se aceptan los roles que se pueden crear vía registro público.

@@ -9,7 +9,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoanService } from '../../core/services/loan.service';
 import { ShipmentService } from '../../core/services/shipment.service';
 import { TransportCompanyService } from '../../core/services/transport-company.service';
-import { ArtworkResponse } from '../../core/models/artwork.models';
+import { ArtworkResponse, isArtworkImage } from '../../core/models/artwork.models';
 import { LoanResponse, LOAN_STATUS_LABEL, LoanStatus } from '../../core/models/loan.models';
 import { ShipmentResponse, SHIPMENT_STATUS_LABEL } from '../../core/models/shipment.models';
 import { TransportCompanyProfile } from '../../core/models/transport-company.models';
@@ -81,6 +81,7 @@ export class LoanDetailComponent implements OnInit {
   protected readonly showQuoteDialog = signal(false);
   protected readonly showRejectQuoteDialog = signal(false);
   protected readonly showDeliveryDialog = signal(false);
+  protected readonly showReassignDialog = signal(false);
 
   /* ===== Forms para los diálogos ===== */
 
@@ -106,6 +107,10 @@ export class LoanDetailComponent implements OnInit {
   protected readonly deliveryForm = this.fb.nonNullable.group({
     receivedBy: ['', [Validators.required]],
     notes: [''],
+  });
+
+  protected readonly reassignForm = this.fb.nonNullable.group({
+    transportCompanyId: [null as number | null, [Validators.required]],
   });
 
   /* ===== Roles y permisos derivados ===== */
@@ -159,6 +164,22 @@ export class LoanDetailComponent implements OnInit {
   protected readonly canRejectQuote = computed(
     () => this.shipment()?.status === 'QUOTED' && this.isFoundation(),
   );
+
+  /**
+   * El museo o el coleccionista pueden buscar OTRA empresa cuando:
+   *  - el préstamo está en QUOTE_PENDING,
+   *  - el último envío OUTBOUND está REJECTED (el museo lo descartó),
+   *  - la empresa NO era obligatoria (si lo fuera, el préstamo ya estaría CANCELLED).
+   */
+  protected readonly canReassignTransport = computed(() => {
+    const l = this.loan();
+    const s = this.shipment();
+    if (!l || !s) return false;
+    if (l.status !== 'QUOTE_PENDING') return false;
+    if (s.status !== 'REJECTED') return false;
+    if (l.transportCompanyMandatory) return false;
+    return this.isFoundation() || this.isCollector();
+  });
   protected readonly canMarkPickedUp = computed(
     () => this.activeShipment()?.status === 'APPROVED' && this.isTransport(),
   );
@@ -212,7 +233,8 @@ export class LoanDetailComponent implements OnInit {
   protected readonly heroImageUrl = computed(() => {
     const a = this.artwork();
     if (!a?.files || a.files.length === 0) return null;
-    return this.artworkService.fileUrl(a.files[0].id);
+    const first = a.files.find(isArtworkImage);
+    return first ? this.artworkService.fileUrl(first.id) : null;
   });
 
   protected readonly statusLabel = computed(() => {
@@ -250,8 +272,12 @@ export class LoanDetailComponent implements OnInit {
           ret: loan.returnShipmentId
             ? this.shipmentService.getById(loan.returnShipmentId)
             : of(null),
+          // Cargamos el listado de empresas cuando:
+          //  - el coleccionista está aceptando la solicitud, o
+          //  - el préstamo está en QUOTE_PENDING (por si toca reasignar transporte).
           companies:
-            loan.status === 'REQUESTED' && this.role() === 'COLLECTOR'
+            (loan.status === 'REQUESTED' && this.role() === 'COLLECTOR')
+            || loan.status === 'QUOTE_PENDING'
               ? this.companyService.getAll()
               : of([] as TransportCompanyProfile[]),
         });
@@ -396,6 +422,32 @@ export class LoanDetailComponent implements OnInit {
       this.showRejectQuoteDialog.set(false),
     );
   }
+
+  openReassign(): void {
+    const previous = this.shipment()?.transportCompanyId ?? null;
+    // Preseleccionamos la primera empresa disponible que NO sea la que acaba
+    // de rechazar el presupuesto, para evitar el error del back.
+    const first = this.companies().find((c) => c.id !== previous)?.id ?? null;
+    this.reassignForm.reset({ transportCompanyId: first });
+    this.showReassignDialog.set(true);
+  }
+
+  confirmReassign(): void {
+    const id = this.loan()?.id;
+    const newCompanyId = this.reassignForm.controls.transportCompanyId.value;
+    if (!id || !newCompanyId) return;
+    this.run(
+      this.loanService.reassignTransport(id, newCompanyId),
+      'Nueva empresa de transporte asignada. Esperando presupuesto.',
+      () => this.showReassignDialog.set(false),
+    );
+  }
+
+  /** Lista de empresas válidas para reasignar: descarta la que acaba de rechazar. */
+  protected readonly reassignableCompanies = computed(() => {
+    const previous = this.shipment()?.transportCompanyId ?? null;
+    return this.companies().filter((c) => c.id !== previous);
+  });
 
   markPickedUp(): void {
     const sId = this.activeShipment()?.id;

@@ -29,6 +29,23 @@ export class ChatService {
     return this.http.post<MessageResponse>(`${this.base}/messages`, req);
   }
 
+  /** Envía un mensaje con archivo adjunto (foto o documento). */
+  sendMessageWithFile(chatSessionId: number, content: string, file: File): Observable<MessageResponse> {
+    const form = new FormData();
+    form.append('file', file);
+    const params = new URLSearchParams({ chatSessionId: String(chatSessionId) });
+    if (content) params.set('content', content);
+    return this.http.post<MessageResponse>(
+      `${this.base}/messages/with-file?${params.toString()}`,
+      form,
+    );
+  }
+
+  /** URL pública del archivo adjunto (sirve el endpoint GET /api/files/{id}). */
+  fileUrl(fileId: string): string {
+    return `${this.base}/files/${fileId}`;
+  }
+
   closeChat(chatSessionId: number): Observable<ChatSessionResponse> {
     return this.http.put<ChatSessionResponse>(`${this.base}/chat-sessions/${chatSessionId}/close`, {});
   }

@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ArtworkService } from '../../../core/services/artwork.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoanService } from '../../../core/services/loan.service';
-import { ArtworkResponse } from '../../../core/models/artwork.models';
+import { ArtworkResponse, isArtworkImage } from '../../../core/models/artwork.models';
 import { CreateLoanRequest } from '../../../core/models/loan.models';
 
 @Component({
@@ -45,7 +45,8 @@ export class RequestLoanComponent implements OnInit {
   protected readonly heroImageUrl = computed(() => {
     const a = this.artwork();
     if (!a?.files || a.files.length === 0) return null;
-    return this.artworkService.fileUrl(a.files[0].id);
+    const first = a.files.find(isArtworkImage);
+    return first ? this.artworkService.fileUrl(first.id) : null;
   });
 
   ngOnInit(): void {

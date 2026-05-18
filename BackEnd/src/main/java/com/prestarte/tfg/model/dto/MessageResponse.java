@@ -17,4 +17,9 @@ public class MessageResponse {
     private String content;
     private LocalDateTime sentAt;
     private Message.TipoMensaje tipo;
+
+    /** Si el mensaje lleva archivo adjunto, datos para mostrarlo / descargarlo. */
+    private String attachmentId;
+    private String attachmentFileName;
+    private String attachmentFileType;
 }

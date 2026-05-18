@@ -5,7 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 
 import { ArtworkService } from '../../core/services/artwork.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ArtworkResponse, CONDITION_LABEL, Condition } from '../../core/models/artwork.models';
+import {
+  ArtworkResponse,
+  CONDITION_LABEL,
+  Condition,
+  isArtworkImage,
+} from '../../core/models/artwork.models';
 
 /**
  * Catálogo público de obras. Accesible sin sesión: cualquier visitante puede
@@ -79,6 +84,12 @@ export class PublicCatalogComponent implements OnInit {
 
   fileUrl(fileId: string): string {
     return this.artworkService.fileUrl(fileId);
+  }
+
+  /** URL de la primera imagen (excluyendo documentos adjuntos). */
+  mainImageUrl(a: ArtworkResponse): string | null {
+    const first = (a.files ?? []).find(isArtworkImage);
+    return first ? this.artworkService.fileUrl(first.id) : null;
   }
 
   goToApp(): void {

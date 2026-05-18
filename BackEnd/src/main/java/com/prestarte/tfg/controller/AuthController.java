@@ -7,6 +7,7 @@ import com.prestarte.tfg.model.dto.LoginRequest;
 import com.prestarte.tfg.model.dto.RegistrationRequest;
 import com.prestarte.tfg.model.dto.ResetPasswordRequest;
 import com.prestarte.tfg.model.dto.UserResponseDto;
+import com.prestarte.tfg.model.entity.DBFile;
 import com.prestarte.tfg.model.entity.User;
 import com.prestarte.tfg.model.entity.UserStatus;
 import com.prestarte.tfg.repository.UserRepository;
@@ -107,6 +108,7 @@ public class AuthController {
     }
 
     private UserResponseDto toDto(User u) {
+        DBFile vf = u.getVerificationFile();
         return UserResponseDto.builder()
                 .id(u.getId())
                 .email(u.getEmail())
@@ -116,6 +118,9 @@ public class AuthController {
                 .status(u.getStatus() == null ? UserStatus.PENDING : u.getStatus())
                 .enabled(u.isEnabled())
                 .taxId(u.getTaxId())
+                .verificationFileId(vf != null ? vf.getId() : null)
+                .verificationFileName(vf != null ? vf.getFileName() : null)
+                .verificationFileType(vf != null ? vf.getFileType() : null)
                 .build();
     }
 }

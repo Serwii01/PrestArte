@@ -73,7 +73,21 @@
           @if (isMine(m)) {
             <div class="flex items-end gap-2 justify-end">
               <div class="max-w-[70%] bg-primary text-white rounded-2xl rounded-br-md px-4 py-2 shadow-sm">
-                <p class="text-sm whitespace-pre-wrap break-words">{{ m.content }}</p>
+                @if (m.attachmentId && isImageMessage(m)) {
+                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener">
+                    <img [src]="attachmentUrl(m.attachmentId)" [alt]="m.attachmentFileName"
+                         class="rounded-lg mb-2 max-h-80 object-cover" />
+                  </a>
+                } @else if (m.attachmentId) {
+                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener" download
+                     class="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:20px;">description</span>
+                    <span class="text-xs font-bold truncate">{{ m.attachmentFileName }}</span>
+                  </a>
+                }
+                @if (m.content) {
+                  <p class="text-sm whitespace-pre-wrap break-words">{{ m.content }}</p>
+                }
                 <p class="text-[10px] opacity-70 mt-1 text-right">{{ m.sentAt | date:'shortTime' }}</p>
               </div>
               <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-border shrink-0">
@@ -87,7 +101,21 @@
               </div>
               <div class="max-w-[70%] bg-white border border-border rounded-2xl rounded-bl-md px-4 py-2 shadow-sm">
                 <p class="text-[11px] font-bold text-primary mb-0.5">{{ m.senderName }}</p>
-                <p class="text-sm text-text-main whitespace-pre-wrap break-words">{{ m.content }}</p>
+                @if (m.attachmentId && isImageMessage(m)) {
+                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener">
+                    <img [src]="attachmentUrl(m.attachmentId)" [alt]="m.attachmentFileName"
+                         class="rounded-lg mb-2 max-h-80 object-cover" />
+                  </a>
+                } @else if (m.attachmentId) {
+                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener" download
+                     class="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-gray-soft hover:bg-gray-200 transition-colors text-text-main">
+                    <span class="material-symbols-outlined text-primary" style="font-size:20px;">description</span>
+                    <span class="text-xs font-bold truncate">{{ m.attachmentFileName }}</span>
+                  </a>
+                }
+                @if (m.content) {
+                  <p class="text-sm text-text-main whitespace-pre-wrap break-words">{{ m.content }}</p>
+                }
                 <p class="text-[10px] text-text-secondary mt-1">{{ m.sentAt | date:'shortTime' }}</p>
               </div>
             </div>
@@ -99,22 +127,44 @@
 
     <!-- Compositor -->
     <form [formGroup]="form" (ngSubmit)="send()"
-          class="px-4 py-3 border-t border-border bg-white flex items-end gap-2">
-      <textarea
-        formControlName="content"
-        rows="1"
-        placeholder="{{ chatClosed() ? 'Chat cerrado' : 'Escribe un mensaje…' }}"
-        [disabled]="chatClosed()"
-        (keydown.enter)="$event.preventDefault(); send()"
-        class="flex-1 resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm
-               focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-               disabled:bg-gray-soft disabled:cursor-not-allowed"></textarea>
-      <button type="submit" [disabled]="form.invalid || sending() || chatClosed()"
-        class="flex items-center justify-center rounded-lg h-10 w-10 shrink-0
-               bg-primary hover:bg-primary-hover text-white shadow-sm
-               disabled:opacity-50 disabled:cursor-not-allowed">
-        <span class="material-symbols-outlined" style="font-size:20px;">send</span>
-      </button>
+          class="px-4 py-3 border-t border-border bg-white flex flex-col gap-2">
+      @if (pendingFile) {
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
+          <span class="material-symbols-outlined text-primary" style="font-size:20px;">
+            {{ pendingFile.type.startsWith('image/') ? 'image' : 'description' }}
+          </span>
+          <span class="text-xs font-bold text-text-main truncate flex-1">{{ pendingFile.name }}</span>
+          <button type="button" (click)="clearPendingFile()"
+                  class="size-6 rounded-full hover:bg-red-50 text-text-secondary hover:text-red-600 flex items-center justify-center">
+            <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+          </button>
+        </div>
+      }
+      <div class="flex items-end gap-2">
+        <label class="flex items-center justify-center rounded-lg h-10 w-10 shrink-0
+                      bg-gray-soft hover:bg-gray-200 text-text-main cursor-pointer
+                      [&:has(input:disabled)]:opacity-50 [&:has(input:disabled)]:cursor-not-allowed">
+          <input type="file" (change)="onFileSelected($event)" [disabled]="chatClosed()" class="hidden"
+                 accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
+          <span class="material-symbols-outlined" style="font-size:20px;">attach_file</span>
+        </label>
+        <textarea
+          formControlName="content"
+          rows="1"
+          placeholder="{{ chatClosed() ? 'Chat cerrado' : (pendingFile ? 'Añade un mensaje (opcional)' : 'Escribe un mensaje…') }}"
+          [disabled]="chatClosed()"
+          (keydown.enter)="$event.preventDefault(); send()"
+          class="flex-1 resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+                 disabled:bg-gray-soft disabled:cursor-not-allowed"></textarea>
+        <button type="submit"
+          [disabled]="(!pendingFile && form.invalid) || sending() || chatClosed()"
+          class="flex items-center justify-center rounded-lg h-10 w-10 shrink-0
+                 bg-primary hover:bg-primary-hover text-white shadow-sm
+                 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined" style="font-size:20px;">send</span>
+        </button>
+      </div>
     </form>
   </div>
 }

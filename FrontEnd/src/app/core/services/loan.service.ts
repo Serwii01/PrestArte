@@ -58,6 +58,18 @@ export class LoanService {
   startReturn(id: number): Observable<LoanResponse> {
     return this.http.post<LoanResponse>(`${this.base}/${id}/start-return`, {});
   }
+
+  /**
+   * Asigna otra empresa de transporte tras el rechazo de un presupuesto. Solo
+   * válido cuando el préstamo está en QUOTE_PENDING y la empresa anterior no
+   * era obligatoria. El back crea un nuevo Shipment OUTBOUND en REQUESTED.
+   */
+  reassignTransport(id: number, transportCompanyId: number): Observable<LoanResponse> {
+    return this.http.post<LoanResponse>(
+      `${this.base}/${id}/reassign-transport`,
+      { transportCompanyId },
+    );
+  }
   // El cierre del ciclo (RETURNED) se dispara automáticamente cuando el
   // shipment de retorno se marca DELIVERED. No hay endpoint manual.
 

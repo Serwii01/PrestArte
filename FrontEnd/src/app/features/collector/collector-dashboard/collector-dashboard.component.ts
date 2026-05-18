@@ -6,7 +6,7 @@ import { ArtworkService } from '../../../core/services/artwork.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoanService } from '../../../core/services/loan.service';
 import { LoanResponse } from '../../../core/models/loan.models';
-import { ArtworkResponse } from '../../../core/models/artwork.models';
+import { ArtworkResponse, isArtworkImage } from '../../../core/models/artwork.models';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { StatusPillComponent } from '../../../shared/components/status-pill/status-pill.component';
 
@@ -72,5 +72,11 @@ export class CollectorDashboardComponent implements OnInit {
     this.artworkService.getByCollector(collectorId).subscribe({
       next: (mine) => this.artworks.set(mine),
     });
+  }
+
+  /** URL de la primera imagen (excluye documentos adjuntos). */
+  mainImageUrl(a: ArtworkResponse): string | null {
+    const first = (a.files ?? []).find(isArtworkImage);
+    return first ? this.artworkService.fileUrl(first.id) : null;
   }
 }

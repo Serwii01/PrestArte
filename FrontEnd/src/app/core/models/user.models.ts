@@ -11,4 +11,9 @@ export interface UserResponse {
   status: UserStatus;
   enabled: boolean;
   taxId?: string;
+
+  /** Documento de verificación KYB (DNI, escritura, etc.). */
+  verificationFileId?: string | null;
+  verificationFileName?: string | null;
+  verificationFileType?: string | null;
 }

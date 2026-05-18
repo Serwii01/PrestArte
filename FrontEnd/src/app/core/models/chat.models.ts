@@ -18,6 +18,9 @@ export interface MessageResponse {
   content: string;
   sentAt: string;
   tipo: MessageType;
+  attachmentId?: string | null;
+  attachmentFileName?: string | null;
+  attachmentFileType?: string | null;
 }
 
 export interface CreateMessageRequest {

@@ -89,14 +89,13 @@ public class ChatSessionService {
         Long foundationId = loan.getFoundation().getId();
         if (currentUser.isAnyOf(collectorId, foundationId)) return;
 
+        // Cualquier empresa de transporte que haya participado en este préstamo
+        // (incluso una con presupuesto rechazado tras reasignación) puede entrar
+        // al chat para responder dudas o consultar el histórico.
         boolean isTransport = shipmentRepository
-                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
-                .map(s -> currentUser.isAnyOf(s.getTransportCompany().getId()))
-                .orElse(false)
-            || shipmentRepository
-                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.RETURN)
-                .map(s -> currentUser.isAnyOf(s.getTransportCompany().getId()))
-                .orElse(false);
+                .findByTransportCompanyId(currentUser.currentId())
+                .stream()
+                .anyMatch(s -> loan.getId().equals(s.getLoanRequest().getId()));
         if (!isTransport) {
             throw new AccessDeniedException("No participas en este préstamo");
         }

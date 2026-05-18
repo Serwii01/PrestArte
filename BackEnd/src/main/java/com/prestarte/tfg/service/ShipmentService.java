@@ -61,8 +61,11 @@ public class ShipmentService {
      */
     @Transactional
     public Shipment createReturnShipment(LoanRequest loan) {
+        // Cogemos el OUTBOUND más reciente: tras una reasignación puede haber
+        // varios y solo el último contiene a la empresa que realmente entregó.
         Shipment outbound = shipmentRepository
-                .findByLoanRequestIdAndDirection(loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
                 .orElseThrow(() -> new IllegalStateException(
                         "No se puede crear el retorno sin un envío OUTBOUND previo."));
 
@@ -224,7 +227,8 @@ public class ShipmentService {
     @Transactional(readOnly = true)
     public Shipment getByLoanId(Long loanId) {
         return shipmentRepository
-                .findByLoanRequestIdAndDirection(loanId, Shipment.ShipmentDirection.OUTBOUND)
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loanId, Shipment.ShipmentDirection.OUTBOUND)
                 .orElse(null);
     }
 

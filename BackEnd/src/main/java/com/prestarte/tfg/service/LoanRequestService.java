@@ -114,6 +114,69 @@ public class LoanRequestService {
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
+    /**
+     * Reasignación de empresa de transporte tras el rechazo de un presupuesto.
+     *
+     * Cuando el museo rechaza el presupuesto y la empresa NO era obligatoria,
+     * el préstamo vuelve a QUOTE_PENDING pero el viejo Shipment OUTBOUND queda
+     * en REJECTED. Este método crea un Shipment OUTBOUND nuevo con la empresa
+     * elegida; el préstamo se mantiene en QUOTE_PENDING esperando el nuevo
+     * presupuesto.
+     *
+     * Permitido a la fundación solicitante o al coleccionista dueño. Si la
+     * empresa era obligatoria, no hay reasignación posible (el préstamo se
+     * habría cancelado automáticamente).
+     */
+    @Transactional
+    public LoanResponse reassignTransport(Long loanId, Long newTransportCompanyId) {
+        LoanRequest loan = findOrThrow(loanId);
+        // Solo las dos partes contratantes pueden reasignar.
+        currentUser.requireAnyUserId(
+                loan.getArtwork().getCollector().getId(),
+                loan.getFoundation().getId());
+
+        if (loan.getStatus() != LoanRequest.Status.QUOTE_PENDING) {
+            throw new IllegalStateException(
+                    "Solo se puede asignar otra empresa de transporte cuando el préstamo " +
+                    "está esperando presupuesto (QUOTE_PENDING).");
+        }
+        if (loan.isTransportCompanyMandatory()) {
+            throw new IllegalStateException(
+                    "La empresa de transporte era obligatoria para este préstamo: " +
+                    "no se puede reasignar.");
+        }
+
+        // Comprobamos que el OUTBOUND más reciente está realmente rechazado.
+        // Si está en REQUESTED o QUOTED, hay una negociación viva: no permitimos
+        // reasignar sin antes rechazarla expresamente.
+        Shipment lastOutbound = shipmentRepository
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loanId, Shipment.ShipmentDirection.OUTBOUND)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Este préstamo no tiene un envío previo que reasignar."));
+        if (lastOutbound.getStatus() != Shipment.ShipmentStatus.REJECTED) {
+            throw new IllegalStateException(
+                    "Ya hay un presupuesto vivo con la empresa actual. " +
+                    "Recházalo antes de buscar otra empresa.");
+        }
+
+        TransportCompany company = transportCompanyRepository.findById(newTransportCompanyId)
+                .orElseThrow(() -> ResourceNotFoundException.of(
+                        "Empresa de transporte", newTransportCompanyId));
+
+        // No tiene sentido asignar la misma empresa que acaba de ser rechazada.
+        if (lastOutbound.getTransportCompany().getId().equals(newTransportCompanyId)) {
+            throw new IllegalStateException(
+                    "Selecciona una empresa distinta a la que acaba de rechazar el presupuesto.");
+        }
+
+        // Crea un nuevo OUTBOUND en REQUESTED. El préstamo se queda en
+        // QUOTE_PENDING (no hay cambio de estado del loan).
+        shipmentService.createOutboundShipment(loan, company);
+
+        return convertToResponse(loan);
+    }
+
     /** Coleccionista o museo cancelan el préstamo antes de que la obra esté en tránsito. */
     @Transactional
     public LoanResponse cancel(Long loanId, String reason) {
@@ -304,17 +367,12 @@ public class LoanRequestService {
         Long collectorId = loan.getArtwork().getCollector().getId();
         Long foundationId = loan.getFoundation().getId();
         if (currentUser.isAnyOf(collectorId, foundationId)) return;
-        // Comprobamos los shipments (OUTBOUND y RETURN) por transport company.
-        boolean isTransport = shipmentRepository.findByLoanRequestIdAndDirection(
-                        loan.getId(), com.prestarte.tfg.model.entity.Shipment.ShipmentDirection.OUTBOUND)
-                .map(s -> s.getTransportCompany().getId())
-                .map(currentUser::isAnyOf)
-                .orElse(false)
-            || shipmentRepository.findByLoanRequestIdAndDirection(
-                        loan.getId(), com.prestarte.tfg.model.entity.Shipment.ShipmentDirection.RETURN)
-                .map(s -> s.getTransportCompany().getId())
-                .map(currentUser::isAnyOf)
-                .orElse(false);
+        // Cualquier empresa de transporte que haya participado en el préstamo
+        // (incluida una que fue rechazada antes de reasignar) puede consultarlo.
+        // Recorremos sus propios envíos buscando uno asociado a este loan.
+        boolean isTransport = shipmentRepository.findByTransportCompanyId(currentUser.currentId())
+                .stream()
+                .anyMatch(s -> loan.getId().equals(s.getLoanRequest().getId()));
         if (!isTransport) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "No tienes acceso a este préstamo");
@@ -372,11 +430,15 @@ public class LoanRequestService {
     }
 
     private LoanResponse convertToResponse(LoanRequest l) {
+        // Siempre usamos el OUTBOUND más reciente: si hubo reasignación, el que
+        // está vivo es el último; los anteriores están en REJECTED.
         Shipment outbound = shipmentRepository
-                .findByLoanRequestIdAndDirection(l.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        l.getId(), Shipment.ShipmentDirection.OUTBOUND)
                 .orElse(null);
         Shipment returnShip = shipmentRepository
-                .findByLoanRequestIdAndDirection(l.getId(), Shipment.ShipmentDirection.RETURN)
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        l.getId(), Shipment.ShipmentDirection.RETURN)
                 .orElse(null);
 
         return LoanResponse.builder()

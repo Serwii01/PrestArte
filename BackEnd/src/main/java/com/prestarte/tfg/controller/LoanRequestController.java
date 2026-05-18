@@ -4,6 +4,7 @@ import com.prestarte.tfg.model.dto.AcceptLoanRequest;
 import com.prestarte.tfg.model.dto.CancelLoanRequest;
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.dto.LoanResponse;
+import com.prestarte.tfg.model.dto.ReassignTransportRequest;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.model.entity.Shipment;
 import com.prestarte.tfg.service.LoanRequestService;
@@ -73,6 +74,17 @@ public class LoanRequestController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<LoanResponse> reject(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.reject(id));
+    }
+
+    /**
+     * Asignar una empresa de transporte distinta tras un presupuesto rechazado.
+     * Solo válido cuando el préstamo está en QUOTE_PENDING y la empresa anterior
+     * no era obligatoria. Crea un nuevo Shipment OUTBOUND en REQUESTED.
+     */
+    @PostMapping("/{id}/reassign-transport")
+    public ResponseEntity<LoanResponse> reassignTransport(@PathVariable Long id,
+                                                          @Valid @RequestBody ReassignTransportRequest body) {
+        return ResponseEntity.ok(loanRequestService.reassignTransport(id, body.getTransportCompanyId()));
     }
 
     /** Cualquier parte cancela el préstamo (solo antes de IN_TRANSIT). */

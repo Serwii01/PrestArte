@@ -28,14 +28,24 @@ public class ArtworkFile {
     @Column(nullable = false, length = 20)
     private FileType type;
 
-    @Column(length = 100)
+    @Column(length = 200)
     private String description;
+
+    /**
+     * Solo aplicable a documentos (type=DOCUMENT). Si es true, el archivo solo es
+     * visible/descargable por el coleccionista dueño y por el admin: ni siquiera
+     * se devuelve su UUID al resto, así que el endpoint /api/files/{id} no puede
+     * resolverlo aunque se intente adivinar.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean confidential = false;
 
     public enum FileType {
         IMAGE_MAIN,     // foto principal
         IMAGE_DETAIL,   // foto detalle
         IMAGE_SIDE,     // lateral
         IMAGE_BACK,     // trasera
-        DOCUMENT        // certificado, informe
+        DOCUMENT        // certificado, seguro, informe, factura...
     }
 }

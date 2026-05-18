@@ -6,20 +6,28 @@ import com.prestarte.tfg.model.dto.CreateArtworkRequest;
 import com.prestarte.tfg.model.dto.FileDto;
 import com.prestarte.tfg.model.dto.UpdateArtworkRequest;
 import com.prestarte.tfg.model.entity.Artwork;
+import com.prestarte.tfg.model.entity.ArtworkFile;
 import com.prestarte.tfg.model.entity.Collector;
+import com.prestarte.tfg.model.entity.DBFile;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.model.entity.TransportCompany;
+import com.prestarte.tfg.repository.ArtworkFileRepository;
 import com.prestarte.tfg.repository.ArtworkRepository;
 import com.prestarte.tfg.repository.CollectorRepository;
 import com.prestarte.tfg.repository.LoanRequestRepository;
 import com.prestarte.tfg.repository.TransportCompanyRepository;
 import com.prestarte.tfg.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +35,7 @@ import java.util.stream.Collectors;
 public class ArtworkService {
 
     private final ArtworkRepository artworkRepository;
+    private final ArtworkFileRepository artworkFileRepository;
     private final CollectorRepository collectorRepository;
     private final TransportCompanyRepository transportCompanyRepository;
     private final LoanRequestRepository loanRequestRepository;
@@ -156,19 +165,93 @@ public class ArtworkService {
         artworkRepository.delete(a);
     }
 
+    // ===== Documentación adjunta (seguros, certificados, informes...) =====
+
+    /**
+     * Adjunta un documento a la obra (type=DOCUMENT). Solo dueño o admin.
+     * Si `confidential` es true, el archivo solo será visible para ellos.
+     */
+    @Transactional
+    public ArtworkDto addDocument(Long artworkId, String description, boolean confidential,
+                                  MultipartFile file) throws IOException {
+        Artwork artwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Obra", artworkId));
+        requireOwnership(artwork);
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("El archivo es obligatorio.");
+        }
+        String name = StringUtils.cleanPath(
+                file.getOriginalFilename() == null ? "documento" : file.getOriginalFilename());
+
+        DBFile dbFile = DBFile.builder()
+                .fileName(name)
+                .fileType(file.getContentType())
+                .data(file.getBytes())
+                .fileSize(file.getSize())
+                .build();
+
+        ArtworkFile af = ArtworkFile.builder()
+                .artwork(artwork)
+                .file(dbFile)
+                .type(ArtworkFile.FileType.DOCUMENT)
+                .description(description != null && !description.isBlank() ? description : name)
+                .confidential(confidential)
+                .build();
+
+        artworkFileRepository.save(af);
+        // Reload to refresh the list
+        return convertToDto(artworkRepository.findById(artworkId).orElseThrow());
+    }
+
+    /** Elimina un documento adjunto. Solo dueño o admin. */
+    @Transactional
+    public ArtworkDto deleteDocument(Long artworkId, Long artworkFileId) {
+        Artwork artwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Obra", artworkId));
+        requireOwnership(artwork);
+
+        ArtworkFile af = artworkFileRepository.findById(artworkFileId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Documento", artworkFileId));
+
+        if (!Objects.equals(af.getArtwork().getId(), artworkId)) {
+            throw new AccessDeniedException("El documento no pertenece a esta obra.");
+        }
+        if (af.getType() != ArtworkFile.FileType.DOCUMENT) {
+            throw new IllegalStateException(
+                    "Este endpoint solo elimina documentos, no fotos.");
+        }
+        artworkFileRepository.delete(af);
+        return convertToDto(artworkRepository.findById(artworkId).orElseThrow());
+    }
+
+    // ======================================================================
+
     private void requireOwnership(Artwork a) {
         if (currentUser.isAdmin()) return;
         currentUser.requireUserId(a.getCollector().getId());
     }
 
     private ArtworkDto convertToDto(Artwork artwork) {
+        // ¿El que mira es el dueño o un admin? Si no, los confidenciales se filtran.
+        Long ownerId = artwork.getCollector() != null ? artwork.getCollector().getId() : null;
+        Long viewerId = currentUser.currentIdOrNull();
+        boolean privileged = currentUser.isAdminOrNull()
+                || (viewerId != null && viewerId.equals(ownerId));
+
         List<FileDto> fileDtos = new ArrayList<>();
         if (artwork.getFiles() != null) {
             fileDtos = artwork.getFiles().stream()
+                    .filter(af -> privileged || !af.isConfidential())
                     .map(af -> FileDto.builder()
                             .id(af.getFile().getId())
+                            .artworkFileId(af.getId())
                             .fileName(af.getFile().getFileName())
                             .fileType(af.getFile().getFileType())
+                            .fileSize(af.getFile().getFileSize())
+                            .type(af.getType() != null ? af.getType().name() : null)
+                            .description(af.getDescription())
+                            .confidential(af.isConfidential())
                             .build())
                     .collect(Collectors.toList());
         }
@@ -188,7 +271,7 @@ public class ArtworkService {
                 .estimatedValue(artwork.getEstimatedValue())
                 .loanConditions(artwork.getLoanConditions())
                 .location(artwork.getLocation())
-                .collectorId(artwork.getCollector() != null ? artwork.getCollector().getId() : null)
+                .collectorId(ownerId)
                 .collectorName(artwork.getCollector() != null ? artwork.getCollector().getName() : "Anónim@")
                 .preferredTransportCompanyId(preferred != null ? preferred.getId() : null)
                 .preferredTransportCompanyName(preferred != null ? preferred.getCompanyName() : null)

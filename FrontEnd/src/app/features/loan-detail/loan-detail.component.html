@@ -307,6 +307,23 @@
             Rechazar presupuesto
           </button>
         }
+        @if (canReassignTransport()) {
+          <div class="mb-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <div class="flex items-start gap-2 mb-2">
+              <span class="material-symbols-outlined text-amber-700 mt-0.5" style="font-size:18px;">swap_horiz</span>
+              <p class="text-xs text-amber-900">
+                El presupuesto anterior fue rechazado. Asigna otra empresa de transporte
+                para que envíe un presupuesto nuevo.
+              </p>
+            </div>
+            <button type="button" (click)="openReassign()" [disabled]="busy()"
+              class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                     bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold disabled:opacity-50">
+              <span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>
+              Buscar otra empresa de transporte
+            </button>
+          </div>
+        }
         @if (canMarkReady()) {
           <button type="button" (click)="markReady()" [disabled]="busy()"
             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2

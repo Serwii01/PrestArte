@@ -1,6 +1,7 @@
 package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.UserResponseDto;
+import com.prestarte.tfg.model.entity.DBFile;
 import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.model.entity.User;
 import com.prestarte.tfg.service.UserService;
@@ -60,6 +61,7 @@ public class UserController {
     }
 
     private UserResponseDto toDto(User u) {
+        DBFile vf = u.getVerificationFile();
         return UserResponseDto.builder()
                 .id(u.getId())
                 .email(u.getEmail())
@@ -69,6 +71,9 @@ public class UserController {
                 .status(u.getStatus())
                 .enabled(u.isEnabled())
                 .taxId(u.getTaxId())
+                .verificationFileId(vf != null ? vf.getId() : null)
+                .verificationFileName(vf != null ? vf.getFileName() : null)
+                .verificationFileType(vf != null ? vf.getFileType() : null)
                 .build();
     }
 }

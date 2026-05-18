@@ -134,17 +134,41 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       });
   }
 
+  /** Archivo a adjuntar antes de enviar (preview en cliente). */
+  protected pendingFile: File | null = null;
+
   send(): void {
-    if (this.form.invalid || this.sending() || this.chatClosed()) return;
+    if (this.sending() || this.chatClosed()) return;
     const c = this.chat();
     if (!c) return;
 
+    // Con adjunto: el contenido puede estar vacío.
+    if (this.pendingFile) {
+      this.sending.set(true);
+      const content = this.form.controls.content.value ?? '';
+      this.chatService.sendMessageWithFile(c.id, content, this.pendingFile).subscribe({
+        next: (msg) => {
+          this.messages.update((current) => [...current, msg]);
+          this.form.reset({ content: '' });
+          this.pendingFile = null;
+          this.sending.set(false);
+          this.shouldScroll = true;
+        },
+        error: (err) => {
+          this.sending.set(false);
+          this.errorMessage.set(err?.error?.message ?? 'No se pudo enviar el archivo.');
+        },
+      });
+      return;
+    }
+
+    // Mensaje de solo texto.
+    if (this.form.invalid) return;
     this.sending.set(true);
     this.chatService
       .sendMessage({ chatSessionId: c.id, content: this.form.controls.content.value })
       .subscribe({
         next: (msg) => {
-          // Optimismo: añadimos el mensaje a la lista al instante.
           this.messages.update((current) => [...current, msg]);
           this.form.reset({ content: '' });
           this.sending.set(false);
@@ -155,6 +179,24 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.errorMessage.set(err?.error?.message ?? 'No se pudo enviar el mensaje.');
         },
       });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.pendingFile = input.files?.[0] ?? null;
+    input.value = '';
+  }
+
+  clearPendingFile(): void {
+    this.pendingFile = null;
+  }
+
+  attachmentUrl(fileId: string): string {
+    return this.chatService.fileUrl(fileId);
+  }
+
+  isImageMessage(m: MessageResponse): boolean {
+    return m.tipo === 'IMAGEN' || (m.attachmentFileType?.startsWith('image/') ?? false);
   }
 
   /** Es mi mensaje (alinear a la derecha, fondo primario). */

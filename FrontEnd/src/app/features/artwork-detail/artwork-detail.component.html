@@ -1,225 +1,453 @@
-@if (loading()) {
-  <div class="stitch-card p-12 text-center">
-    <p class="text-text-secondary">Cargando obra...</p>
-  </div>
-} @else if (errorMessage()) {
-  <div class="stitch-card p-12 text-center">
-    <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>
-    <p class="text-text-main font-bold">{{ errorMessage() }}</p>
-    <a routerLink="/app" class="inline-block mt-4 text-primary font-semibold hover:underline">Volver al panel</a>
-  </div>
-} @else if (artwork(); as a) {
-  <!-- Cabecera con vuelta -->
-  <div class="mb-6">
-    <button type="button" (click)="goBack()"
-            class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
-      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
-      Volver
-    </button>
-  </div>
-
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-    <!-- Galería -->
-    <div class="lg:col-span-3 space-y-4">
-      <div class="aspect-[4/3] w-full rounded-2xl bg-gray-100 overflow-hidden border border-border shadow-sm">
-        @if (mainImageUrl()) {
-          <img [src]="mainImageUrl()" [alt]="a.title" class="w-full h-full object-cover" />
-        } @else {
-          <div class="w-full h-full flex items-center justify-center text-text-secondary">
-            <span class="material-symbols-outlined" style="font-size:64px;">image_not_supported</span>
-          </div>
-        }
-      </div>
-
-      @if ((a.files?.length ?? 0) > 1) {
-        <div class="grid grid-cols-5 sm:grid-cols-6 gap-2">
-          @for (f of a.files; let i = $index; track f.id) {
-            <button type="button" (click)="selectImage(i)"
-                    class="aspect-square rounded-lg overflow-hidden border-2 transition-colors"
-                    [class.border-primary]="selectedFileIndex() === i"
-                    [class.border-transparent]="selectedFileIndex() !== i">
-              <img [src]="fileUrl(f.id)" [alt]="f.fileName" class="w-full h-full object-cover" />
+@if (isPublic()) {
+  <div class="relative flex min-h-screen w-full flex-col bg-background">
+    <!-- Navbar público (mismo patrón que el catálogo público) -->
+    <header
+      class="fixed top-0 z-50 w-full transition-all duration-300"
+      [class.bg-white]="scrolled()"
+      [class.shadow-sm]="scrolled()"
+      [class.border-b]="scrolled()"
+      [class.border-gray-soft]="scrolled()"
+      [class.bg-white\/70]="!scrolled()"
+      [class.backdrop-blur-md]="!scrolled()"
+    >
+      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <a routerLink="/" class="flex items-center">
+          <img src="/assets/images/logo.png" alt="Prestarte" class="h-12 w-auto object-contain" />
+        </a>
+        <nav class="hidden md:flex items-center gap-8">
+          <a routerLink="/" class="text-sm font-medium text-text-main hover:text-primary transition-colors">
+            Inicio
+          </a>
+          <a routerLink="/catalog" class="text-sm font-bold text-primary">
+            Catálogo
+          </a>
+          <a routerLink="/partners" class="text-sm font-medium text-text-main hover:text-primary transition-colors">
+            Partners
+          </a>
+        </nav>
+        <div class="flex items-center gap-3">
+          @if (auth.isLoggedIn()) {
+            <button type="button" (click)="goToApp()"
+              class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold
+                     text-white hover:bg-primary-hover transition-colors shadow-sm">
+              Ir a mi panel
             </button>
+          } @else {
+            <a routerLink="/login"
+              class="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-sm
+                     font-bold text-text-main hover:bg-gray-soft transition-colors">
+              Iniciar sesión
+            </a>
+            <a routerLink="/register"
+              class="flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm
+                     font-bold text-white hover:bg-primary-hover transition-colors shadow-sm">
+              Registrarse
+            </a>
           }
         </div>
+      </div>
+    </header>
+
+    <main class="pt-24 pb-16 flex-1">
+      <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 w-full">
+        <ng-container *ngTemplateOutlet="content"></ng-container>
+      </div>
+    </main>
+
+    <footer class="bg-white pt-10 pb-8 border-t border-gray-soft">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-text-secondary">
+        © {{ year }} Prestarte · Trabajo de Fin de Grado
+      </div>
+    </footer>
+  </div>
+} @else {
+  <ng-container *ngTemplateOutlet="content"></ng-container>
+}
+
+<ng-template #content>
+  @if (loading()) {
+    <div class="stitch-card p-12 text-center">
+      <p class="text-text-secondary">Cargando obra...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="stitch-card p-12 text-center">
+      <span class="material-symbols-outlined text-red-500 mb-2" style="font-size:40px;">error</span>
+      <p class="text-text-main font-bold">{{ errorMessage() }}</p>
+      @if (isPublic()) {
+        <a routerLink="/catalog" class="inline-block mt-4 text-primary font-semibold hover:underline">Volver al catálogo</a>
+      } @else {
+        <a routerLink="/app" class="inline-block mt-4 text-primary font-semibold hover:underline">Volver al panel</a>
+      }
+    </div>
+  } @else if (artwork(); as a) {
+    <!-- Cabecera con vuelta -->
+    <div class="mb-6">
+      @if (isPublic()) {
+        <a routerLink="/catalog"
+           class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+          <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+          Volver al catálogo
+        </a>
+      } @else {
+        <button type="button" (click)="goBack()"
+                class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+          <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+          Volver
+        </button>
       }
     </div>
 
-    <!-- Datos laterales -->
-    <aside class="lg:col-span-2 space-y-6">
-      <section>
-        @if (isMine()) {
-          <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider mb-3">
-            <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
-            Tu obra
-          </span>
-        }
-        <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight leading-tight">
-          {{ a.title }}
-        </h1>
-        <p class="text-lg text-text-secondary mt-1">
-          {{ a.artist }}
-          @if (a.year) { · {{ a.year }} }
-        </p>
-        @if (a.location) {
-          <p class="mt-2 inline-flex items-center gap-1 text-sm text-text-secondary">
-            <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
-            {{ a.location }}
-          </p>
-        }
-      </section>
-
-      <!-- Stats compactas -->
-      <section class="stitch-card p-5">
-        <dl class="grid grid-cols-2 gap-y-4 gap-x-6">
-          <div>
-            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Estado</dt>
-            <dd class="mt-1 text-sm font-bold text-text-main">{{ conditionLabel() }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Valor estimado</dt>
-            <dd class="mt-1 text-sm font-bold text-text-main">{{ formattedValue() }}</dd>
-          </div>
-          <div class="col-span-2">
-            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Dimensiones</dt>
-            <dd class="mt-1 text-sm font-bold text-text-main">{{ dimensionsLabel() }}</dd>
-          </div>
-          <div class="col-span-2">
-            <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coleccionista</dt>
-            <dd class="mt-1 text-sm font-bold text-text-main">{{ a.collectorName || 'Anónim@' }}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <!-- Descripción -->
-      @if (a.description) {
-        <section class="stitch-card p-5">
-          <h3 class="text-sm font-bold text-text-main mb-2">Descripción</h3>
-          <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.description }}</p>
-        </section>
-      }
-
-      <!-- Condiciones de préstamo -->
-      @if (a.loanConditions) {
-        <section class="stitch-card p-5">
-          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary" style="font-size:18px;">rule</span>
-            Condiciones de préstamo
-          </h3>
-          <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.loanConditions }}</p>
-        </section>
-      }
-
-      <!-- Empresa preferida -->
-      @if (a.preferredTransportCompanyName) {
-        <section class="stitch-card p-5">
-          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary" style="font-size:18px;">local_shipping</span>
-            Empresa de transporte preferida
-          </h3>
-          <p class="text-sm text-text-main font-bold">{{ a.preferredTransportCompanyName }}</p>
-          @if (a.preferredTransportMandatory) {
-            <div class="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
-              <span class="material-symbols-outlined text-amber-700 mt-0.5" style="font-size:16px;">priority_high</span>
-              <p class="text-xs text-amber-900">
-                <span class="font-bold">Obligatoria.</span>
-                Si el museo rechaza el presupuesto de esta empresa, el préstamo se cancela.
-              </p>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <!-- Galería -->
+      <div class="lg:col-span-3 space-y-4">
+        <div class="aspect-[4/3] w-full rounded-2xl bg-gray-100 overflow-hidden border border-border shadow-sm">
+          @if (mainImageUrl()) {
+            <img [src]="mainImageUrl()" [alt]="a.title" class="w-full h-full object-cover" />
           } @else {
-            <p class="mt-2 text-xs text-text-secondary">
-              El museo podrá negociar con otra empresa si lo prefiere.
+            <div class="w-full h-full flex items-center justify-center text-text-secondary">
+              <span class="material-symbols-outlined" style="font-size:64px;">image_not_supported</span>
+            </div>
+          }
+        </div>
+
+        @if (images().length > 1) {
+          <div class="grid grid-cols-5 sm:grid-cols-6 gap-2">
+            @for (f of images(); let i = $index; track f.id) {
+              <button type="button" (click)="selectImage(i)"
+                      class="aspect-square rounded-lg overflow-hidden border-2 transition-colors"
+                      [class.border-primary]="selectedFileIndex() === i"
+                      [class.border-transparent]="selectedFileIndex() !== i">
+                <img [src]="fileUrl(f.id)" [alt]="f.fileName" class="w-full h-full object-cover" />
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Documentación -->
+        <section class="stitch-card p-5">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" style="font-size:18px;">folder_open</span>
+              Documentación
+              <span class="text-xs font-normal text-text-secondary">
+                ({{ documents().length }})
+              </span>
+            </h3>
+            @if (isMine()) {
+              <button type="button" (click)="toggleUploader()"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                             bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors">
+                <span class="material-symbols-outlined" style="font-size:16px;">
+                  {{ showUploader() ? 'close' : 'upload_file' }}
+                </span>
+                {{ showUploader() ? 'Cancelar' : 'Añadir documento' }}
+              </button>
+            }
+          </div>
+
+          <p class="text-xs text-text-secondary mb-3">
+            Adjunta certificados, seguros vigentes, informes de condición, facturas… Los marcados como
+            <span class="font-bold">confidenciales</span> solo serán visibles para ti y la administración.
+          </p>
+
+          <!-- Formulario de subida (solo dueño) -->
+          @if (isMine() && showUploader()) {
+            <div class="mb-4 p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
+              <label class="flex items-center gap-3 h-16 rounded-lg border-2 border-dashed
+                            border-border hover:border-primary/50 hover:bg-white/50 cursor-pointer transition-colors px-3">
+                <input type="file" (change)="onDocSelected($event)"
+                       accept=".pdf,image/jpeg,image/png,.doc,.docx,.xls,.xlsx,.txt" class="hidden" />
+                <span class="material-symbols-outlined text-primary shrink-0" style="font-size:24px;">upload_file</span>
+                @if (pendingDoc) {
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-text-main truncate">{{ pendingDoc.name }}</p>
+                    <p class="text-xs text-text-secondary">Haz click para cambiar</p>
+                  </div>
+                } @else {
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-text-main">Seleccionar archivo</p>
+                    <p class="text-xs text-text-secondary">PDF, JPG, PNG, DOC, XLS…</p>
+                  </div>
+                }
+              </label>
+
+              <input type="text" [(ngModel)]="pendingDocDescription"
+                     placeholder="Descripción (ej. Seguro vigente 2026, Certificado de autenticidad…)"
+                     class="w-full rounded-lg border border-border bg-white h-10 px-3 text-sm
+                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+
+              <label class="flex items-start gap-2 text-sm text-text-main cursor-pointer select-none">
+                <input type="checkbox" [(ngModel)]="pendingDocConfidential"
+                       class="mt-0.5 size-4 rounded border-border text-primary focus:ring-primary/20" />
+                <span>
+                  <span class="font-bold">Confidencial</span>
+                  <span class="block text-xs text-text-secondary">
+                    Solo lo verás tú y la administración. No será descargable por museos ni visitantes.
+                  </span>
+                </span>
+              </label>
+
+              @if (docError()) {
+                <div class="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 flex items-start gap-2">
+                  <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:14px;">error</span>
+                  <span>{{ docError() }}</span>
+                </div>
+              }
+
+              <button type="button" (click)="uploadDocument()"
+                      [disabled]="!pendingDoc || uploadingDoc()"
+                      class="w-full flex items-center justify-center gap-2 rounded-lg h-10 px-3
+                             bg-primary hover:bg-primary-hover text-white text-sm font-bold transition-colors
+                             disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined" style="font-size:18px;">cloud_upload</span>
+                {{ uploadingDoc() ? 'Subiendo…' : 'Subir documento' }}
+              </button>
+            </div>
+          }
+
+          <!-- Listado de documentos -->
+          @if (documents().length === 0) {
+            <p class="text-xs text-text-secondary italic">
+              @if (isMine()) {
+                Todavía no has añadido ningún documento.
+              } @else {
+                El coleccionista no ha publicado documentación para esta obra.
+              }
+            </p>
+          } @else {
+            <ul class="space-y-2">
+              @for (d of documents(); track d.artworkFileId ?? d.id) {
+                <li class="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-gray-soft/40 transition-colors">
+                  <div class="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined" style="font-size:22px;">
+                      @if (isImageDoc(d)) {
+                        image
+                      } @else if (d.fileType === 'application/pdf') {
+                        picture_as_pdf
+                      } @else {
+                        description
+                      }
+                    </span>
+                  </div>
+
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <p class="text-sm font-bold text-text-main truncate" [title]="d.description || d.fileName">
+                        {{ d.description || d.fileName }}
+                      </p>
+                      @if (d.confidential) {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                          <span class="material-symbols-outlined" style="font-size:12px;">lock</span>
+                          Confidencial
+                        </span>
+                      }
+                    </div>
+                    <p class="text-xs text-text-secondary truncate" [title]="d.fileName">
+                      {{ d.fileName }}
+                      @if (d.fileSize) { · {{ humanSize(d.fileSize) }} }
+                    </p>
+                  </div>
+
+                  <a [href]="fileUrl(d.id)" target="_blank" rel="noopener"
+                     [download]="d.fileName"
+                     title="Descargar"
+                     class="size-9 rounded-lg bg-primary hover:bg-primary-hover text-white
+                            flex items-center justify-center transition-colors shrink-0">
+                    <span class="material-symbols-outlined" style="font-size:18px;">download</span>
+                  </a>
+
+                  @if (isMine()) {
+                    <button type="button" (click)="deleteDocument(d)" [disabled]="busy()"
+                            title="Eliminar"
+                            class="size-9 rounded-lg border border-red-300 text-red-600
+                                   hover:bg-red-50 flex items-center justify-center transition-colors shrink-0
+                                   disabled:opacity-50">
+                      <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      <!-- Datos laterales -->
+      <aside class="lg:col-span-2 space-y-6">
+        <section>
+          @if (isMine()) {
+            <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider mb-3">
+              <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
+              Tu obra
+            </span>
+          }
+          <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight leading-tight">
+            {{ a.title }}
+          </h1>
+          <p class="text-lg text-text-secondary mt-1">
+            {{ a.artist }}
+            @if (a.year) { · {{ a.year }} }
+          </p>
+          @if (a.location) {
+            <p class="mt-2 inline-flex items-center gap-1 text-sm text-text-secondary">
+              <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+              {{ a.location }}
             </p>
           }
         </section>
-      }
 
-      <!-- Acciones del dueño -->
-      @if (isMine()) {
-        @if (actionMessage()) {
-          <div class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
-            <span class="material-symbols-outlined text-emerald-600 mt-0.5" style="font-size:18px;">check_circle</span>
-            <span>{{ actionMessage() }}</span>
-          </div>
+        <!-- Stats compactas -->
+        <section class="stitch-card p-5">
+          <dl class="grid grid-cols-2 gap-y-4 gap-x-6">
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Estado</dt>
+              <dd class="mt-1 text-sm font-bold text-text-main">{{ conditionLabel() }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Valor estimado</dt>
+              <dd class="mt-1 text-sm font-bold text-text-main">{{ formattedValue() }}</dd>
+            </div>
+            <div class="col-span-2">
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Dimensiones</dt>
+              <dd class="mt-1 text-sm font-bold text-text-main">{{ dimensionsLabel() }}</dd>
+            </div>
+            <div class="col-span-2">
+              <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coleccionista</dt>
+              <dd class="mt-1 text-sm font-bold text-text-main">{{ a.collectorName || 'Anónim@' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Descripción -->
+        @if (a.description) {
+          <section class="stitch-card p-5">
+            <h3 class="text-sm font-bold text-text-main mb-2">Descripción</h3>
+            <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.description }}</p>
+          </section>
         }
-        @if (errorMessage()) {
-          <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-            <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:18px;">error</span>
-            <span>{{ errorMessage() }}</span>
-          </div>
+
+        <!-- Condiciones de préstamo -->
+        @if (a.loanConditions) {
+          <section class="stitch-card p-5">
+            <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" style="font-size:18px;">rule</span>
+              Condiciones de préstamo
+            </h3>
+            <p class="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{{ a.loanConditions }}</p>
+          </section>
         }
 
-        <div class="stitch-card p-4 space-y-2">
-          <p class="text-xs uppercase font-bold tracking-wider text-text-secondary mb-2">Gestión</p>
-
-          <a [routerLink]="['/app/collector/edit', a.id]"
-             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
-                    bg-primary hover:bg-primary-hover transition-colors
-                    text-white text-sm font-bold">
-            <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
-            Editar obra
-          </a>
-
-          <button type="button" (click)="toggleAvailability()" [disabled]="busy()"
-                  class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
-                         bg-white border border-border hover:bg-gray-soft transition-colors
-                         text-text-main text-sm font-medium disabled:opacity-50">
-            @if (a.availableForLoan ?? true) {
-              <span class="material-symbols-outlined" style="font-size:18px;">pause_circle</span>
-              Dar de baja
+        <!-- Empresa preferida -->
+        @if (a.preferredTransportCompanyName) {
+          <section class="stitch-card p-5">
+            <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" style="font-size:18px;">local_shipping</span>
+              Empresa de transporte preferida
+            </h3>
+            <p class="text-sm text-text-main font-bold">{{ a.preferredTransportCompanyName }}</p>
+            @if (a.preferredTransportMandatory) {
+              <div class="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                <span class="material-symbols-outlined text-amber-700 mt-0.5" style="font-size:16px;">priority_high</span>
+                <p class="text-xs text-amber-900">
+                  <span class="font-bold">Obligatoria.</span>
+                  Si el museo rechaza el presupuesto de esta empresa, el préstamo se cancela.
+                </p>
+              </div>
             } @else {
-              <span class="material-symbols-outlined text-emerald-600" style="font-size:18px;">play_circle</span>
-              Publicar para préstamo
+              <p class="mt-2 text-xs text-text-secondary">
+                El museo podrá negociar con otra empresa si lo prefiere.
+              </p>
             }
-          </button>
+          </section>
+        }
 
-          <button type="button" (click)="deleteArtwork()" [disabled]="busy()"
-                  class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
-                         bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-colors
-                         text-sm font-bold disabled:opacity-50">
-            <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
-            Eliminar
-          </button>
-
-          @if (a.availableForLoan === false) {
-            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-              Esta obra está dada de baja. Sigue siendo visible en tu colección y en el catálogo
-              público pero los museos no pueden solicitar préstamo hasta que la vuelvas a publicar.
-            </p>
+        <!-- Acciones del dueño -->
+        @if (isMine()) {
+          @if (actionMessage()) {
+            <div class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+              <span class="material-symbols-outlined text-emerald-600 mt-0.5" style="font-size:18px;">check_circle</span>
+              <span>{{ actionMessage() }}</span>
+            </div>
           }
-        </div>
-      }
+          @if (errorMessage()) {
+            <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+              <span class="material-symbols-outlined text-red-600 mt-0.5" style="font-size:18px;">error</span>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
 
-      <!-- Acción FOUNDATION -->
-      @if (canRequestLoan()) {
-        <a [routerLink]="['/app/foundation/request-loan', a.id]"
-           class="flex w-full items-center justify-center gap-2 rounded-lg h-12 px-4
-                  bg-primary hover:bg-primary-hover transition-colors
-                  text-white text-base font-bold tracking-[0.015em] shadow-sm">
-          <span class="material-symbols-outlined" style="font-size:20px;">handshake</span>
-          Solicitar préstamo
-        </a>
-      } @else if (!auth.isLoggedIn()) {
-        <div class="p-4 rounded-xl border border-primary/30 bg-primary/5">
-          <p class="text-sm text-text-main font-bold mb-1">¿Te interesa esta obra?</p>
-          <p class="text-xs text-text-secondary mb-3">
-            Solo los museos y fundaciones pueden solicitar préstamos. Si representas a una
-            institución, inicia sesión o regístrate.
-          </p>
-          <div class="flex gap-2">
-            <a routerLink="/login"
-               class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
-                      bg-primary hover:bg-primary-hover text-white text-sm font-bold">
-              Iniciar sesión
+          <div class="stitch-card p-4 space-y-2">
+            <p class="text-xs uppercase font-bold tracking-wider text-text-secondary mb-2">Gestión</p>
+
+            <a [routerLink]="['/app/collector/edit', a.id]"
+               class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                      bg-primary hover:bg-primary-hover transition-colors
+                      text-white text-sm font-bold">
+              <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+              Editar obra
             </a>
-            <a [routerLink]="['/register']" [queryParams]="{ role: 'FOUNDATION' }"
-               class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
-                      bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
-              Registrarse
-            </a>
+
+            <button type="button" (click)="toggleAvailability()" [disabled]="busy()"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                           bg-white border border-border hover:bg-gray-soft transition-colors
+                           text-text-main text-sm font-medium disabled:opacity-50">
+              @if (a.availableForLoan ?? true) {
+                <span class="material-symbols-outlined" style="font-size:18px;">pause_circle</span>
+                Dar de baja
+              } @else {
+                <span class="material-symbols-outlined text-emerald-600" style="font-size:18px;">play_circle</span>
+                Publicar para préstamo
+              }
+            </button>
+
+            <button type="button" (click)="deleteArtwork()" [disabled]="busy()"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4
+                           bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-colors
+                           text-sm font-bold disabled:opacity-50">
+              <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+              Eliminar
+            </button>
+
+            @if (a.availableForLoan === false) {
+              <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+                Esta obra está dada de baja. Sigue siendo visible en tu colección y en el catálogo
+                público pero los museos no pueden solicitar préstamo hasta que la vuelvas a publicar.
+              </p>
+            }
           </div>
-        </div>
-      }
-    </aside>
-  </div>
-}
+        }
+
+        <!-- Acción FOUNDATION -->
+        @if (canRequestLoan()) {
+          <a [routerLink]="['/app/foundation/request-loan', a.id]"
+             class="flex w-full items-center justify-center gap-2 rounded-lg h-12 px-4
+                    bg-primary hover:bg-primary-hover transition-colors
+                    text-white text-base font-bold tracking-[0.015em] shadow-sm">
+            <span class="material-symbols-outlined" style="font-size:20px;">handshake</span>
+            Solicitar préstamo
+          </a>
+        } @else if (!auth.isLoggedIn()) {
+          <div class="p-4 rounded-xl border border-primary/30 bg-primary/5">
+            <p class="text-sm text-text-main font-bold mb-1">¿Te interesa esta obra?</p>
+            <p class="text-xs text-text-secondary mb-3">
+              Solo los museos y fundaciones pueden solicitar préstamos. Si representas a una
+              institución, inicia sesión o regístrate.
+            </p>
+            <div class="flex gap-2">
+              <a routerLink="/login"
+                 class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
+                        bg-primary hover:bg-primary-hover text-white text-sm font-bold">
+                Iniciar sesión
+              </a>
+              <a [routerLink]="['/register']" [queryParams]="{ role: 'FOUNDATION' }"
+                 class="flex-1 flex items-center justify-center rounded-lg h-10 px-3
+                        bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
+                Registrarse
+              </a>
+            </div>
+          </div>
+        }
+      </aside>
+    </div>
+  }
+</ng-template>

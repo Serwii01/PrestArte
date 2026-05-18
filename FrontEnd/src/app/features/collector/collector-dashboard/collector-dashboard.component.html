@@ -118,8 +118,8 @@
                class="group relative rounded-xl bg-white border border-border overflow-hidden
                       shadow-sm hover:shadow-md transition-all">
               <div class="aspect-[4/3] w-full bg-gray-100 relative overflow-hidden">
-                @if (a.files && a.files.length > 0) {
-                  <img [src]="artworkService.fileUrl(a.files[0].id)" [alt]="a.title"
+                @if (mainImageUrl(a); as url) {
+                  <img [src]="url" [alt]="a.title"
                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 } @else {
                   <div class="w-full h-full flex items-center justify-center text-text-secondary">

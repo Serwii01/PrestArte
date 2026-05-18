@@ -66,4 +66,33 @@ export class ArtworkService {
   fileUrl(fileId: string): string {
     return `${this.filesBase}/${fileId}`;
   }
+
+  /**
+   * Sube un documento adjunto (seguro, certificado, factura, informe…) a una obra.
+   * El backend lo guarda con type=DOCUMENT y `confidential` opcional.
+   */
+  addDocument(
+    artworkId: number,
+    description: string,
+    confidential: boolean,
+    file: File,
+  ): Observable<ArtworkResponse> {
+    const data = new FormData();
+    data.append('file', file);
+    const params = new URLSearchParams({
+      confidential: String(!!confidential),
+    });
+    if (description) params.set('description', description);
+    return this.http.post<ArtworkResponse>(
+      `${this.base}/${artworkId}/documents?${params.toString()}`,
+      data,
+    );
+  }
+
+  /** Borra un documento adjunto (solo dueño/admin). */
+  deleteDocument(artworkId: number, artworkFileId: number): Observable<ArtworkResponse> {
+    return this.http.delete<ArtworkResponse>(
+      `${this.base}/${artworkId}/documents/${artworkFileId}`,
+    );
+  }
 }

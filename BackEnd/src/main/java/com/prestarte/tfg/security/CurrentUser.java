@@ -39,6 +39,32 @@ public class CurrentUser {
     }
 
     /**
+     * Versión "blanda": devuelve el id del usuario autenticado o {@code null}
+     * si no hay sesión. Útil para endpoints públicos que necesitan saber
+     * quién mira para filtrar campos sensibles sin obligar a iniciar sesión.
+     */
+    public Long currentIdOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return null;
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUser().getId();
+        }
+        return null;
+    }
+
+    /** True si hay sesión y el usuario tiene rol ADMIN. */
+    public boolean isAdminOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return false;
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUser().getRole() == Role.ADMIN;
+        }
+        return false;
+    }
+
+    /**
      * Verifica que el usuario actual es exactamente el id esperado. Si no,
      * lanza 403. Pensado para "esta acción solo la puede hacer el dueño X".
      */

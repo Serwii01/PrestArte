@@ -21,6 +21,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final UserRepository userRepository;
+    private final com.prestarte.tfg.repository.DBFileRepository dbFileRepository;
     private final CurrentUser currentUser;
     private final ChatSessionService chatSessionService;
 
@@ -86,7 +87,53 @@ public class MessageService {
         return mapToResponse(message);
     }
 
+    /**
+     * Envía un mensaje con archivo adjunto. El sender se toma del JWT.
+     * Si el archivo es image/*, el tipo es IMAGEN; en otro caso, DOCUMENTO.
+     */
+    @Transactional
+    public MessageResponse createMessageWithFile(Long chatSessionId, String content,
+                                                 org.springframework.web.multipart.MultipartFile file)
+            throws java.io.IOException {
+        ChatSession chatSession = chatSessionRepository.findById(chatSessionId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Sesión de chat", chatSessionId));
+
+        if (chatSession.getEstado() == ChatSession.EstadoChat.CERRADO) {
+            throw new IllegalStateException("No se pueden enviar mensajes a un chat cerrado");
+        }
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Adjunto vacío o no proporcionado");
+        }
+
+        chatSessionService.requireParticipant(chatSession.getLoanRequest());
+
+        com.prestarte.tfg.model.entity.User sender = userRepository.findById(currentUser.currentId())
+                .orElseThrow(() -> new AccessDeniedException("Sesión no reconocida"));
+
+        com.prestarte.tfg.model.entity.DBFile dbFile = com.prestarte.tfg.model.entity.DBFile.builder()
+                .fileName(file.getOriginalFilename())
+                .fileType(file.getContentType())
+                .data(file.getBytes())
+                .fileSize(file.getSize())
+                .build();
+        dbFileRepository.save(dbFile);
+
+        boolean isImage = file.getContentType() != null && file.getContentType().startsWith("image/");
+        Message.TipoMensaje tipo = isImage ? Message.TipoMensaje.IMAGEN : Message.TipoMensaje.DOCUMENTO;
+
+        Message msg = Message.builder()
+                .chatSession(chatSession)
+                .sender(sender)
+                .content(content != null ? content.trim() : "")
+                .tipo(tipo)
+                .attachment(dbFile)
+                .build();
+
+        return mapToResponse(messageRepository.save(msg));
+    }
+
     private MessageResponse mapToResponse(Message message) {
+        var att = message.getAttachment();
         return MessageResponse.builder()
                 .id(message.getId())
                 .chatSessionId(message.getChatSession().getId())
@@ -95,6 +142,9 @@ public class MessageService {
                 .content(message.getContent())
                 .sentAt(message.getSentAt())
                 .tipo(message.getTipo())
+                .attachmentId(att != null ? att.getId() : null)
+                .attachmentFileName(att != null ? att.getFileName() : null)
+                .attachmentFileType(att != null ? att.getFileType() : null)
                 .build();
     }
 }

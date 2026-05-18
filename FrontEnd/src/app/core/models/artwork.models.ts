@@ -1,5 +1,25 @@
 export type Condition = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'DAMAGED';
 
+export type ArtworkFileType =
+  | 'IMAGE_MAIN'
+  | 'IMAGE_DETAIL'
+  | 'IMAGE_SIDE'
+  | 'IMAGE_BACK'
+  | 'DOCUMENT';
+
+export interface FileDto {
+  /** UUID del DBFile, sirve para GET /api/files/{id}. */
+  id: string;
+  /** Id interno del ArtworkFile, necesario para borrar el adjunto. */
+  artworkFileId?: number;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+  type?: ArtworkFileType;
+  description?: string;
+  confidential?: boolean;
+}
+
 export interface ArtworkResponse {
   id: number;
   title: string;
@@ -39,13 +59,6 @@ export interface UpdateArtworkRequest {
   preferredTransportMandatory?: boolean;
 }
 
-export interface FileDto {
-  id: string;
-  fileName: string;
-  fileType: string;
-  url?: string;
-}
-
 export interface CreateArtworkRequest {
   title: string;
   artist: string;
@@ -78,3 +91,14 @@ export const CONDITION_OPTIONS: Array<{ value: Condition; label: string; descrip
   { value: 'POOR', label: 'Defectuoso', description: 'Daños visibles que requieren atención' },
   { value: 'DAMAGED', label: 'Dañado', description: 'Necesita restauración antes de exponerse' },
 ];
+
+/** ¿Es una imagen "principal de la obra" (no documento)? */
+export function isArtworkImage(f: FileDto): boolean {
+  if (f.type) return f.type !== 'DOCUMENT';
+  return (f.fileType ?? '').startsWith('image/');
+}
+
+/** ¿Es un documento adjunto (seguro, certificado, etc.)? */
+export function isArtworkDocument(f: FileDto): boolean {
+  return f.type === 'DOCUMENT';
+}

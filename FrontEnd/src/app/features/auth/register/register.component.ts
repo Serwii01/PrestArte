@@ -27,6 +27,8 @@ export class RegisterComponent implements OnInit {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly success = signal(false);
   protected file: File | null = null;
+  /** Marcamos si el usuario ha intentado enviar para mostrar el error del archivo. */
+  protected readonly submitted = signal(false);
 
   protected readonly roleOptions = [
     { value: 'COLLECTOR', label: 'Coleccionista' },
@@ -34,12 +36,17 @@ export class RegisterComponent implements OnInit {
     { value: 'TRANSPORT', label: 'Transporte' },
   ] as const;
 
+  /**
+   * Todos los campos son obligatorios. La contraseña debe tener al menos 6
+   * caracteres (el back exige también 6). Email, teléfono y DNI/CIF/LEI
+   * tienen validaciones específicas.
+   */
   protected readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required]],
+    name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phone: [''],
-    taxId: [''],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    phone: ['', [Validators.required, Validators.minLength(6)]],
+    taxId: ['', [Validators.required, Validators.minLength(4)]],
     role: ['COLLECTOR' as RegisterRole, [Validators.required]],
   });
 
@@ -55,7 +62,14 @@ export class RegisterComponent implements OnInit {
   }
 
   submit(): void {
-    if (this.form.invalid || !this.file) return;
+    this.submitted.set(true);
+    // Si el formulario es inválido, mostramos los errores en cada campo.
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    if (!this.file) return;
+
     this.loading.set(true);
     this.errorMessage.set(null);
     this.success.set(false);
@@ -78,6 +92,12 @@ export class RegisterComponent implements OnInit {
         this.errorMessage.set(err?.error?.message ?? 'No se pudo completar el registro.');
       },
     });
+  }
+
+  /** Helper para el template: ¿hay que mostrar error en este campo? */
+  showError(name: keyof typeof this.form.controls): boolean {
+    const ctrl = this.form.controls[name];
+    return ctrl.invalid && (ctrl.touched || ctrl.dirty || this.submitted());
   }
 
   private isValidRole(value: string): value is RegisterRole {
