@@ -255,9 +255,9 @@
             <div class="artwork-card__media">
               <img [src]="a.img" [alt]="a.title" class="artwork-card__img" />
               @if (a.available) {
-                <div class="artwork-card__badge artwork-card__badge--available">Disponible</div>
+                <div class="artwork-card__badge artwork-card__badge--available">Demo</div>
               } @else {
-                <div class="artwork-card__badge artwork-card__badge--loan">En préstamo</div>
+                <div class="artwork-card__badge artwork-card__badge--loan">Demo</div>
               }
             </div>
             <h4 class="artwork-card__title">{{ a.title }}</h4>
@@ -370,7 +370,6 @@
           <ul class="footer__list">
             <li><a routerLink="/login" class="footer__link">Iniciar sesión</a></li>
             <li><a routerLink="/register" [queryParams]="{ role: 'COLLECTOR' }" class="footer__link">Registrarse</a></li>
-            <li><a class="footer__link" href="#">Contacto</a></li>
           </ul>
         </div>
       </div>
