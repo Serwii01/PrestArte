@@ -1,6 +1,5 @@
 package com.prestarte.tfg.service;
 
-import com.prestarte.tfg.model.dto.*;
 import com.prestarte.tfg.model.entity.Foundation;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.model.entity.Role;
@@ -18,6 +17,14 @@ import com.prestarte.tfg.model.dto.FoundationInventoryDto;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio que ofrece operaciones específicas para el rol fundación.
+ *
+ * Incluye el alta directa de fundaciones y la composición del panel
+ * resumen, que separa las solicitudes a la espera de respuesta del
+ * coleccionista y las obras que la fundación ya tiene físicamente en
+ * su poder.
+ */
 @Service
 @RequiredArgsConstructor
 public class FoundationService {
@@ -26,33 +33,27 @@ public class FoundationService {
     private final LoanRequestRepository loanRequestRepository;
     private final ShipmentRepository shipmentRepository;
 
-    /**
-     * Crea una nueva fundación y le asigna el rol correspondiente.
-     */
+    /** Persiste una nueva fundación con su rol correspondiente. */
     @Transactional
     public Foundation createFoundation(Foundation foundation) {
         foundation.setRole(Role.FOUNDATION);
         return foundationRepository.save(foundation);
     }
 
-    /**
-     * Lista todas las fundaciones registradas.
-     */
+    /** Devuelve el listado completo de fundaciones registradas. */
     public List<Foundation> getAllFoundations() {
         return foundationRepository.findAll();
     }
 
     /**
-     * Genera la información para el Dashboard de la Fundación.
-     * Separa las peticiones que están esperando respuesta de las obras que ya están en el museo.
+     * Construye el resumen del panel de la fundación: peticiones
+     * pendientes de respuesta y obras ya recibidas en el museo.
      */
     @Transactional(readOnly = true)
     public FoundationDashboardDto getDashboard(Long foundationId) {
-        // 1. Peticiones enviadas por esta fundación que siguen pendientes
         List<LoanRequest> pending = loanRequestRepository.findByFoundationIdAndStatus(
                 foundationId, LoanRequest.Status.REQUESTED);
 
-        // 2. Obras que la fundación ya tiene físicamente (envío entregado)
         List<Shipment> activeShipments = shipmentRepository.findByLoanRequestFoundationIdAndStatus(
                 foundationId, Shipment.ShipmentStatus.DELIVERED);
 
@@ -67,8 +68,8 @@ public class FoundationService {
     }
 
     /**
-     * Mapea una LoanRequest a un DTO de petición pendiente para el museo.
-     * Incluye las condiciones del préstamo que el coleccionista definió.
+     * Compone el DTO de una solicitud pendiente, incluyendo las
+     * condiciones de préstamo definidas por el coleccionista.
      */
     private FoundationPendingRequestDto mapToPendingDto(LoanRequest lr) {
         return FoundationPendingRequestDto.builder()
@@ -78,15 +79,12 @@ public class FoundationService {
                 .collectorName(lr.getArtwork().getCollector().getName())
                 .startDate(lr.getStartDate())
                 .endDate(lr.getEndDate())
-                // Aquí extraemos las condiciones que irán al PDF
                 .loanConditions(lr.getArtwork().getLoanConditions())
                 .status(lr.getStatus().name())
                 .build();
     }
 
-    /**
-     * Mapea un Shipment a un DTO de inventario activo para el museo.
-     */
+    /** Compone el DTO de inventario activo a partir del envío entregado. */
     private FoundationInventoryDto mapToInventoryDto(Shipment s) {
         return FoundationInventoryDto.builder()
                 .shipmentId(s.getId())

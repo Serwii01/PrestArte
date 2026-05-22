@@ -30,6 +30,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio que gestiona las obras del catálogo.
+ *
+ * Cubre la creación, edición, eliminación y deshabilitación temporal de
+ * las obras, junto con la subida y borrado de documentos adjuntos
+ * (seguros, certificados, informes). La conversión a DTO filtra los
+ * documentos marcados como confidenciales cuando el usuario que
+ * consulta no es el dueño ni un administrador.
+ */
 @Service
 @RequiredArgsConstructor
 public class ArtworkService {
@@ -41,12 +50,18 @@ public class ArtworkService {
     private final LoanRequestRepository loanRequestRepository;
     private final CurrentUser currentUser;
 
+    /**
+     * Crea una nueva obra para el coleccionista indicado.
+     *
+     * Resuelve además la empresa de transporte preferida en caso de
+     * que se haya indicado y persiste el estado de conservación a
+     * partir del valor que llega validado en el DTO.
+     */
     @Transactional
     public ArtworkDto createArtwork(CreateArtworkRequest request) {
         Collector collector = collectorRepository.findById(request.getCollectorId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Coleccionista", request.getCollectorId()));
 
-        // Empresa de transporte preferida (opcional)
         TransportCompany preferred = null;
         if (request.getPreferredTransportCompanyId() != null) {
             preferred = transportCompanyRepository.findById(request.getPreferredTransportCompanyId())
@@ -70,33 +85,38 @@ public class ArtworkService {
                 .preferredTransportMandatory(
                         preferred != null && request.isPreferredTransportMandatory())
                 .build();
-
-        // El @Pattern del DTO ya valida el enum; aquí parseamos sin try/catch.
         artwork.setCondition(Artwork.Condition.valueOf(request.getCondition()));
 
         Artwork saved = artworkRepository.save(artwork);
         return convertToDto(saved);
     }
 
+    /** Devuelve el catálogo completo de obras. */
     public List<ArtworkDto> getAllArtworks() {
         return artworkRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    /** Devuelve la ficha de una obra a partir de su identificador. */
     public ArtworkDto getArtworkById(Long id) {
         Artwork artwork = artworkRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", id));
         return convertToDto(artwork);
     }
 
+    /** Devuelve todas las obras pertenecientes a un coleccionista. */
     public List<ArtworkDto> getArtworksByCollector(Long collectorId) {
         return artworkRepository.findByCollectorId(collectorId).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
-    /** Edita la obra. Solo el coleccionista dueño (o admin) puede. */
+    /**
+     * Edita una obra existente. La acción queda reservada al
+     * coleccionista propietario o a un administrador. Solo se
+     * sobreescriben los campos que vengan informados en la petición.
+     */
     @Transactional
     public ArtworkDto updateArtwork(Long id, UpdateArtworkRequest req) {
         Artwork a = artworkRepository.findById(id)
@@ -128,7 +148,12 @@ public class ArtworkService {
         return convertToDto(artworkRepository.save(a));
     }
 
-    /** Da de baja / vuelve a poner disponible la obra para préstamos. */
+    /**
+     * Habilita o deshabilita la obra para nuevas solicitudes de
+     * préstamo. La obra deshabilitada sigue siendo visible en el
+     * catálogo, pero las fundaciones no pueden iniciar una solicitud
+     * sobre ella hasta que el coleccionista la vuelva a habilitar.
+     */
     @Transactional
     public ArtworkDto setAvailability(Long id, boolean available) {
         Artwork a = artworkRepository.findById(id)
@@ -139,8 +164,9 @@ public class ArtworkService {
     }
 
     /**
-     * Elimina la obra. Solo si no tiene préstamos vivos (cualquier estado no
-     * terminal); si los hay, rechazamos con 409 para preservar el histórico.
+     * Elimina una obra del catálogo. La eliminación solo se permite
+     * cuando la obra no tiene préstamos vivos, para preservar el
+     * histórico de transacciones realizadas.
      */
     @Transactional
     public void deleteArtwork(Long id) {
@@ -165,11 +191,13 @@ public class ArtworkService {
         artworkRepository.delete(a);
     }
 
-    // ===== Documentación adjunta (seguros, certificados, informes...) =====
+    // ===== Documentación adjunta a la obra =====
 
     /**
-     * Adjunta un documento a la obra (type=DOCUMENT). Solo dueño o admin.
-     * Si `confidential` es true, el archivo solo será visible para ellos.
+     * Asocia un documento (certificado, seguro, informe...) a la obra
+     * indicada. La acción está reservada al coleccionista dueño o a un
+     * administrador. Si el documento se marca como confidencial, solo
+     * ellos podrán verlo en la ficha pública.
      */
     @Transactional
     public ArtworkDto addDocument(Long artworkId, String description, boolean confidential,
@@ -200,11 +228,15 @@ public class ArtworkService {
                 .build();
 
         artworkFileRepository.save(af);
-        // Reload to refresh the list
         return convertToDto(artworkRepository.findById(artworkId).orElseThrow());
     }
 
-    /** Elimina un documento adjunto. Solo dueño o admin. */
+    /**
+     * Elimina un documento adjunto de la obra. Solo el dueño o un
+     * administrador pueden hacerlo, y la operación se rechaza si el
+     * archivo apuntado no es un documento (las fotografías se gestionan
+     * por un flujo distinto).
+     */
     @Transactional
     public ArtworkDto deleteDocument(Long artworkId, Long artworkFileId) {
         Artwork artwork = artworkRepository.findById(artworkId)
@@ -225,15 +257,20 @@ public class ArtworkService {
         return convertToDto(artworkRepository.findById(artworkId).orElseThrow());
     }
 
-    // ======================================================================
+    // ===== Helpers privados =====
 
+    /** Comprueba que la sesión actual es la del coleccionista dueño o un administrador. */
     private void requireOwnership(Artwork a) {
         if (currentUser.isAdmin()) return;
         currentUser.requireUserId(a.getCollector().getId());
     }
 
+    /**
+     * Transforma una obra en su DTO público, ocultando los documentos
+     * marcados como confidenciales cuando el usuario que mira no es el
+     * dueño ni un administrador.
+     */
     private ArtworkDto convertToDto(Artwork artwork) {
-        // ¿El que mira es el dueño o un admin? Si no, los confidenciales se filtran.
         Long ownerId = artwork.getCollector() != null ? artwork.getCollector().getId() : null;
         Long viewerId = currentUser.currentIdOrNull();
         boolean privileged = currentUser.isAdminOrNull()

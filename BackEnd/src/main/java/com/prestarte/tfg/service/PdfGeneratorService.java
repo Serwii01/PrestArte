@@ -12,9 +12,22 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Servicio que genera el contrato del préstamo en formato PDF.
+ *
+ * Compone un documento con cabecera, datos de las partes (coleccionista,
+ * fundación y empresa de transporte), información de la obra y del
+ * envío, condiciones acordadas y pie de firma, usando la biblioteca
+ * OpenPDF. El PDF se utiliza tanto en las notificaciones por correo
+ * como en la descarga manual desde la ficha del préstamo.
+ */
 @Service
 public class PdfGeneratorService {
 
+    /**
+     * Genera los bytes del contrato del préstamo indicado, incluyendo
+     * los datos económicos del envío asociado.
+     */
     public byte[] generateLoanContract(LoanRequest loan, Shipment shipment) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 40, 40, 50, 50);

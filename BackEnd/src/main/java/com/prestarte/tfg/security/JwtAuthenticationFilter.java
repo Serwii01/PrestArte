@@ -17,9 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Extrae el JWT del header Authorization, lo valida y carga la autenticación
- * en el SecurityContext. Si no hay token o no es válido, deja pasar la petición
- * para que la decisión final la tome el filtro de autorización.
+ * Filtro que interpreta la cabecera {@code Authorization} de cada
+ * petición.
+ *
+ * Si encuentra un token JWT válido, carga el usuario asociado en el
+ * contexto de seguridad de Spring. Si el token está ausente o no es
+ * válido, simplemente deja pasar la petición y será la cadena de
+ * autorización la que decida si el endpoint puede atenderse de forma
+ * anónima o no.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,6 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
+    /**
+     * Procesa cada petición una sola vez: recupera el token, valida su
+     * firma y vigencia y, en caso afirmativo, registra el usuario
+     * autenticado para que el resto de filtros y controladores puedan
+     * conocer quién está realizando la llamada.
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -58,7 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (JwtException ex) {
-            // Token inválido o expirado: no autenticamos. La respuesta 401 la dará el AuthEntryPoint.
+            // Token con firma inválida o caducado: se descarta la autenticación y
+            // se delega en el resto de la cadena la respuesta HTTP apropiada.
             SecurityContextHolder.clearContext();
         }
 

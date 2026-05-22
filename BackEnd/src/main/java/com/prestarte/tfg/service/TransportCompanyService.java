@@ -14,6 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Servicio que gestiona las empresas de transporte y su perfil
+ * público.
+ *
+ * Permite registrar nuevas empresas, mostrar el listado de las que
+ * están aprobadas y activas (utilizado en los selectores y en la
+ * página de partners) y actualizar la ficha pública desde la propia
+ * cuenta de la empresa o desde la administración.
+ */
 @Service
 @RequiredArgsConstructor
 public class TransportCompanyService {
@@ -21,6 +30,10 @@ public class TransportCompanyService {
     private final TransportCompanyRepository transportCompanyRepository;
     private final CurrentUser currentUser;
 
+    /**
+     * Registra una nueva empresa de transporte. Comprueba la unicidad
+     * del identificador fiscal antes de persistir.
+     */
     @Transactional
     public TransportCompany registerCompany(TransportCompany company) {
         if (transportCompanyRepository.existsByTaxId(company.getTaxId())) {
@@ -30,8 +43,9 @@ public class TransportCompanyService {
     }
 
     /**
-     * Lista de empresas aprobadas y activas: lo que se muestra en cualquier
-     * desplegable de selección y en el catálogo público de partners.
+     * Devuelve las empresas de transporte aprobadas y activas. Es el
+     * listado que se muestra en cualquier selector y en el catálogo
+     * público de partners.
      */
     @Transactional(readOnly = true)
     public List<TransportCompany> getAllCompanies() {
@@ -40,12 +54,13 @@ public class TransportCompanyService {
                 .toList();
     }
 
-    /** Perfil público de empresas aprobadas (DTO sin datos sensibles). */
+    /** Devuelve los perfiles públicos de todas las empresas aprobadas. */
     @Transactional(readOnly = true)
     public List<TransportCompanyProfileDto> getPublicProfiles() {
         return getAllCompanies().stream().map(this::toProfile).toList();
     }
 
+    /** Devuelve el perfil público de una empresa concreta. */
     @Transactional(readOnly = true)
     public TransportCompanyProfileDto getPublicProfile(Long id) {
         TransportCompany c = transportCompanyRepository.findById(id)
@@ -56,6 +71,7 @@ public class TransportCompanyService {
         return toProfile(c);
     }
 
+    /** Devuelve la entidad completa por su identificador. */
     @Transactional(readOnly = true)
     public TransportCompany getById(Long id) {
         return transportCompanyRepository.findById(id)
@@ -63,8 +79,8 @@ public class TransportCompanyService {
     }
 
     /**
-     * El propietario de la empresa actualiza su ficha pública.
-     * Solo ese usuario (o un admin) puede llamar a este endpoint.
+     * Actualiza el perfil público de la empresa. Solo el titular de
+     * la cuenta o un administrador pueden ejecutar la acción.
      */
     @Transactional
     public TransportCompanyProfileDto updateProfile(Long id, UpdateTransportCompanyRequest req) {
@@ -82,6 +98,7 @@ public class TransportCompanyService {
         return toProfile(transportCompanyRepository.save(c));
     }
 
+    /** Elimina una empresa de transporte por su identificador. */
     @Transactional
     public void deleteCompany(Long id) {
         if (!transportCompanyRepository.existsById(id)) {
@@ -90,6 +107,7 @@ public class TransportCompanyService {
         transportCompanyRepository.deleteById(id);
     }
 
+    /** Compone el DTO público a partir de la entidad de empresa. */
     private TransportCompanyProfileDto toProfile(TransportCompany c) {
         return TransportCompanyProfileDto.builder()
                 .id(c.getId())

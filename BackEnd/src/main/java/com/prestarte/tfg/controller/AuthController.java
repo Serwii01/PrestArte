@@ -29,8 +29,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 /**
- * Endpoints públicos de autenticación: registro y login.
- * El resto del flujo (aprobación de admin) está en UserController bajo /api/admin/**.
+ * Endpoints públicos relacionados con la autenticación.
+ *
+ * Expone el registro de nuevos usuarios, el inicio de sesión y los dos
+ * pasos del flujo de recuperación de contraseña. Las acciones
+ * administrativas (aprobar o rechazar cuentas) viven en
+ * {@link UserController} bajo {@code /api/admin}.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -44,8 +48,9 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
 
     /**
-     * Registro de un nuevo usuario (Coleccionista, Fundación o Empresa de Transporte).
-     * El usuario queda con status=PENDING y enabled=false hasta que un admin lo apruebe.
+     * Registra una nueva cuenta a partir de los datos del formulario y
+     * del documento de verificación adjunto. La cuenta queda pendiente
+     * de aprobación hasta que un administrador la revise.
      */
     @PostMapping(value = "/register", consumes = "multipart/form-data")
     public ResponseEntity<UserResponseDto> register(@RequestPart("data") @Valid RegistrationRequest request,
@@ -55,8 +60,9 @@ public class AuthController {
     }
 
     /**
-     * Login: devuelve JWT + datos básicos del usuario.
-     * Rechaza si el usuario no está aprobado (enabled=false → DisabledException).
+     * Comprueba las credenciales del usuario y devuelve un JWT junto
+     * con sus datos básicos. Rechaza la operación si la cuenta aún no
+     * está aprobada.
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -65,7 +71,6 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (DisabledException ex) {
-            // Usuario existe y password OK pero no aprobado
             throw new DisabledException("Tu cuenta está pendiente de aprobación por el equipo de administración");
         } catch (BadCredentialsException ex) {
             throw new BadCredentialsException("Email o contraseña incorrectos");
@@ -91,8 +96,9 @@ public class AuthController {
     }
 
     /**
-     * Solicitud de "olvidé mi contraseña". Devuelve siempre 200 aunque el email
-     * no exista, para no revelar qué cuentas están registradas.
+     * Atiende una solicitud de recuperación de contraseña. Responde
+     * siempre con HTTP 200 aunque el correo no esté registrado, de
+     * modo que no se pueda inferir qué cuentas existen.
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
@@ -100,13 +106,14 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    /** Reset efectivo: el usuario abre el enlace del email y elige nueva contraseña. */
+    /** Cambia la contraseña del usuario asociado al token recibido. */
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         passwordResetService.resetPassword(req);
         return ResponseEntity.ok().build();
     }
 
+    /** Compone el DTO público a partir de la entidad de usuario. */
     private UserResponseDto toDto(User u) {
         DBFile vf = u.getVerificationFile();
         return UserResponseDto.builder()

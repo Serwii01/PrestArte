@@ -7,8 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Respuesta canónica para LoanRequest. Sustituye a la entidad cruda en todos
- * los endpoints REST: evita ciclos de serialización y problemas de lazy.
+ * DTO público que representa un préstamo.
+ *
+ * Se utiliza como respuesta en todos los endpoints relacionados con
+ * el flujo de préstamo. Incluye los datos identificativos de la
+ * obra, las partes implicadas, el estado actual y las referencias
+ * a los envíos asociados cuando ya existen.
  */
 @Data
 @Builder
@@ -31,13 +35,13 @@ public class LoanResponse {
 
     private String status;
 
-    /** Si es true, el coleccionista exigió específicamente la empresa de transporte. */
+    /** Indica si la empresa de transporte se ha marcado como obligatoria. */
     private boolean transportCompanyMandatory;
 
-    /** Id del Shipment OUTBOUND vinculado, o null si aún no se ha creado. */
+    /** Identificador del envío de ida, si ya está creado. */
     private Long shipmentId;
 
-    /** Id del Shipment RETURN vinculado (solo a partir de RETURNING). */
+    /** Identificador del envío de retorno, presente desde el inicio de la devolución. */
     private Long returnShipmentId;
 
     private LocalDateTime cancelledAt;

@@ -9,6 +9,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Endpoints REST específicos del rol fundación.
+ *
+ * Permiten crear y listar fundaciones y recuperar el resumen del
+ * panel principal, donde aparecen tanto las peticiones pendientes
+ * como las obras que la fundación ya ha recibido.
+ */
 @RestController
 @RequestMapping("/api/foundations")
 @RequiredArgsConstructor
@@ -16,19 +23,22 @@ public class FoundationController {
 
     private final FoundationService foundationService;
 
+    /** Crea una nueva fundación. */
     @PostMapping
     public Foundation createFoundation(@RequestBody Foundation foundation) {
         return foundationService.createFoundation(foundation);
     }
 
+    /** Devuelve el listado completo de fundaciones registradas. */
     @GetMapping
     public List<Foundation> getAllFoundations() {
         return foundationService.getAllFoundations();
     }
 
     /**
-     * Nuevo Endpoint: Dashboard del Museo/Fundación.
-     * Devuelve las peticiones pendientes (con sus condiciones) y el inventario activo.
+     * Devuelve el resumen del panel de la fundación: peticiones
+     * pendientes con sus condiciones de préstamo e inventario activo
+     * en el museo.
      */
     @GetMapping("/{id}/dashboard")
     public ResponseEntity<FoundationDashboardDto> getDashboard(@PathVariable Long id) {

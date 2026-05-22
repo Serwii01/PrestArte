@@ -5,6 +5,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { environment } from '../../../../environments/environment';
+import {
+  emailWithTldValidator,
+  spanishPhoneValidator,
+  spanishTaxIdValidator,
+} from '../../../core/validators/spanish.validators';
 
 type RegisterRole = 'COLLECTOR' | 'FOUNDATION' | 'TRANSPORT';
 
@@ -43,10 +48,10 @@ export class RegisterComponent implements OnInit {
    */
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email, emailWithTldValidator()]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    phone: ['', [Validators.required, Validators.minLength(6)]],
-    taxId: ['', [Validators.required, Validators.minLength(4)]],
+    phone: ['', [Validators.required, spanishPhoneValidator()]],
+    taxId: ['', [Validators.required, spanishTaxIdValidator()]],
     role: ['COLLECTOR' as RegisterRole, [Validators.required]],
   });
 

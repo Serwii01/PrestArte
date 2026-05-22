@@ -7,9 +7,14 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * Payload de registro. Todos los campos (excepto el rol, que viene
- * forzado por la UI) son obligatorios; el documento KYB viaja aparte
- * como `multipart/form-data` y se valida en {@code UserService}.
+ * Payload del formulario de registro.
+ *
+ * Todos los campos son obligatorios. El documento de verificación
+ * viaja en una parte aparte de la petición multipart y se valida
+ * en {@code UserService}. Las anotaciones definen un primer nivel de
+ * comprobación de formato; la validación final de la letra o el
+ * dígito de control del identificador fiscal se aplica también en el
+ * servicio.
  */
 @Data
 public class RegistrationRequest {
@@ -28,16 +33,20 @@ public class RegistrationRequest {
     private String name;
 
     @NotBlank(message = "El teléfono es obligatorio")
-    @Size(min = 6, max = 20, message = "El teléfono debe tener al menos 6 caracteres")
+    @Pattern(regexp = "^(?:\\+?34)?[6-9]\\d{8}$",
+            message = "Teléfono no válido. 9 dígitos empezando por 6, 7, 8 o 9 (con o sin +34).")
     private String phone;
 
-    @NotBlank(message = "El DNI / CIF / LEI es obligatorio")
-    @Size(min = 4, max = 50, message = "El DNI / CIF / LEI no es válido")
+    /** Identificador fiscal: admite DNI, NIE o CIF en sus formatos habituales. */
+    @NotBlank(message = "El DNI / NIE / CIF es obligatorio")
+    @Pattern(regexp = "^(\\d{8}[A-Za-z]|[XYZxyz]\\d{7}[A-Za-z]|[ABCDEFGHJNPQRSUVWabcdefghjnpqrsuvw]\\d{7}[0-9A-Ja-j])$",
+            message = "Formato de DNI / NIE / CIF no válido")
     private String taxId;
 
     /**
-     * Solo se aceptan los roles que se pueden crear vía registro público.
-     * ADMIN nunca puede registrarse por esta vía: se crea por seed en el arranque.
+     * Rol elegido en el formulario. Solo se aceptan los roles que se
+     * pueden crear desde el registro público; el rol de administrador
+     * se crea exclusivamente en la rutina de arranque.
      */
     @NotBlank(message = "El rol es obligatorio")
     @Pattern(regexp = "COLLECTOR|FOUNDATION|MUSEUM|TRANSPORT",

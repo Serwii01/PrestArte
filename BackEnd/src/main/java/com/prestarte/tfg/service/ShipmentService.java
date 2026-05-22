@@ -7,7 +7,6 @@ import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
 import com.prestarte.tfg.security.CurrentUser;
-import com.prestarte.tfg.service.statemachine.LoanStateMachine;
 import com.prestarte.tfg.service.statemachine.ShipmentStateMachine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -20,9 +19,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Lógica logística (envío de la obra). Cada operación valida la transición
- * mediante {@link ShipmentStateMachine} y, cuando procede, sincroniza el
- * préstamo asociado vía {@link LoanRequestService}.
+ * Servicio que gestiona la operativa logística de los envíos.
+ *
+ * Cubre tanto la creación de los envíos (ida y vuelta) como las
+ * transiciones de su máquina de estados: subida de presupuesto,
+ * aprobación o rechazo por parte del museo, recogida, tránsito y
+ * entrega. Cada acción notifica al servicio de préstamos para que el
+ * estado del préstamo asociado avance de forma coordinada.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,12 +36,18 @@ public class ShipmentService {
     private final ShipmentStateMachine shipmentStateMachine;
     private final CurrentUser currentUser;
 
-    // @Lazy para romper el ciclo ShipmentService ↔ LoanRequestService
+    // Se inyecta con @Lazy porque existe una dependencia cíclica entre
+    // ShipmentService y LoanRequestService.
     @Lazy
     private final LoanRequestService loanRequestService;
 
-    /* ========== CREACIÓN DE SHIPMENT (llamada desde LoanRequestService.accept) ========== */
+    // ===== Creación de envíos =====
 
+    /**
+     * Crea el envío de ida asociado a un préstamo recién aceptado.
+     * Arranca en estado REQUESTED a la espera de que la empresa de
+     * transporte suba un presupuesto.
+     */
     @Transactional
     public Shipment createOutboundShipment(LoanRequest loan, TransportCompany company) {
         Shipment shipment = Shipment.builder()
@@ -54,15 +63,13 @@ public class ShipmentService {
     }
 
     /**
-     * Crea el Shipment de retorno al iniciar la devolución. Reutiliza la empresa
-     * de transporte del OUTBOUND y arranca en APPROVED (el coste del retorno se
-     * considera incluido en el presupuesto original, así que no se vuelve a pedir
-     * presupuesto ni aprobación al museo).
+     * Crea el envío de devolución cuando el museo inicia el retorno.
+     * Reutiliza la empresa de transporte del envío de ida más reciente
+     * y arranca en estado APPROVED, ya que el coste del retorno se
+     * considera incluido en el presupuesto original.
      */
     @Transactional
     public Shipment createReturnShipment(LoanRequest loan) {
-        // Cogemos el OUTBOUND más reciente: tras una reasignación puede haber
-        // varios y solo el último contiene a la empresa que realmente entregó.
         Shipment outbound = shipmentRepository
                 .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
                         loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
@@ -81,16 +88,16 @@ public class ShipmentService {
         return shipmentRepository.save(ret);
     }
 
-    /* ========== ACCIONES DEL FLUJO ========== */
+    // ===== Acciones del flujo =====
 
     /**
-     * Transportista propone presupuesto. Shipment REQUESTED → QUOTED.
-     * Sincroniza el préstamo a QUOTE_PROPOSED.
+     * La empresa de transporte sube su presupuesto. Avanza el envío
+     * de REQUESTED a QUOTED y sincroniza el préstamo, que pasa a
+     * QUOTE_PROPOSED a la espera de la aprobación del museo.
      */
     @Transactional
     public ShipmentResponse proposeQuote(Long shipmentId, ProposeQuoteRequest req) {
         Shipment shipment = findOrThrow(shipmentId);
-        // Solo la empresa de transporte asignada puede subir el presupuesto.
         currentUser.requireUserId(shipment.getTransportCompany().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.QUOTED);
 
@@ -105,17 +112,13 @@ public class ShipmentService {
     }
 
     /**
-     * Museo aprueba el presupuesto. Shipment QUOTED → APPROVED.
-     * El avance del préstamo a PAID se hace en PaymentService (sub-fase 2.4).
-     * En esta sub-fase, dejamos el préstamo en QUOTE_PROPOSED hasta que el pago se ejecute.
-     *
-     * NOTA: temporalmente avanzamos también el préstamo a PAID aquí para que el
-     * flujo sea probable end-to-end. En 2.4 se moverá a PaymentService.
+     * El museo aprueba el presupuesto. Avanza el envío a APPROVED y
+     * notifica al préstamo, que pasa a PAID. Se exige que el envío
+     * tenga un precio propuesto antes de poder aprobarlo.
      */
     @Transactional
     public ShipmentResponse approveQuote(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
-        // Solo la fundación que solicitó el préstamo puede aprobar el presupuesto.
         currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.APPROVED);
 
@@ -134,14 +137,14 @@ public class ShipmentService {
     }
 
     /**
-     * Museo rechaza el presupuesto. Shipment QUOTED → REJECTED.
-     * El préstamo va a CANCELLED si la empresa era obligatoria, o vuelve a
-     * QUOTE_PENDING para pedir presupuesto a otra empresa.
+     * El museo rechaza el presupuesto. Marca el envío como REJECTED y
+     * delega en el servicio de préstamos la decisión sobre el
+     * expediente: cancelación si la empresa era obligatoria, vuelta a
+     * QUOTE_PENDING en caso contrario.
      */
     @Transactional
     public ShipmentResponse rejectQuote(Long shipmentId, String reason) {
         Shipment shipment = findOrThrow(shipmentId);
-        // Rechazar presupuesto es decisión exclusiva de la fundación.
         currentUser.requireUserId(shipment.getLoanRequest().getFoundation().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.REJECTED);
 
@@ -153,9 +156,10 @@ public class ShipmentService {
     }
 
     /**
-     * Transportista marca obra recogida. APPROVED → PICKED_UP.
-     * Solo el OUTBOUND mueve el préstamo a IN_TRANSIT; el shipment de RETURN
-     * deja el préstamo en RETURNING hasta que se entregue al coleccionista.
+     * La empresa de transporte indica que ha recogido la obra. Solo el
+     * envío de ida desencadena la transición del préstamo a
+     * IN_TRANSIT; el envío de retorno mantiene al préstamo en
+     * RETURNING hasta que se confirme la entrega final.
      */
     @Transactional
     public ShipmentResponse markPickedUp(Long shipmentId) {
@@ -172,7 +176,7 @@ public class ShipmentService {
         return mapToResponse(shipment);
     }
 
-    /** Transportista marca obra en tránsito. PICKED_UP → IN_TRANSIT. */
+    /** La empresa de transporte marca el envío como en tránsito. */
     @Transactional
     public ShipmentResponse markInTransit(Long shipmentId) {
         Shipment shipment = findOrThrow(shipmentId);
@@ -181,14 +185,14 @@ public class ShipmentService {
 
         shipment.setStatus(Shipment.ShipmentStatus.IN_TRANSIT);
         shipmentRepository.save(shipment);
-        // El préstamo ya está en IN_TRANSIT desde markPickedUp, no se mueve.
         return mapToResponse(shipment);
     }
 
     /**
-     * Confirma la llegada del envío. IN_TRANSIT → DELIVERED.
-     * - OUTBOUND: lo confirma el museo. Préstamo → DELIVERED → ON_LOAN.
-     * - RETURN: lo confirma el coleccionista. Préstamo → RETURNED (cierre del ciclo).
+     * Confirma la entrega de un envío. Si es el de ida, lo confirma el
+     * museo y el préstamo avanza a DELIVERED y luego a ON_LOAN. Si es
+     * el de retorno, lo confirma el coleccionista y el préstamo se
+     * cierra como RETURNED.
      */
     @Transactional
     public ShipmentResponse confirmDelivery(Long shipmentId, ConfirmReceiptRequest request) {
@@ -216,13 +220,12 @@ public class ShipmentService {
         return mapToResponse(shipment);
     }
 
-    /* ========== LECTURAS ========== */
+    // ===== Lecturas =====
 
     /**
-     * Devuelve el Shipment OUTBOUND del préstamo (el que se usa para el
-     * contrato y datos económicos). Antes existía un único shipment por loan,
-     * pero ahora hay también de RETURN: filtramos por dirección para evitar
-     * que Spring Data devuelva "non-unique result".
+     * Devuelve el envío de ida activo de un préstamo. Se elige el más
+     * reciente porque un préstamo puede haber pasado por varios envíos
+     * OUTBOUND como consecuencia de una reasignación de empresa.
      */
     @Transactional(readOnly = true)
     public Shipment getByLoanId(Long loanId) {
@@ -232,6 +235,7 @@ public class ShipmentService {
                 .orElse(null);
     }
 
+    /** Devuelve la entidad del envío comprobando los permisos del usuario actual. */
     @Transactional(readOnly = true)
     public Shipment getByIdRaw(Long id) {
         Shipment s = findOrThrow(id);
@@ -239,6 +243,7 @@ public class ShipmentService {
         return s;
     }
 
+    /** Devuelve el DTO del envío comprobando los permisos del usuario actual. */
     @Transactional(readOnly = true)
     public ShipmentResponse getById(Long id) {
         Shipment s = findOrThrow(id);
@@ -246,6 +251,7 @@ public class ShipmentService {
         return mapToResponse(s);
     }
 
+    /** Devuelve los envíos de una empresa de transporte concreta. */
     @Transactional(readOnly = true)
     public List<ShipmentResponse> getByTransportCompany(Long companyId) {
         if (!currentUser.isAdmin()) {
@@ -256,7 +262,7 @@ public class ShipmentService {
                 .collect(Collectors.toList());
     }
 
-    /* ========== HELPERS ========== */
+    // ===== Helpers privados =====
 
     private Shipment findOrThrow(Long id) {
         return shipmentRepository.findById(id)
@@ -264,8 +270,10 @@ public class ShipmentService {
     }
 
     /**
-     * El usuario actual ha de ser parte del préstamo asociado al envío:
-     * coleccionista dueño, fundación solicitante, empresa de transporte o admin.
+     * Verifica que el usuario actual está autorizado a ver el envío.
+     * Solo tienen acceso el coleccionista dueño, la fundación
+     * solicitante, la empresa de transporte responsable del envío y
+     * los administradores.
      */
     private void requireShipmentAccess(Shipment s) {
         if (currentUser.isAdmin()) return;
@@ -278,6 +286,7 @@ public class ShipmentService {
         }
     }
 
+    /** Compone el DTO de respuesta a partir de la entidad de envío. */
     private ShipmentResponse mapToResponse(Shipment s) {
         return ShipmentResponse.builder()
                 .id(s.getId())

@@ -4,10 +4,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * Body para POST /api/loan-requests/{id}/accept.
- * El coleccionista acepta el préstamo eligiendo una empresa de transporte y
- * decide si esa empresa es obligatoria (no se puede sustituir si el museo
- * rechaza el presupuesto).
+ * Payload utilizado por el coleccionista para aceptar una solicitud
+ * de préstamo.
+ *
+ * Indica la empresa de transporte elegida y si esa elección debe
+ * considerarse obligatoria. Si lo es, un rechazo posterior del
+ * presupuesto cancelará el préstamo en lugar de permitir reasignar a
+ * otra empresa.
  */
 @Data
 public class AcceptLoanRequest {
@@ -15,6 +18,6 @@ public class AcceptLoanRequest {
     @NotNull(message = "Debes elegir una empresa de transporte")
     private Long transportCompanyId;
 
-    /** Si true, el museo no podrá pedir presupuesto a otra empresa. */
+    /** Marca la empresa elegida como obligatoria para este préstamo. */
     private boolean transportCompanyMandatory;
 }

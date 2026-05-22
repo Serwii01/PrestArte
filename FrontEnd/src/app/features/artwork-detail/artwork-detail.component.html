@@ -18,6 +18,10 @@
           <a routerLink="/" class="text-sm font-medium text-text-main hover:text-primary transition-colors">
             Inicio
           </a>
+          <a routerLink="/" fragment="how"
+             class="text-sm font-medium text-text-main hover:text-primary transition-colors">
+            Cómo funciona
+          </a>
           <a routerLink="/catalog" class="text-sm font-bold text-primary">
             Catálogo
           </a>
@@ -56,7 +60,7 @@
 
     <footer class="bg-white pt-10 pb-8 border-t border-gray-soft">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-text-secondary">
-        © {{ year }} Prestarte · Trabajo de Fin de Grado
+        © {{ year }} Prestarte · Sergio Fernández Morales
       </div>
     </footer>
   </div>
@@ -275,12 +279,20 @@
       <!-- Datos laterales -->
       <aside class="lg:col-span-2 space-y-6">
         <section>
-          @if (isMine()) {
-            <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider mb-3">
-              <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
-              Tu obra
-            </span>
-          }
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            @if (isMine()) {
+              <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider">
+                <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
+                Tu obra
+              </span>
+            }
+            @if (isDisabled()) {
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                <span class="material-symbols-outlined" style="font-size:14px;">pause_circle</span>
+                Deshabilitada por el coleccionista
+              </span>
+            }
+          </div>
           <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight leading-tight">
             {{ a.title }}
           </h1>
@@ -418,7 +430,18 @@
         }
 
         <!-- Acción FOUNDATION -->
-        @if (canRequestLoan()) {
+        @if (isDisabled() && !isMine()) {
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
+            <span class="material-symbols-outlined text-amber-700 mt-0.5" style="font-size:22px;">pause_circle</span>
+            <div class="flex-1">
+              <p class="text-sm text-amber-900 font-bold mb-1">Préstamos en pausa</p>
+              <p class="text-xs text-amber-900/80">
+                El coleccionista ha deshabilitado temporalmente esta obra. Sigue visible en el
+                catálogo pero no se pueden enviar nuevas solicitudes de préstamo.
+              </p>
+            </div>
+          </div>
+        } @else if (canRequestLoan()) {
           <a [routerLink]="['/app/foundation/request-loan', a.id]"
              class="flex w-full items-center justify-center gap-2 rounded-lg h-12 px-4
                     bg-primary hover:bg-primary-hover transition-colors

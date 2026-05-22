@@ -7,8 +7,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * Body para POST /api/shipments/{id}/quote.
- * El transportista sube un presupuesto con coste de transporte y de seguro.
+ * Payload utilizado por la empresa de transporte para subir su
+ * presupuesto al envío.
+ *
+ * Recoge el precio del servicio, el coste de la póliza de seguro y,
+ * opcionalmente, la referencia del seguro contratado.
  */
 @Data
 public class ProposeQuoteRequest {

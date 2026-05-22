@@ -4,8 +4,11 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 /**
- * Body para PUT /api/artworks/{id}. Solo el dueño (o admin) puede llamar.
- * Todos los campos son opcionales: se actualizan los que vengan.
+ * Payload utilizado para actualizar los datos de una obra.
+ *
+ * Todos los campos son opcionales y solo se aplican los que vienen
+ * informados, lo que permite hacer cambios parciales sin tener que
+ * reenviar la ficha completa.
  */
 @Data
 public class UpdateArtworkRequest {

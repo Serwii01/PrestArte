@@ -11,8 +11,13 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Wrapper de la entidad User que cumple la interfaz UserDetails de Spring Security.
- * Permite acceder al User completo desde cualquier controller mediante @AuthenticationPrincipal.
+ * Adaptador entre la entidad {@link User} y la interfaz
+ * {@link UserDetails} de Spring Security.
+ *
+ * Permite que cualquier controlador acceda al objeto {@link User}
+ * completo a partir del principal autenticado, sin perder por el
+ * camino los campos propios del dominio (rol, identificador fiscal,
+ * estado de la cuenta, etc.).
  */
 @RequiredArgsConstructor
 @Getter
@@ -20,9 +25,13 @@ public class CustomUserDetails implements UserDetails {
 
     private final User user;
 
+    /**
+     * Convierte el rol de la entidad en una autoridad de Spring
+     * añadiendo el prefijo {@code ROLE_}, que es el formato que
+     * espera el método {@code hasRole} del DSL de seguridad.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convención Spring: prefijo "ROLE_" para que hasRole(...) funcione
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
@@ -51,6 +60,7 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
+    /** La cuenta solo puede iniciar sesión cuando el administrador la ha habilitado. */
     @Override
     public boolean isEnabled() {
         return user.isEnabled();

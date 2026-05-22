@@ -20,9 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Endpoints REST sobre LoanRequest. Cada endpoint refleja una ACCIÓN del flujo
- * de negocio (no una transición de estado arbitraria), y la state machine
- * impide transiciones inválidas con un 409.
+ * Endpoints REST relacionados con las solicitudes de préstamo.
+ *
+ * Cada endpoint refleja una acción concreta del flujo de negocio (no
+ * una transición arbitraria del estado). La validez de cada
+ * transición la asegura la máquina de estados del préstamo, que
+ * rechaza con HTTP 409 cualquier intento fuera de las transiciones
+ * permitidas.
  */
 @RestController
 @RequestMapping("/api/loan-requests")
@@ -33,36 +37,41 @@ public class LoanRequestController {
     private final ShipmentService shipmentService;
     private final PdfGeneratorService pdfGeneratorService;
 
-    /* ========== CREACIÓN Y LECTURA ========== */
+    // ===== Creación y lectura =====
 
+    /** Crea una nueva solicitud de préstamo desde la fundación. */
     @PostMapping
     public ResponseEntity<LoanResponse> create(@Valid @RequestBody CreateLoanRequest dto) {
         return ResponseEntity.ok(loanRequestService.createRequest(dto));
     }
 
+    /** Devuelve el detalle de un préstamo concreto. */
     @GetMapping("/{id}")
     public ResponseEntity<LoanResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.getById(id));
     }
 
+    /** Devuelve todos los préstamos del sistema (reservado al administrador). */
     @GetMapping
     public ResponseEntity<List<LoanResponse>> getAll() {
         return ResponseEntity.ok(loanRequestService.getAllLoanRequests());
     }
 
+    /** Devuelve los préstamos asociados a las obras de un coleccionista. */
     @GetMapping("/collector/{collectorId}")
     public ResponseEntity<List<LoanResponse>> getByCollector(@PathVariable Long collectorId) {
         return ResponseEntity.ok(loanRequestService.getRequestsByCollector(collectorId));
     }
 
+    /** Devuelve los préstamos solicitados por una fundación. */
     @GetMapping("/foundation/{foundationId}")
     public ResponseEntity<List<LoanResponse>> getByFoundation(@PathVariable Long foundationId) {
         return ResponseEntity.ok(loanRequestService.getRequestsByFoundation(foundationId));
     }
 
-    /* ========== ACCIONES DEL FLUJO ========== */
+    // ===== Acciones del flujo =====
 
-    /** Coleccionista acepta y elige empresa de transporte. */
+    /** El coleccionista acepta la solicitud y selecciona la empresa de transporte. */
     @PostMapping("/{id}/accept")
     public ResponseEntity<LoanResponse> accept(@PathVariable Long id,
                                                @Valid @RequestBody AcceptLoanRequest body) {
@@ -70,16 +79,15 @@ public class LoanRequestController {
                 id, body.getTransportCompanyId(), body.isTransportCompanyMandatory()));
     }
 
-    /** Coleccionista rechaza la solicitud (terminal). */
+    /** El coleccionista rechaza la solicitud de forma definitiva. */
     @PostMapping("/{id}/reject")
     public ResponseEntity<LoanResponse> reject(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.reject(id));
     }
 
     /**
-     * Asignar una empresa de transporte distinta tras un presupuesto rechazado.
-     * Solo válido cuando el préstamo está en QUOTE_PENDING y la empresa anterior
-     * no era obligatoria. Crea un nuevo Shipment OUTBOUND en REQUESTED.
+     * Asigna una empresa de transporte distinta cuando se ha rechazado
+     * el presupuesto anterior y la empresa inicial no era obligatoria.
      */
     @PostMapping("/{id}/reassign-transport")
     public ResponseEntity<LoanResponse> reassignTransport(@PathVariable Long id,
@@ -87,7 +95,7 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRequestService.reassignTransport(id, body.getTransportCompanyId()));
     }
 
-    /** Cualquier parte cancela el préstamo (solo antes de IN_TRANSIT). */
+    /** Cancela el préstamo desde cualquiera de las dos partes implicadas. */
     @PostMapping("/{id}/cancel")
     public ResponseEntity<LoanResponse> cancel(@PathVariable Long id,
                                                @Valid @RequestBody(required = false) CancelLoanRequest body) {
@@ -95,25 +103,23 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRequestService.cancel(id, reason));
     }
 
-    /** Coleccionista confirma que la obra está lista para recoger. */
+    /** El coleccionista indica que la obra está preparada para ser recogida. */
     @PostMapping("/{id}/ready-for-pickup")
     public ResponseEntity<LoanResponse> markReadyForPickup(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.markReadyForPickup(id));
     }
 
-    /** Museo inicia el retorno de la obra al final del préstamo. */
+    /** La fundación inicia el retorno de la obra al final del préstamo. */
     @PostMapping("/{id}/start-return")
     public ResponseEntity<LoanResponse> startReturn(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.startReturn(id));
     }
-    // El cierre del ciclo (RETURNING → RETURNED) ahora se dispara automáticamente
-    // cuando el Shipment de RETURN llega a DELIVERED en ShipmentService.confirmDelivery.
 
-    /* ========== CONTRATO PDF ========== */
+    // ===== Descarga del contrato en PDF =====
 
+    /** Devuelve el contrato del préstamo en formato PDF descargable. */
     @GetMapping("/{id}/contract")
     public ResponseEntity<byte[]> downloadContract(@PathVariable Long id) {
-        // Necesitamos la entidad cruda para que el PDF tenga acceso a todos los campos
         LoanRequest loan = loanRequestService.getEntityById(id);
         Shipment shipment = shipmentService.getByLoanId(id);
 

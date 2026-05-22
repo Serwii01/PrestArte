@@ -4,7 +4,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * Body para POST /api/loan-requests/{id}/cancel.
+ * Payload utilizado para cancelar un préstamo.
+ *
+ * El motivo de cancelación es opcional y se guarda en el préstamo
+ * como referencia para el histórico.
  */
 @Data
 public class CancelLoanRequest {

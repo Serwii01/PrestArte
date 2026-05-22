@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { emailWithTldValidator } from '../../../core/validators/spanish.validators';
 
 @Component({
   selector: 'app-forgot-password',
@@ -21,7 +22,7 @@ export class ForgotPasswordComponent {
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email, emailWithTldValidator()]],
   });
 
   submit(): void {

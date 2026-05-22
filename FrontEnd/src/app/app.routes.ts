@@ -150,11 +150,11 @@ export const routes: Routes = [
               ),
           },
           {
+            // El catálogo está unificado con el público. Si alguien apunta a la
+            // ruta antigua (links viejos, dashboards anteriores), lo redirigimos.
             path: 'browse',
-            loadComponent: () =>
-              import('./features/foundation/browse-artworks/browse-artworks.component').then(
-                (m) => m.BrowseArtworksComponent,
-              ),
+            redirectTo: '/catalog',
+            pathMatch: 'full',
           },
           {
             path: 'request-loan/:artworkId',

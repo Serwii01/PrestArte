@@ -8,18 +8,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 /**
- * Acceso al usuario autenticado dentro de la capa de servicios.
+ * Punto de acceso al usuario autenticado desde la capa de servicios.
  *
- * Cualquier acción del flujo (aceptar préstamo, subir presupuesto, etc.) debe
- * llamar a {@link #requireUserId(Long)} o {@link #getOrThrow()} para verificar
- * que quien ejecuta la acción es quien debería. Si no, lanzamos
- * {@link AccessDeniedException} (mapeada a 403 por GlobalExceptionHandler).
+ * Centraliza la lectura del {@code SecurityContext} y ofrece utilidades
+ * para comprobar la identidad del usuario que está ejecutando una
+ * acción concreta. Cuando una operación solo puede realizarla el dueño
+ * de un recurso o un administrador, los servicios delegan en esta
+ * clase y dejan que se lance {@link AccessDeniedException} si la
+ * verificación falla; el manejador global de errores se encarga
+ * después de devolver el HTTP 403 correspondiente.
  */
 @Service
 public class CurrentUser {
 
     /**
-     * Devuelve el {@link User} autenticado, o lanza {@link AccessDeniedException}.
+     * Devuelve el usuario asociado a la sesión actual. Si no hay
+     * sesión o no se reconoce el principal, lanza {@code AccessDeniedException}.
      */
     public User getOrThrow() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -33,15 +37,16 @@ public class CurrentUser {
         throw new AccessDeniedException("Sesión no reconocida");
     }
 
-    /** Atajo: id del usuario actual. */
+    /** Atajo para obtener el identificador del usuario autenticado. */
     public Long currentId() {
         return getOrThrow().getId();
     }
 
     /**
-     * Versión "blanda": devuelve el id del usuario autenticado o {@code null}
-     * si no hay sesión. Útil para endpoints públicos que necesitan saber
-     * quién mira para filtrar campos sensibles sin obligar a iniciar sesión.
+     * Variante tolerante que devuelve el identificador del usuario
+     * autenticado o {@code null} si no hay sesión. Resulta práctica en
+     * endpoints públicos que necesitan saber quién está mirando para
+     * filtrar campos sensibles sin obligar a iniciar sesión.
      */
     public Long currentIdOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -53,7 +58,7 @@ public class CurrentUser {
         return null;
     }
 
-    /** True si hay sesión y el usuario tiene rol ADMIN. */
+    /** Indica si la sesión actual pertenece a un administrador, o {@code false} si no hay sesión. */
     public boolean isAdminOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return false;
@@ -65,8 +70,10 @@ public class CurrentUser {
     }
 
     /**
-     * Verifica que el usuario actual es exactamente el id esperado. Si no,
-     * lanza 403. Pensado para "esta acción solo la puede hacer el dueño X".
+     * Exige que el usuario actual coincida con el identificador
+     * indicado; si no es así, lanza una excepción de acceso denegado.
+     * Pensado para acciones que solo puede ejecutar el dueño del
+     * recurso.
      */
     public void requireUserId(Long expected) {
         if (expected == null || !expected.equals(currentId())) {
@@ -75,8 +82,10 @@ public class CurrentUser {
     }
 
     /**
-     * Verifica que el usuario actual es uno de los ids permitidos. Útil cuando
-     * la acción la pueden hacer dos partes (ej. cancelar = collector o foundation).
+     * Exige que el usuario actual sea alguno de los identificadores
+     * indicados. Resulta útil cuando la acción la pueden realizar
+     * varias partes, por ejemplo cancelar un préstamo (coleccionista
+     * o fundación).
      */
     public void requireAnyUserId(Long... allowed) {
         Long me = currentId();
@@ -86,12 +95,12 @@ public class CurrentUser {
         throw new AccessDeniedException("No tienes permiso para esta operación");
     }
 
-    /** True si el usuario actual tiene rol ADMIN. */
+    /** Indica si la sesión actual tiene rol de administrador. */
     public boolean isAdmin() {
         return getOrThrow().getRole() == Role.ADMIN;
     }
 
-    /** True si el usuario actual coincide con alguno de los ids pasados. */
+    /** Indica si el usuario actual coincide con alguno de los identificadores indicados. */
     public boolean isAnyOf(Long... allowed) {
         Long me = currentId();
         for (Long id : allowed) {

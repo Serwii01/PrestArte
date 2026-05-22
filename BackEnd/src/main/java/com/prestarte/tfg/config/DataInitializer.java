@@ -13,12 +13,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Crea un administrador inicial al arrancar la aplicación si todavía no existe.
- * Las credenciales se leen de application.properties (app.admin.email / app.admin.password).
+ * Inicializa el usuario administrador necesario para arrancar la
+ * plataforma.
  *
- * Es idempotente: si el admin ya existe en BD, no hace nada.
- * Si cambias la pwd en properties y arrancas, NO actualiza la existente
- * (por seguridad: cambios de pwd se hacen desde la UI, no por reinicio).
+ * Las credenciales se leen de {@code application.properties}. La rutina
+ * es idempotente: si ya existe una cuenta con el email indicado no se
+ * crea ninguna otra ni se modifica la contraseña. Las contraseñas se
+ * mantienen únicamente desde la interfaz para evitar sobreescrituras
+ * accidentales al reiniciar la aplicación.
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +40,10 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.admin.name:Administrador}")
     private String adminName;
 
+    /**
+     * Comprueba la existencia del administrador inicial y lo crea si la
+     * base de datos aún no contiene una cuenta con ese email.
+     */
     @Override
     public void run(String... args) {
         if (userRepository.existsByEmail(adminEmail)) {

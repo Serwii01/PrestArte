@@ -7,6 +7,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Carga los detalles de un usuario a partir de su correo electrónico.
+ *
+ * Es la implementación que utiliza Spring Security para resolver el
+ * usuario tanto durante el login como en la validación de cada token
+ * JWT. Devuelve siempre una instancia de {@link CustomUserDetails}
+ * envolviendo la entidad correspondiente.
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

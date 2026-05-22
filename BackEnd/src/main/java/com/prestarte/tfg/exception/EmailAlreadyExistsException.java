@@ -1,8 +1,11 @@
 package com.prestarte.tfg.exception;
 
 /**
- * Lanzada cuando se intenta registrar un email ya existente.
- * Mapea a HTTP 409 Conflict en GlobalExceptionHandler.
+ * Excepción que se lanza cuando se intenta crear una cuenta con un
+ * correo electrónico que ya está registrado.
+ *
+ * El manejador global de errores la traduce a un HTTP 409 (conflicto)
+ * para que el cliente pueda mostrar un mensaje específico.
  */
 public class EmailAlreadyExistsException extends RuntimeException {
     public EmailAlreadyExistsException(String email) {

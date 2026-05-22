@@ -4,11 +4,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * Body para POST /api/loan-requests/{id}/reassign-transport.
+ * Payload utilizado para reasignar la empresa de transporte de un
+ * préstamo cuando el museo ha rechazado el presupuesto anterior.
  *
- * Lo usa el museo o el coleccionista después de que la empresa actual haya
- * visto su presupuesto rechazado: permite escoger otra empresa que vuelva a
- * presupuestar el transporte sin tener que crear un préstamo nuevo.
+ * Indica la nueva empresa que se encargará de elaborar el
+ * presupuesto, evitando tener que crear un préstamo nuevo desde
+ * cero.
  */
 @Data
 public class ReassignTransportRequest {

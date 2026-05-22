@@ -8,6 +8,16 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Máquina de estados que rige el ciclo de vida de un préstamo.
+ *
+ * Cada estado mantiene un conjunto cerrado de transiciones permitidas
+ * hacia otros estados. Cualquier intento de transición fuera de este
+ * conjunto se rechaza con {@link IllegalStateException}, que el
+ * manejador global de errores traduce a un HTTP 409. Los estados
+ * terminales (RETURNED, REJECTED y CANCELLED) no permiten transiciones
+ * adicionales.
+ */
 @Component
 public class LoanStateMachine {
 
@@ -25,15 +35,16 @@ public class LoanStateMachine {
         ALLOWED.put(Status.DELIVERED,        EnumSet.of(Status.ON_LOAN));
         ALLOWED.put(Status.ON_LOAN,          EnumSet.of(Status.RETURNING));
         ALLOWED.put(Status.RETURNING,        EnumSet.of(Status.RETURNED));
-        // Estados terminales
+        // Estados terminales: no admiten más transiciones.
         ALLOWED.put(Status.RETURNED,  EnumSet.noneOf(Status.class));
         ALLOWED.put(Status.REJECTED,  EnumSet.noneOf(Status.class));
         ALLOWED.put(Status.CANCELLED, EnumSet.noneOf(Status.class));
     }
 
     /**
-     * Verifica que la transición {@code from → to} es válida.
-     * Si no lo es, lanza {@link IllegalStateException} (mapeada a HTTP 409 por GlobalExceptionHandler).
+     * Comprueba que la transición {@code from → to} está permitida.
+     * Si no lo está, lanza una excepción con el detalle de las
+     * transiciones válidas desde el estado de partida.
      */
     public void validate(Status from, Status to) {
         if (from == null) {
@@ -47,6 +58,7 @@ public class LoanStateMachine {
         }
     }
 
+    /** Variante no lanzadora que devuelve si la transición es válida. */
     public boolean canTransition(Status from, Status to) {
         Set<Status> allowed = ALLOWED.getOrDefault(from, EnumSet.noneOf(Status.class));
         return allowed.contains(to);

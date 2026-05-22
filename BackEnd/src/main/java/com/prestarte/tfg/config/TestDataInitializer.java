@@ -13,16 +13,18 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 
 /**
- * Carga un conjunto mínimo de datos de demostración: 1 coleccionista, 1 fundación,
- * 1 empresa de transporte, 1 obra y 1 solicitud de préstamo.
+ * Carga un conjunto mínimo de datos de demostración al arrancar la
+ * aplicación cuando se activa la propiedad {@code app.seed-test-data}.
  *
- * Solo se activa si {@code app.seed-test-data=true}. Idempotente: si los usuarios
- * ya existen, no se duplica nada.
+ * Crea un coleccionista, una fundación, una empresa de transporte, una
+ * obra y una solicitud de préstamo entre ellos. La rutina es
+ * idempotente: si los usuarios de prueba ya existen, no inserta
+ * duplicados.
  *
- * Credenciales generadas (cambiar en producción):
- *   collector@test.com / Collector1234!
+ * Credenciales generadas (orientadas únicamente a desarrollo):
+ *   collector@test.com  / Collector1234!
  *   foundation@test.com / Foundation1234!
- *   transport@test.com / Transport1234!
+ *   transport@test.com  / Transport1234!
  */
 @Component
 @ConditionalOnProperty(name = "app.seed-test-data", havingValue = "true")

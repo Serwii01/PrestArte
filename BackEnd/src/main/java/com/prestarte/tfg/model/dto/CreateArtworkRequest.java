@@ -3,6 +3,14 @@ package com.prestarte.tfg.model.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+/**
+ * Payload utilizado para dar de alta una obra en el catálogo.
+ *
+ * Recoge los datos descriptivos, físicos y económicos de la obra,
+ * además de las condiciones que el coleccionista exige para el
+ * préstamo y la referencia opcional a su empresa de transporte
+ * preferida.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +37,7 @@ public class CreateArtworkRequest {
     @PositiveOrZero(message = "Las dimensiones no pueden ser negativas")
     private Double depthCm;
 
-    /** Valores válidos: EXCELLENT, GOOD, FAIR, POOR, DAMAGED. */
+    /** Estado de conservación: EXCELLENT, GOOD, FAIR, POOR o DAMAGED. */
     @NotBlank(message = "El estado de conservación es obligatorio")
     @Pattern(regexp = "EXCELLENT|GOOD|FAIR|POOR|DAMAGED",
             message = "Estado de conservación inválido")
@@ -37,24 +45,24 @@ public class CreateArtworkRequest {
 
     private String description;
 
-    /** Valor estimado en euros. Obligatorio (lo usa el seguro). */
+    /** Valor estimado en euros, utilizado como referencia del seguro. */
     @NotNull(message = "El valor estimado es obligatorio")
     @Positive(message = "El valor estimado debe ser mayor que 0")
     private Double estimatedValue;
 
-    /** Condiciones que el coleccionista exige al museo (luz, humedad, etc.). */
+    /** Condiciones que el coleccionista exige al museo (clima, luz, manipulación...). */
     private String loanConditions;
 
-    /** Ciudad / pueblo donde se encuentra físicamente la obra. */
+    /** Ciudad o localidad donde se encuentra físicamente la obra. */
     @Size(max = 150)
     private String location;
 
-    /** ID de la empresa de transporte preferida (opcional). */
+    /** Empresa de transporte preferida por el coleccionista, si la hay. */
     private Long preferredTransportCompanyId;
 
     /**
-     * Si true, la empresa preferida es OBLIGATORIA: el museo no podrá negociar
-     * con otra. Si la rechaza, el préstamo se cancela.
+     * Indica si la empresa preferida es obligatoria. Cuando es true,
+     * un rechazo posterior del presupuesto cancela el préstamo.
      */
     private boolean preferredTransportMandatory;
 

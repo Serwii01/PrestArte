@@ -5,13 +5,14 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoanService } from '../../../core/services/loan.service';
 import { LoanResponse } from '../../../core/models/loan.models';
+import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { StatusPillComponent } from '../../../shared/components/status-pill/status-pill.component';
 
 @Component({
   selector: 'app-foundation-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, StatCardComponent, StatusPillComponent],
+  imports: [CommonModule, RouterLink, StatCardComponent, StatusPillComponent, ChatsShortcutComponent],
   templateUrl: './foundation-dashboard.component.html',
   styleUrl: './foundation-dashboard.component.scss',
 })

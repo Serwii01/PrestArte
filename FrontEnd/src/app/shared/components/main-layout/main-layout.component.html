@@ -22,11 +22,79 @@
       </div>
 
       <div class="flex flex-1 justify-end gap-4 md:gap-6 items-center">
-        <button type="button"
-                class="hidden sm:flex items-center justify-center size-10 rounded-lg
-                       hover:bg-gray-soft transition-colors text-text-secondary">
-          <span class="material-symbols-outlined">notifications</span>
-        </button>
+        <!-- Campana de notificaciones -->
+        <div class="relative hidden sm:block">
+          <button type="button" (click)="toggleNotifications()"
+                  [attr.aria-expanded]="notifOpen()"
+                  class="flex items-center justify-center size-10 rounded-lg
+                         hover:bg-gray-soft transition-colors text-text-secondary
+                         relative">
+            <span class="material-symbols-outlined">notifications</span>
+            @if (notifications.unreadCount() > 0) {
+              <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full
+                           bg-red-600 text-white text-[10px] font-bold leading-none
+                           flex items-center justify-center shadow-sm">
+                {{ notifications.unreadCount() > 9 ? '9+' : notifications.unreadCount() }}
+              </span>
+            }
+          </button>
+
+          @if (notifOpen()) {
+            <div class="absolute right-0 mt-2 w-[360px] max-w-[calc(100vw-2rem)]
+                        bg-white rounded-xl border border-border shadow-xl
+                        overflow-hidden z-50">
+              <div class="px-4 py-3 border-b border-border flex items-center justify-between">
+                <p class="text-sm font-bold text-text-main">Notificaciones</p>
+                <button type="button" (click)="notifications.refresh()"
+                        class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                  <span class="material-symbols-outlined" style="font-size:14px;">refresh</span>
+                  Actualizar
+                </button>
+              </div>
+
+              @if (notifications.loading()) {
+                <div class="py-8 text-center text-sm text-text-secondary">Cargando…</div>
+              } @else if (notifications.notifications().length === 0) {
+                <div class="py-10 px-6 text-center">
+                  <span class="material-symbols-outlined text-emerald-500 mb-1" style="font-size:32px;">task_alt</span>
+                  <p class="text-sm font-bold text-text-main">Todo al día</p>
+                  <p class="text-xs text-text-secondary mt-1">
+                    No tienes acciones pendientes por ahora.
+                  </p>
+                </div>
+              } @else {
+                <ul class="max-h-[400px] overflow-y-auto divide-y divide-border">
+                  @for (n of notifications.notifications(); track n.id) {
+                    <li>
+                      <button type="button" (click)="openNotification(n.link)"
+                              class="w-full flex items-start gap-3 px-4 py-3 text-left
+                                     hover:bg-gray-soft/50 transition-colors">
+                        <div class="size-9 rounded-lg flex items-center justify-center shrink-0"
+                             [class.bg-amber-100]="n.severity === 'warning'"
+                             [class.text-amber-700]="n.severity === 'warning'"
+                             [class.bg-primary\/10]="n.severity === 'info'"
+                             [class.text-primary]="n.severity === 'info'"
+                             [class.bg-emerald-100]="n.severity === 'success'"
+                             [class.text-emerald-700]="n.severity === 'success'">
+                          <span class="material-symbols-outlined" style="font-size:20px;">{{ n.icon }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-bold text-text-main">{{ n.title }}</p>
+                          @if (n.subtitle) {
+                            <p class="text-xs text-text-secondary mt-0.5 truncate" [title]="n.subtitle">
+                              {{ n.subtitle }}
+                            </p>
+                          }
+                        </div>
+                        <span class="material-symbols-outlined text-text-secondary shrink-0" style="font-size:18px;">chevron_right</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </div>
 
         <div class="flex items-center gap-3">
           <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center

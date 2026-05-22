@@ -23,13 +23,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * Configuración central de Spring Security para Prestarte.
+ * Configuración central de Spring Security.
  *
- * - JWT stateless (sin sesión).
- * - CORS abierto al origen del frontend Angular.
- * - Endpoints públicos: /api/auth/**, GET /api/files/{id} (imágenes).
- * - /api/admin/**: requiere ROLE_ADMIN.
- * - El resto: requiere autenticación.
+ * Define una cadena de filtros sin estado basada en JWT, abre el origen
+ * CORS al frontend Angular y declara qué endpoints son públicos, cuáles
+ * exigen autenticación y cuáles requieren el rol de administrador. Las
+ * credenciales se cifran con BCrypt.
  */
 @Configuration
 @EnableMethodSecurity
@@ -41,6 +40,11 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
+    /**
+     * Construye la cadena de filtros HTTP. Desactiva CSRF (la API es
+     * stateless y no usa formularios), declara las reglas de acceso y
+     * registra el filtro JWT antes del filtro de autenticación estándar.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -48,20 +52,20 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Públicos
+                        // Endpoints públicos del flujo de autenticación.
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Descarga de archivos por UUID: accesible para mostrar imágenes.
                         .requestMatchers(HttpMethod.GET, "/api/files/*").permitAll()
-                        // Catálogo público: cualquiera puede ver listado y detalle de obras.
-                        // El sub-recurso /api/artworks/collector/* se protege antes
-                        // para que NO caiga en el permitAll del wildcard.
+                        // Las obras del catálogo y sus fichas son públicas; sin embargo,
+                        // el listado por coleccionista exige sesión para evitar fugas.
                         .requestMatchers(HttpMethod.GET, "/api/artworks/collector/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/artworks", "/api/artworks/*").permitAll()
-                        // Partners (empresas de transporte) — perfil público
+                        // Perfil público de las empresas de transporte.
                         .requestMatchers(HttpMethod.GET, "/api/transport-companies",
                                 "/api/transport-companies/*").permitAll()
-                        // Admin
+                        // Operaciones administrativas reservadas al rol ADMIN.
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // El resto requiere autenticación
+                        // Cualquier otro endpoint requiere autenticación válida.
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -69,6 +73,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configura CORS para permitir las llamadas desde el origen del
+     * frontend, exponer las cabeceras necesarias y aceptar todos los
+     * métodos REST utilizados por la API.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -83,11 +92,13 @@ public class SecurityConfig {
         return source;
     }
 
+    /** Algoritmo de cifrado de contraseñas utilizado en el registro y en el login. */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /** Expone el AuthenticationManager por defecto para usarlo en el login. */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();

@@ -4,6 +4,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/**
+ * Payload del formulario de inicio de sesión.
+ *
+ * Contiene únicamente el correo y la contraseña. Las comprobaciones
+ * de unicidad o de aprobación de la cuenta se realizan en el
+ * servicio durante la autenticación.
+ */
 @Data
 public class LoginRequest {
 

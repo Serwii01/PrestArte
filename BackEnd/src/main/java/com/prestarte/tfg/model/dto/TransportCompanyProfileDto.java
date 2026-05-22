@@ -6,9 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Perfil público de una empresa de transporte. No expone datos sensibles
- * (email del usuario, taxId, status interno...). Lo consume el catálogo
- * público de partners y el detalle.
+ * DTO público con el perfil de una empresa de transporte.
+ *
+ * Lo consumen tanto la sección pública de partners como los
+ * selectores internos. Solo contiene la información que la empresa
+ * desea publicar, sin exponer datos administrativos como su estado
+ * o su identificador fiscal.
  */
 @Data
 @Builder

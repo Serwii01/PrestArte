@@ -390,6 +390,7 @@
         }
 
         @if (!canAccept() && !canReject() && !canQuote() && !canApproveQuote() && !canRejectQuote()
+              && !canReassignTransport()
               && !canMarkReady() && !canMarkPickedUp() && !canMarkInTransit() && !canConfirmDelivery()
               && !canStartReturn() && !canCancel() && !canDownloadContract()) {
           <p class="text-text-secondary text-sm text-center py-2">
@@ -558,6 +559,46 @@
             <button type="submit" [disabled]="busy()"
               class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-50">
               Rechazar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Reasignar transporte -->
+  @if (showReassignDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Buscar otra empresa de transporte</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          La empresa anterior queda con presupuesto rechazado. Elige otra para que prepare un presupuesto nuevo.
+        </p>
+        <form [formGroup]="reassignForm" (ngSubmit)="confirmReassign()" class="space-y-3">
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Nueva empresa</p>
+            <select formControlName="transportCompanyId"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+              <option [ngValue]="null" disabled>Selecciona una empresa…</option>
+              @for (c of reassignableCompanies(); track c.id) {
+                <option [ngValue]="c.id">{{ c.companyName }}</option>
+              }
+            </select>
+            @if (reassignableCompanies().length === 0) {
+              <p class="text-xs text-amber-700 mt-2">
+                No hay otras empresas de transporte registradas en la plataforma.
+              </p>
+            }
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showReassignDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="reassignForm.invalid || busy() || reassignableCompanies().length === 0"
+              class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+              Asignar y pedir presupuesto
             </button>
           </div>
         </form>

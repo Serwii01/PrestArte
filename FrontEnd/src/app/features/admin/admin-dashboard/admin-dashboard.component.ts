@@ -6,12 +6,13 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { Role, UserResponse } from '../../../core/models/user.models';
+import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, StatCardComponent],
+  imports: [CommonModule, FormsModule, StatCardComponent, ChatsShortcutComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
 })

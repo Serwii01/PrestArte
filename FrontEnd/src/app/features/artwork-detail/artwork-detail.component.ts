@@ -64,9 +64,15 @@ export class ArtworkDetailComponent implements OnInit {
     return a.collectorId === this.auth.userId();
   });
 
-  /** Para mostrar el botón "solicitar préstamo" solo a museos. */
+  /** ¿La obra está dada de baja por el coleccionista? Visible para todos. */
+  protected readonly isDisabled = computed(() => this.artwork()?.availableForLoan === false);
+
+  /**
+   * Para mostrar el botón "solicitar préstamo" solo a museos y solo si la obra
+   * está activa. Si el coleccionista la ha deshabilitado, no se puede pedir.
+   */
   protected readonly canRequestLoan = computed(
-    () => this.auth.role() === 'FOUNDATION' && !this.isMine(),
+    () => this.auth.role() === 'FOUNDATION' && !this.isMine() && !this.isDisabled(),
   );
 
   /** Imágenes (gallery): excluye documentos. */

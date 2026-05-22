@@ -8,8 +8,13 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * Estructura uniforme de error que devuelve la API.
- * Garantiza que el frontend siempre recibe el mismo contrato ante un fallo.
+ * Estructura uniforme que utiliza la API para informar de cualquier
+ * error.
+ *
+ * Ofrecer siempre el mismo contrato facilita el tratamiento de errores
+ * en el cliente: además del código y la descripción genérica, puede
+ * incluirse un mapa con los errores asociados a campos concretos
+ * cuando el fallo proviene de una validación.
  */
 @Data
 @Builder
@@ -21,6 +26,6 @@ public class ErrorResponse {
     private String message;
     private String path;
 
-    /** Errores de validación campo→mensaje. Null si no aplica. */
+    /** Diccionario campo → mensaje cuando el error proviene de una validación. */
     private Map<String, String> fieldErrors;
 }

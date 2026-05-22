@@ -14,6 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio que gestiona los mensajes intercambiados dentro de una
+ * sesión de chat.
+ *
+ * Cubre la lectura del histórico, el envío de mensajes de texto y el
+ * envío con archivo adjunto. El emisor se toma siempre del usuario
+ * autenticado, no del cuerpo de la petición, para evitar
+ * suplantaciones.
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageService {
@@ -21,11 +30,11 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final UserRepository userRepository;
-    private final com.prestarte.tfg.repository.DBFileRepository dbFileRepository;
+    private final DBFileRepository dbFileRepository;
     private final CurrentUser currentUser;
     private final ChatSessionService chatSessionService;
 
-    /** Mensajes del chat. Solo participantes pueden leerlos. */
+    /** Devuelve el histórico de una sesión, accesible solo a sus participantes. */
     public List<MessageResponse> getMessagesByChatSessionId(Long chatSessionId) {
         ChatSession chat = chatSessionRepository.findById(chatSessionId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Sesión de chat", chatSessionId));
@@ -37,8 +46,9 @@ public class MessageService {
     }
 
     /**
-     * Envía un mensaje al chat. El sender se toma del JWT (no del cliente):
-     * eso evita la suplantación enviando un senderId arbitrario.
+     * Crea un mensaje de texto en la sesión indicada. El emisor se
+     * resuelve a partir del JWT de la petición. Se rechazan los
+     * mensajes vacíos y los enviados a un chat ya cerrado.
      */
     @Transactional
     public MessageResponse createMessage(CreateMessageRequest request) {
@@ -53,11 +63,9 @@ public class MessageService {
             throw new IllegalArgumentException("El mensaje no puede estar vacío");
         }
 
-        // El sender real es el usuario autenticado, ignoramos request.senderId.
         User sender = userRepository.findById(currentUser.currentId())
                 .orElseThrow(() -> new AccessDeniedException("Sesión no reconocida"));
 
-        // Validamos que el sender es participante del préstamo asociado.
         chatSessionService.requireParticipant(chatSession.getLoanRequest());
 
         Message message = Message.builder()
@@ -70,7 +78,7 @@ public class MessageService {
         return mapToResponse(messageRepository.save(message));
     }
 
-    /** Solo accesible para admin (auditoría). */
+    /** Devuelve todos los mensajes del sistema. Reservado a auditoría. */
     public List<MessageResponse> getAllMessages() {
         if (!currentUser.isAdmin()) {
             throw new AccessDeniedException("Solo administradores pueden listar todos los mensajes");
@@ -80,6 +88,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    /** Devuelve un mensaje concreto comprobando que el usuario pueda verlo. */
     public MessageResponse getMessageDtoById(Long id) {
         Message message = messageRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Mensaje", id));
@@ -88,8 +97,9 @@ public class MessageService {
     }
 
     /**
-     * Envía un mensaje con archivo adjunto. El sender se toma del JWT.
-     * Si el archivo es image/*, el tipo es IMAGEN; en otro caso, DOCUMENTO.
+     * Crea un mensaje con archivo adjunto. El tipo del mensaje se
+     * deduce del MIME del archivo: si es una imagen se marca como
+     * {@code IMAGEN}; en cualquier otro caso, como {@code DOCUMENTO}.
      */
     @Transactional
     public MessageResponse createMessageWithFile(Long chatSessionId, String content,
@@ -107,10 +117,10 @@ public class MessageService {
 
         chatSessionService.requireParticipant(chatSession.getLoanRequest());
 
-        com.prestarte.tfg.model.entity.User sender = userRepository.findById(currentUser.currentId())
+        User sender = userRepository.findById(currentUser.currentId())
                 .orElseThrow(() -> new AccessDeniedException("Sesión no reconocida"));
 
-        com.prestarte.tfg.model.entity.DBFile dbFile = com.prestarte.tfg.model.entity.DBFile.builder()
+        DBFile dbFile = DBFile.builder()
                 .fileName(file.getOriginalFilename())
                 .fileType(file.getContentType())
                 .data(file.getBytes())
@@ -132,6 +142,7 @@ public class MessageService {
         return mapToResponse(messageRepository.save(msg));
     }
 
+    /** Compone el DTO de respuesta a partir de la entidad de mensaje. */
     private MessageResponse mapToResponse(Message message) {
         var att = message.getAttachment();
         return MessageResponse.builder()

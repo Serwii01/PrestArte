@@ -3,7 +3,6 @@ package com.prestarte.tfg.security;
 import com.prestarte.tfg.model.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +18,10 @@ import java.util.function.Function;
 /**
  * Servicio de generación y validación de tokens JWT.
  *
- * El secreto se configura vía 'app.jwt.secret' y debe ser una cadena Base64 de
- * al menos 256 bits (recomendado: generar con `openssl rand -base64 64`).
+ * Encapsula la firma HMAC-SHA256 de los tokens emitidos en el login y
+ * las comprobaciones que realiza el filtro de seguridad para validar
+ * los tokens recibidos en cada petición. El secreto se inyecta como
+ * cadena Base64 desde la configuración.
  */
 @Service
 public class JwtService {
@@ -35,6 +36,10 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
+    /**
+     * Genera un token JWT para el usuario indicado, incluyendo su id y
+     * rol como claims y su correo como subject.
+     */
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("uid", user.getId());
@@ -42,14 +47,17 @@ public class JwtService {
         return buildToken(claims, user.getEmail());
     }
 
+    /** Devuelve la duración configurada para los tokens, en milisegundos. */
     public long getExpirationMs() {
         return expirationMs;
     }
 
+    /** Extrae el subject (email) del token. */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /** Comprueba que el token pertenece al usuario indicado y aún no ha caducado. */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isExpired(token);

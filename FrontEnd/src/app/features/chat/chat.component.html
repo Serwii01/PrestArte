@@ -1,9 +1,21 @@
-<div class="mb-6">
+<div class="mb-6 flex items-center justify-between gap-3 flex-wrap">
   <a [routerLink]="['/app/loans', id]"
      class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
     <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
     Volver al préstamo
   </a>
+  <!-- Toggle de la barra lateral en móvil (en desktop la barra siempre visible) -->
+  <button type="button" (click)="toggleSidebar()"
+          class="lg:hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                 bg-white border border-border hover:bg-gray-soft text-text-main text-sm font-medium">
+    <span class="material-symbols-outlined" style="font-size:18px;">forum</span>
+    @if (sidebarOpen()) { Ocultar chats } @else { Otros chats }
+    @if (chats().length > 0) {
+      <span class="ml-1 px-1.5 py-0 rounded-full bg-primary/10 text-primary text-xs font-bold">
+        {{ chats().length }}
+      </span>
+    }
+  </button>
 </div>
 
 @if (loading()) {
@@ -30,7 +42,70 @@
     <p class="text-text-main font-bold">{{ errorMessage() }}</p>
   </div>
 } @else {
-  <div class="stitch-card flex flex-col h-[calc(100vh-200px)] overflow-hidden">
+  <div class="flex gap-6 items-stretch h-[calc(100vh-200px)]">
+    <!-- Barra lateral con todos mis chats -->
+    <aside class="stitch-card overflow-hidden flex-col w-72 shrink-0"
+           [class.hidden]="!sidebarOpen()"
+           [class.flex]="sidebarOpen()"
+           [class.lg:flex]="true">
+      <header class="px-4 py-3 border-b border-border bg-background/50">
+        <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">
+          Mis conversaciones
+        </p>
+        @if (!chatsLoading()) {
+          <p class="text-[11px] text-text-secondary mt-0.5">
+            {{ chats().length }} {{ chats().length === 1 ? 'chat' : 'chats' }}
+          </p>
+        }
+      </header>
+
+      @if (chatsLoading()) {
+        <div class="p-6 text-center text-text-secondary text-sm">Cargando…</div>
+      } @else if (chats().length === 0) {
+        <div class="p-6 text-center">
+          <span class="material-symbols-outlined text-text-secondary mb-1" style="font-size:28px;">
+            chat_bubble_outline
+          </span>
+          <p class="text-xs text-text-secondary">
+            No tienes otros chats activos.
+          </p>
+        </div>
+      } @else {
+        <ul class="flex-1 overflow-y-auto divide-y divide-border">
+          @for (c of chats(); track c.loanId) {
+            <li>
+              <a [routerLink]="['/app/loans', c.loanId, 'chat']"
+                 (click)="sidebarOpen.set(false)"
+                 class="flex items-start gap-3 px-4 py-3 transition-colors"
+                 [class.bg-primary\/10]="isCurrentChat(c.loanId)"
+                 [class.border-l-4]="isCurrentChat(c.loanId)"
+                 [class.border-primary]="isCurrentChat(c.loanId)"
+                 [class.hover\:bg-background]="!isCurrentChat(c.loanId)">
+                <div class="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined" style="font-size:18px;">forum</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-text-main truncate" [title]="c.artworkTitle">
+                    {{ c.artworkTitle }}
+                  </p>
+                  <p class="text-xs text-text-secondary truncate">
+                    @if (c.counterpartyName) {
+                      {{ c.counterpartyName }}
+                    } @else if (c.artworkArtist) {
+                      {{ c.artworkArtist }}
+                    } @else {
+                      Préstamo #{{ c.loanId }}
+                    }
+                  </p>
+                </div>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+  <div class="stitch-card flex flex-col flex-1 min-w-0 overflow-hidden">
     <!-- Cabecera del chat -->
     <header class="px-6 py-4 border-b border-border flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -166,5 +241,6 @@
         </button>
       </div>
     </form>
+  </div>
   </div>
 }

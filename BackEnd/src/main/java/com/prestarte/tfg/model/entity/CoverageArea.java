@@ -2,10 +2,15 @@ package com.prestarte.tfg.model.entity;
 
 /**
  * Cobertura geográfica que ofrece una empresa de transporte.
- * Se usa como filtro al listar empresas para un préstamo concreto.
+ *
+ * Permite filtrar el listado de empresas en función del alcance del
+ * envío que se quiere presupuestar.
  */
 public enum CoverageArea {
-    DOMESTIC,        // Solo nacional
-    EUROPE,          // Unión Europea / EEE
-    INTERNATIONAL    // Global
+    /** Servicio solo dentro del territorio nacional. */
+    DOMESTIC,
+    /** Servicio dentro de la Unión Europea o del Espacio Económico Europeo. */
+    EUROPE,
+    /** Servicio internacional sin restricciones geográficas. */
+    INTERNATIONAL
 }

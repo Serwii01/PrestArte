@@ -19,12 +19,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Lógica de "olvidé mi contraseña":
- *  1. forgotPassword: genera un token de un solo uso, invalida los previos del
- *     mismo usuario, y manda un email con la URL de reseteo. Devuelve siempre
- *     200 al cliente: no revelamos si el email existe o no (anti-enumeration).
- *  2. resetPassword: valida el token (existe, no expirado, no usado), actualiza
- *     la contraseña hasheada y marca el token como usado.
+ * Servicio que implementa el flujo de recuperación de contraseña.
+ *
+ * Se compone de dos pasos: la solicitud de recuperación genera un
+ * token de un solo uso y lo envía por correo, y el paso de
+ * restablecimiento valida el token y actualiza la contraseña. La
+ * solicitud responde siempre con éxito al cliente, independientemente
+ * de si el correo está registrado, para no revelar qué cuentas
+ * existen.
  */
 @Service
 @RequiredArgsConstructor
@@ -41,21 +43,24 @@ public class PasswordResetService {
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
+    /**
+     * Atiende una solicitud de recuperación de contraseña. Si el correo
+     * pertenece a un usuario, se invalidan los tokens anteriores, se
+     * genera uno nuevo y se envía por correo electrónico. Si no
+     * pertenece a nadie, la operación termina sin hacer nada.
+     */
     @Transactional
     public void forgotPassword(ForgotPasswordRequest req) {
         Optional<User> maybeUser = userRepository.findByEmail(req.getEmail());
         if (maybeUser.isEmpty()) {
-            // No revelamos si el email existe.
             log.info("Solicitud de reset para email no registrado: {}", req.getEmail());
             return;
         }
 
         User user = maybeUser.get();
 
-        // Invalidamos tokens previos.
         tokenRepository.invalidateAllForUser(user);
 
-        // Generamos token nuevo.
         PasswordResetToken token = PasswordResetToken.builder()
                 .token(UUID.randomUUID().toString())
                 .user(user)
@@ -67,6 +72,12 @@ public class PasswordResetService {
         sendResetEmail(user, token.getToken());
     }
 
+    /**
+     * Restablece la contraseña del usuario asociado al token indicado.
+     * Comprueba que el token exista, esté vigente y no haya sido
+     * utilizado, cifra la nueva contraseña con BCrypt y marca el
+     * token como consumido.
+     */
     @Transactional
     public void resetPassword(ResetPasswordRequest req) {
         PasswordResetToken token = tokenRepository.findByToken(req.getToken())
@@ -88,6 +99,11 @@ public class PasswordResetService {
         log.info("Contraseña restablecida para el usuario {}", user.getEmail());
     }
 
+    /**
+     * Envía al usuario el correo de recuperación con el enlace que
+     * incluye el token. El enlace queda también registrado en el log
+     * para facilitar el desarrollo en entornos sin servidor SMTP.
+     */
     private void sendResetEmail(User user, String tokenValue) {
         String link = frontendBaseUrl + "/reset-password?token=" + tokenValue;
         String subject = "Prestarte - Restablece tu contraseña";
@@ -99,7 +115,6 @@ public class PasswordResetService {
                 "Si no has sido tú, puedes ignorar este mensaje.\n\n" +
                 "Un saludo,\nEl equipo de Prestarte.";
         emailService.sendSimpleEmail(user.getEmail(), subject, body);
-        // Como fallback en local sin SMTP funcional, también lo logueamos.
         log.info("Reset link para {}: {}", user.getEmail(), link);
     }
 }

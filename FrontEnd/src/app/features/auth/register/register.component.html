@@ -98,8 +98,8 @@
             <p class="text-xs text-red-600 mt-1">
               @if (form.controls.email.errors?.['required']) {
                 El email es obligatorio.
-              } @else if (form.controls.email.errors?.['email']) {
-                El email no tiene un formato válido.
+              } @else if (form.controls.email.errors?.['email'] || form.controls.email.errors?.['emailTld']) {
+                Formato no válido. Asegúrate de incluir un dominio con TLD (ej. nombre&#64;ejemplo.com).
               }
             </p>
           }
@@ -136,8 +136,8 @@
               <p class="text-xs text-red-600 mt-1">
                 @if (form.controls.phone.errors?.['required']) {
                   El teléfono es obligatorio.
-                } @else if (form.controls.phone.errors?.['minlength']) {
-                  El teléfono debe tener al menos 6 caracteres.
+                } @else if (form.controls.phone.errors?.['phoneFormat']) {
+                  Teléfono no válido. 9 dígitos empezando por 6, 7, 8 o 9 (con o sin +34).
                 }
               </p>
             }
@@ -155,9 +155,9 @@
           @if (showError('taxId')) {
             <p class="text-xs text-red-600 mt-1">
               @if (form.controls.taxId.errors?.['required']) {
-                El DNI / CIF / LEI es obligatorio.
-              } @else if (form.controls.taxId.errors?.['minlength']) {
-                El identificador no es válido.
+                El DNI / NIE / CIF es obligatorio.
+              } @else if (form.controls.taxId.errors?.['taxIdFormat']) {
+                Identificador no válido. Comprueba el formato y la letra/dígito de control.
               }
             </p>
           }

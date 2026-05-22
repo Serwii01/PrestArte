@@ -26,18 +26,34 @@ export class ResetPasswordComponent implements OnInit {
   protected readonly missingToken = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
-    newPassword: ['', [Validators.required, Validators.minLength(8)]],
+    // Mismo mínimo que el registro (6 caracteres) para consistencia con el back.
+    newPassword: ['', [Validators.required, Validators.minLength(6)]],
     confirmPassword: ['', [Validators.required]],
   });
 
+  /** Tick reactivo para que los computeds reaccionen a cambios del form. */
+  private readonly formTick = signal(0);
+
   protected readonly passwordsMatch = computed(() => {
-    return this.form.controls.newPassword.value === this.form.controls.confirmPassword.value;
+    this.formTick();
+    const a = this.form.controls.newPassword.value;
+    const b = this.form.controls.confirmPassword.value;
+    return a === b;
+  });
+
+  /** True si el usuario ya ha escrito algo en confirmación pero no coincide. */
+  protected readonly showMismatch = computed(() => {
+    this.formTick();
+    const b = this.form.controls.confirmPassword.value;
+    return !!b && !this.passwordsMatch();
   });
 
   ngOnInit(): void {
     if (!this.token) {
       this.missingToken.set(true);
     }
+    // Refresca los computeds (passwordsMatch, showMismatch) en cada cambio.
+    this.form.valueChanges.subscribe(() => this.formTick.update((n) => n + 1));
   }
 
   submit(): void {

@@ -4,8 +4,12 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * Body para PUT /api/transport-companies/{id}/profile.
- * El propietario de la empresa edita su ficha pública.
+ * Payload utilizado para actualizar el perfil público de una empresa
+ * de transporte.
+ *
+ * Todos los campos son opcionales: la acción solo modifica los
+ * valores que vengan informados, lo que permite cambios parciales
+ * desde la propia cuenta de la empresa o desde la administración.
  */
 @Data
 public class UpdateTransportCompanyRequest {

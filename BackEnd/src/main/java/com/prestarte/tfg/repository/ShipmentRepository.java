@@ -6,23 +6,36 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Acceso a la tabla de envíos.
+ *
+ * Un préstamo puede tener varios envíos a lo largo de su ciclo: el de
+ * ida y el de vuelta, y opcionalmente varios envíos OUTBOUND si el
+ * presupuesto se rechaza y se reasigna a otra empresa. Por eso, además
+ * de los buscadores convencionales, se expone una consulta que devuelve
+ * el último envío de una dirección concreta, que es el que se considera
+ * activo en cada momento.
+ */
 @Repository
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
+
+    /** Devuelve los envíos asignados a una empresa de transporte concreta. */
     List<Shipment> findByTransportCompanyId(Long transportCompanyId);
 
+    /** Devuelve los envíos en un estado concreto de los préstamos de una fundación. */
     List<Shipment> findByLoanRequestFoundationIdAndStatus(Long foundationId, Shipment.ShipmentStatus status);
 
-    /** Shipment OUTBOUND del préstamo (legado: asume un único OUTBOUND). */
+    /** Devuelve cualquier envío asociado al préstamo indicado. */
     Optional<Shipment> findByLoanRequestId(Long loanId);
 
-    /** Lookup por dirección concreta (OUTBOUND o RETURN). Legado. */
+    /** Devuelve el envío de una dirección concreta dentro del préstamo. */
     Optional<Shipment> findByLoanRequestIdAndDirection(Long loanId, Shipment.ShipmentDirection direction);
 
     /**
-     * Último shipment de una dirección dada. Tras introducir la reasignación de
-     * transportistas, un préstamo puede tener varios OUTBOUND (uno por intento):
-     * el primero queda en REJECTED, los siguientes hasta que se apruebe uno.
-     * Esta query devuelve el más reciente, que es el activo en el flujo.
+     * Devuelve el envío más reciente de la dirección indicada para un
+     * préstamo. Se utiliza para obtener el envío activo cuando hay
+     * varios OUTBOUND como consecuencia de una reasignación de empresa
+     * de transporte.
      */
     Optional<Shipment> findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
             Long loanId, Shipment.ShipmentDirection direction);

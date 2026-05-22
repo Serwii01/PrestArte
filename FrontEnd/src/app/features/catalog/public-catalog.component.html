@@ -17,8 +17,16 @@
         <a routerLink="/" class="text-sm font-medium text-text-main hover:text-primary transition-colors">
           Inicio
         </a>
+        <a routerLink="/" fragment="how"
+           class="text-sm font-medium text-text-main hover:text-primary transition-colors">
+          Cómo funciona
+        </a>
         <a routerLink="/catalog" class="text-sm font-bold text-primary">
           Catálogo
+        </a>
+        <a routerLink="/partners"
+           class="text-sm font-medium text-text-main hover:text-primary transition-colors">
+          Partners
         </a>
       </nav>
       <div class="flex items-center gap-3">
@@ -106,6 +114,14 @@
               <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-text-main shadow-sm">
                 {{ conditionLabel(a.condition) }}
               </div>
+              @if (a.availableForLoan === false) {
+                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider shadow-sm">
+                    <span class="material-symbols-outlined" style="font-size:14px;">pause_circle</span>
+                    Deshabilitada
+                  </span>
+                </div>
+              }
             </div>
             <div class="p-4">
               <h4 class="font-bold text-text-main truncate">{{ a.title }}</h4>
@@ -131,7 +147,7 @@
   <!-- Footer simple -->
   <footer class="bg-white pt-10 pb-8 border-t border-gray-soft">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-text-secondary">
-      © {{ year }} Prestarte · Trabajo de Fin de Grado
+      © {{ year }} Prestarte · Sergio Fernández Morales
     </div>
   </footer>
 </div>

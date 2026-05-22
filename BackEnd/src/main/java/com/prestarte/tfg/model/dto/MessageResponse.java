@@ -6,6 +6,13 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO público que representa un mensaje del chat.
+ *
+ * Incluye los datos del autor, la fecha de envío y, cuando el
+ * mensaje lleva un archivo adjunto, la información mínima necesaria
+ * para que la interfaz pueda mostrarlo o enlazar a su descarga.
+ */
 @Data
 @Builder
 public class MessageResponse {
@@ -18,7 +25,7 @@ public class MessageResponse {
     private LocalDateTime sentAt;
     private Message.TipoMensaje tipo;
 
-    /** Si el mensaje lleva archivo adjunto, datos para mostrarlo / descargarlo. */
+    /** Identificador del archivo adjunto, si el mensaje incluye uno. */
     private String attachmentId;
     private String attachmentFileName;
     private String attachmentFileType;

@@ -16,6 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Servicio que orquesta el ciclo de vida de un préstamo.
+ *
+ * Concentra las acciones que disparan transiciones en la máquina de
+ * estados de {@link LoanRequest}: creación de la solicitud, aceptación
+ * y elección de empresa de transporte, rechazos, cancelaciones,
+ * reasignación de transporte tras un presupuesto rechazado, marcaje
+ * de preparación, inicio y cierre del retorno. Cada acción comprueba
+ * los permisos del usuario que la ejecuta y delega en
+ * {@link LoanStateMachine} la validación de la transición.
+ */
 @Service
 @RequiredArgsConstructor
 public class LoanRequestService {
@@ -34,11 +45,17 @@ public class LoanRequestService {
     private final LoanStateMachine stateMachine;
     private final CurrentUser currentUser;
 
-    /* ========== CREACIÓN ========== */
+    // ===== Creación =====
 
+    /**
+     * Crea una nueva solicitud de préstamo en estado REQUESTED.
+     *
+     * La acción la ejecuta la propia fundación; el método comprueba
+     * que la obra exista y esté disponible para préstamo antes de
+     * persistir la solicitud.
+     */
     @Transactional
     public LoanResponse createRequest(CreateLoanRequest dto) {
-        // Solo la propia fundación puede crear solicitudes a su nombre.
         currentUser.requireUserId(dto.getFoundationId());
 
         Artwork artwork = artworkRepository.findById(dto.getArtworkId())
@@ -65,20 +82,21 @@ public class LoanRequestService {
         return convertToResponse(loanRequestRepository.save(request));
     }
 
-    /* ========== ACCIONES DEL FLUJO ========== */
+    // ===== Acciones del flujo (dispara el coleccionista o la fundación) =====
 
     /**
-     * Coleccionista acepta la solicitud y elige empresa de transporte.
-     * Pasa el estado a ACCEPTED y crea inmediatamente el Shipment OUTBOUND
-     * en estado REQUESTED, lo que también deja al préstamo en QUOTE_PENDING.
+     * El coleccionista acepta la solicitud y elige la empresa de
+     * transporte. Tras la aceptación se crea de inmediato el envío
+     * OUTBOUND en estado REQUESTED y el préstamo avanza a
+     * QUOTE_PENDING, a la espera del presupuesto. Antes de aceptar se
+     * comprueba que la obra no tenga otro préstamo aceptado en las
+     * mismas fechas.
      */
     @Transactional
     public LoanResponse accept(Long loanId, Long transportCompanyId, boolean mandatory) {
         LoanRequest loan = findOrThrow(loanId);
-        // Solo el coleccionista dueño de la obra puede aceptar.
         currentUser.requireUserId(loan.getArtwork().getCollector().getId());
 
-        // Validación de fechas (regla de negocio: no solapar préstamos aceptados de la misma obra)
         boolean overlapping = loanRequestRepository.existsOverlappingLoan(
                 loan.getArtwork().getId(), loan.getStartDate(), loan.getEndDate());
         if (overlapping) {
@@ -86,17 +104,14 @@ public class LoanRequestService {
                     "Esta obra ya está reservada para las fechas seleccionadas.");
         }
 
-        // Verificar que la empresa de transporte existe
         TransportCompany company = transportCompanyRepository.findById(transportCompanyId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Empresa de transporte", transportCompanyId));
 
-        // Transición REQUESTED → ACCEPTED
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.ACCEPTED);
         loan.setStatus(LoanRequest.Status.ACCEPTED);
         loan.setTransportCompanyMandatory(mandatory);
         loanRequestRepository.save(loan);
 
-        // Crea el shipment OUTBOUND en REQUESTED y avanza el préstamo a QUOTE_PENDING
         shipmentService.createOutboundShipment(loan, company);
         stateMachine.validate(LoanRequest.Status.ACCEPTED, LoanRequest.Status.QUOTE_PENDING);
         loan.setStatus(LoanRequest.Status.QUOTE_PENDING);
@@ -104,7 +119,7 @@ public class LoanRequestService {
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
-    /** Coleccionista rechaza la solicitud (terminal). */
+    /** El coleccionista rechaza la solicitud de manera definitiva. */
     @Transactional
     public LoanResponse reject(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
@@ -115,22 +130,19 @@ public class LoanRequestService {
     }
 
     /**
-     * Reasignación de empresa de transporte tras el rechazo de un presupuesto.
+     * Asigna una nueva empresa de transporte después de que el museo
+     * haya rechazado el presupuesto anterior.
      *
-     * Cuando el museo rechaza el presupuesto y la empresa NO era obligatoria,
-     * el préstamo vuelve a QUOTE_PENDING pero el viejo Shipment OUTBOUND queda
-     * en REJECTED. Este método crea un Shipment OUTBOUND nuevo con la empresa
-     * elegida; el préstamo se mantiene en QUOTE_PENDING esperando el nuevo
-     * presupuesto.
-     *
-     * Permitido a la fundación solicitante o al coleccionista dueño. Si la
-     * empresa era obligatoria, no hay reasignación posible (el préstamo se
-     * habría cancelado automáticamente).
+     * Solo aplica cuando el préstamo está en QUOTE_PENDING, la empresa
+     * inicial no era obligatoria y el último envío OUTBOUND quedó en
+     * estado REJECTED. La acción puede iniciarla la fundación o el
+     * coleccionista. Como resultado se crea un nuevo Shipment OUTBOUND
+     * con la empresa elegida; el préstamo permanece en QUOTE_PENDING a
+     * la espera del nuevo presupuesto.
      */
     @Transactional
     public LoanResponse reassignTransport(Long loanId, Long newTransportCompanyId) {
         LoanRequest loan = findOrThrow(loanId);
-        // Solo las dos partes contratantes pueden reasignar.
         currentUser.requireAnyUserId(
                 loan.getArtwork().getCollector().getId(),
                 loan.getFoundation().getId());
@@ -146,9 +158,6 @@ public class LoanRequestService {
                     "no se puede reasignar.");
         }
 
-        // Comprobamos que el OUTBOUND más reciente está realmente rechazado.
-        // Si está en REQUESTED o QUOTED, hay una negociación viva: no permitimos
-        // reasignar sin antes rechazarla expresamente.
         Shipment lastOutbound = shipmentRepository
                 .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
                         loanId, Shipment.ShipmentDirection.OUTBOUND)
@@ -164,20 +173,20 @@ public class LoanRequestService {
                 .orElseThrow(() -> ResourceNotFoundException.of(
                         "Empresa de transporte", newTransportCompanyId));
 
-        // No tiene sentido asignar la misma empresa que acaba de ser rechazada.
         if (lastOutbound.getTransportCompany().getId().equals(newTransportCompanyId)) {
             throw new IllegalStateException(
                     "Selecciona una empresa distinta a la que acaba de rechazar el presupuesto.");
         }
 
-        // Crea un nuevo OUTBOUND en REQUESTED. El préstamo se queda en
-        // QUOTE_PENDING (no hay cambio de estado del loan).
         shipmentService.createOutboundShipment(loan, company);
-
         return convertToResponse(loan);
     }
 
-    /** Coleccionista o museo cancelan el préstamo antes de que la obra esté en tránsito. */
+    /**
+     * Cancela el préstamo. La acción la puede iniciar tanto el
+     * coleccionista como la fundación, siempre que el estado actual
+     * permita la transición a CANCELLED.
+     */
     @Transactional
     public LoanResponse cancel(Long loanId, String reason) {
         LoanRequest loan = findOrThrow(loanId);
@@ -191,7 +200,11 @@ public class LoanRequestService {
         return convertToResponse(loanRequestRepository.save(loan));
     }
 
-    /** Coleccionista marca la obra como lista para recoger (tras pago aprobado). */
+    /**
+     * El coleccionista indica que la obra está preparada para ser
+     * recogida. Marca la transición a READY_FOR_PICKUP cuando el
+     * presupuesto ya está aprobado.
+     */
     @Transactional
     public LoanResponse markReadyForPickup(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
@@ -202,10 +215,10 @@ public class LoanRequestService {
     }
 
     /**
-     * Museo inicia el retorno: el préstamo pasa a RETURNING y se genera
-     * automáticamente un Shipment de RETURN con la misma empresa de transporte
-     * que el OUTBOUND, en estado APPROVED (el coste del retorno se considera
-     * incluido en el presupuesto original).
+     * El museo inicia la devolución. Avanza el préstamo a RETURNING y
+     * crea automáticamente un envío de retorno asociado con la misma
+     * empresa de transporte; el coste de la devolución se considera
+     * incluido en el presupuesto original.
      */
     @Transactional
     public LoanResponse startReturn(Long loanId) {
@@ -215,15 +228,14 @@ public class LoanRequestService {
         loan.setStatus(LoanRequest.Status.RETURNING);
         LoanRequest saved = loanRequestRepository.save(loan);
 
-        // Crear el Shipment de retorno asociado.
         shipmentService.createReturnShipment(saved);
-
         return convertToResponse(saved);
     }
 
     /**
-     * Cierre del ciclo cuando el Shipment de RETURN llega a DELIVERED.
-     * Llamado por ShipmentService.confirmDelivery cuando el shipment es de retorno.
+     * Cierra el ciclo del préstamo cuando el envío de retorno se ha
+     * entregado al coleccionista. La llama {@link ShipmentService} al
+     * confirmar la entrega del envío RETURN.
      */
     @Transactional
     public void onReturnDelivered(LoanRequest loan) {
@@ -232,12 +244,9 @@ public class LoanRequestService {
         loanRequestRepository.save(loan);
     }
 
-    /* ========== ACCIONES DESDE ShipmentService (sincronización) ========== */
+    // ===== Sincronizaciones disparadas desde ShipmentService =====
 
-    /**
-     * Llamado por ShipmentService cuando el transportista propone presupuesto.
-     * Transición QUOTE_PENDING → QUOTE_PROPOSED.
-     */
+    /** Avanza el préstamo a QUOTE_PROPOSED cuando el transportista sube su presupuesto. */
     @Transactional
     public void onShipmentQuoted(LoanRequest loan) {
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.QUOTE_PROPOSED);
@@ -246,8 +255,9 @@ public class LoanRequestService {
     }
 
     /**
-     * Llamado por PaymentService (sub-fase 2.4) cuando el museo aprueba y paga.
-     * Transición QUOTE_PROPOSED → PAID.
+     * Avanza el préstamo a PAID cuando se aprueba el presupuesto del
+     * envío. Tras la transición notifica a las tres partes con el
+     * contrato definitivo en PDF.
      */
     @Transactional
     public void onPaymentSucceeded(LoanRequest loan) {
@@ -258,9 +268,10 @@ public class LoanRequestService {
     }
 
     /**
-     * Llamado cuando el museo rechaza el presupuesto.
-     * Si la empresa era obligatoria → CANCELLED. Si no → vuelve a QUOTE_PENDING
-     * para pedir presupuesto a otra empresa.
+     * Reacciona al rechazo de un presupuesto por parte del museo. Si
+     * la empresa de transporte era obligatoria, el préstamo se
+     * cancela. En caso contrario, vuelve a QUOTE_PENDING para que se
+     * pueda reasignar a otra empresa.
      */
     @Transactional
     public void onQuoteRejected(LoanRequest loan, String reason) {
@@ -277,7 +288,7 @@ public class LoanRequestService {
         loanRequestRepository.save(loan);
     }
 
-    /** Llamado por ShipmentService cuando el transportista marca recogida. */
+    /** Avanza el préstamo a IN_TRANSIT cuando el transportista confirma la recogida. */
     @Transactional
     public void onShipmentPickedUp(LoanRequest loan) {
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.IN_TRANSIT);
@@ -285,20 +296,24 @@ public class LoanRequestService {
         loanRequestRepository.save(loan);
     }
 
-    /** Llamado por ShipmentService cuando el museo confirma llegada. */
+    /**
+     * Avanza el préstamo a DELIVERED cuando el museo confirma la
+     * recepción, y a continuación lo deja en ON_LOAN para reflejar
+     * que la obra ya se encuentra en exposición.
+     */
     @Transactional
     public void onShipmentDelivered(LoanRequest loan) {
         stateMachine.validate(loan.getStatus(), LoanRequest.Status.DELIVERED);
         loan.setStatus(LoanRequest.Status.DELIVERED);
         loanRequestRepository.save(loan);
-        // Avance automático a ON_LOAN: el préstamo está activo en cuanto llega
         stateMachine.validate(LoanRequest.Status.DELIVERED, LoanRequest.Status.ON_LOAN);
         loan.setStatus(LoanRequest.Status.ON_LOAN);
         loanRequestRepository.save(loan);
     }
 
-    /* ========== LECTURAS ========== */
+    // ===== Lecturas =====
 
+    /** Devuelve la ficha de un préstamo si la sesión actual puede consultarlo. */
     @Transactional(readOnly = true)
     public LoanResponse getById(Long id) {
         LoanRequest loan = findOrThrow(id);
@@ -307,20 +322,20 @@ public class LoanRequestService {
     }
 
     /**
-     * Devuelve la entidad cruda (no DTO). Uso interno para generación de PDF
-     * o flujos que necesitan acceso a relaciones lazy dentro de su transacción.
+     * Devuelve la entidad sin convertir a DTO. Resulta útil para
+     * componer documentos como el contrato en PDF, que necesitan
+     * acceso a relaciones perezosas dentro de la misma transacción.
      */
     @Transactional(readOnly = true)
     public LoanRequest getEntityById(Long id) {
         LoanRequest loan = findOrThrow(id);
         requireLoanAccess(loan);
-        // Forzamos la carga de las relaciones que el PDF necesita,
-        // dentro de la transacción.
         loan.getArtwork().getCollector().getName();
         loan.getFoundation().getName();
         return loan;
     }
 
+    /** Devuelve los préstamos solicitados por una fundación concreta. */
     @Transactional(readOnly = true)
     public List<LoanResponse> getRequestsByFoundation(Long foundationId) {
         if (!currentUser.isAdmin()) {
@@ -330,6 +345,7 @@ public class LoanRequestService {
                 .map(this::convertToResponse).toList();
     }
 
+    /** Devuelve los préstamos cuyas obras pertenecen a un coleccionista. */
     @Transactional(readOnly = true)
     public List<LoanResponse> getRequestsByCollector(Long collectorId) {
         if (!currentUser.isAdmin()) {
@@ -339,7 +355,7 @@ public class LoanRequestService {
                 .map(this::convertToResponse).toList();
     }
 
-    /** Solo admin puede listar todos los préstamos. */
+    /** Devuelve todos los préstamos del sistema. Reservado al administrador. */
     @Transactional(readOnly = true)
     public List<LoanResponse> getAllLoanRequests() {
         if (!currentUser.isAdmin()) {
@@ -350,7 +366,7 @@ public class LoanRequestService {
                 .map(this::convertToResponse).toList();
     }
 
-    /* ========== HELPERS ========== */
+    // ===== Helpers privados =====
 
     private LoanRequest findOrThrow(Long id) {
         return loanRequestRepository.findById(id)
@@ -358,18 +374,16 @@ public class LoanRequestService {
     }
 
     /**
-     * Comprueba que el usuario actual puede VER este préstamo: ha de ser el
-     * coleccionista dueño, la fundación solicitante, la empresa de transporte
-     * de alguno de los shipments asociados, o un administrador.
+     * Verifica que el usuario actual puede consultar el préstamo. Es
+     * accesible para el coleccionista dueño, la fundación solicitante,
+     * cualquier empresa de transporte que haya participado en él y
+     * los administradores.
      */
     private void requireLoanAccess(LoanRequest loan) {
         if (currentUser.isAdmin()) return;
         Long collectorId = loan.getArtwork().getCollector().getId();
         Long foundationId = loan.getFoundation().getId();
         if (currentUser.isAnyOf(collectorId, foundationId)) return;
-        // Cualquier empresa de transporte que haya participado en el préstamo
-        // (incluida una que fue rechazada antes de reasignar) puede consultarlo.
-        // Recorremos sus propios envíos buscando uno asociado a este loan.
         boolean isTransport = shipmentRepository.findByTransportCompanyId(currentUser.currentId())
                 .stream()
                 .anyMatch(s -> loan.getId().equals(s.getLoanRequest().getId()));
@@ -380,8 +394,10 @@ public class LoanRequestService {
     }
 
     /**
-     * Notifica a las tres partes (fundación, coleccionista y transportista)
-     * con el contrato formal en PDF al confirmarse el pago.
+     * Genera el contrato del préstamo en PDF y lo envía por correo
+     * electrónico a la fundación, al coleccionista y a la empresa de
+     * transporte. Cualquier fallo en el envío se registra en el log
+     * sin interrumpir el avance del préstamo.
      */
     private void notifyPartiesOnAcceptance(LoanRequest loan) {
         try {
@@ -429,9 +445,13 @@ public class LoanRequestService {
         }
     }
 
+    /**
+     * Compone el DTO de respuesta de un préstamo. Para los envíos se
+     * elige siempre el más reciente de cada dirección, ya que tras una
+     * reasignación de transporte pueden existir varios envíos OUTBOUND
+     * y solo el último es el que está vivo en el flujo.
+     */
     private LoanResponse convertToResponse(LoanRequest l) {
-        // Siempre usamos el OUTBOUND más reciente: si hubo reasignación, el que
-        // está vivo es el último; los anteriores están en REJECTED.
         Shipment outbound = shipmentRepository
                 .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
                         l.getId(), Shipment.ShipmentDirection.OUTBOUND)

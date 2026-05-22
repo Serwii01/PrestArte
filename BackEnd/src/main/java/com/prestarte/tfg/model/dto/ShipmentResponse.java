@@ -3,6 +3,14 @@ package com.prestarte.tfg.model.dto;
 import lombok.*;
 import java.time.LocalDateTime;
 
+/**
+ * DTO público que representa un envío.
+ *
+ * Incluye la información necesaria para mostrar el detalle del envío
+ * (datos del préstamo, de la empresa de transporte, importe,
+ * seguro y estado actual) y los datos finales de entrega cuando ya se
+ * ha confirmado la recepción.
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,7 +25,7 @@ public class ShipmentResponse {
     private String transportCompanyName;
     private String artworkTitle;
 
-    // Datos económicos y seguro
+    // Datos económicos y de seguro
     private Double price;
     private Double insuranceCost;
     private Double insuranceValue;
@@ -30,7 +38,7 @@ public class ShipmentResponse {
     private LocalDateTime deliveryDate;
     private LocalDateTime createdAt;
 
-    // --- AÑADE ESTOS DOS CAMPOS PARA EL DASHBOARD ---
+    // Fechas del préstamo asociado, mostradas en el panel de la empresa
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

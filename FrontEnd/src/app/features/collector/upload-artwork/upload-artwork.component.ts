@@ -43,8 +43,23 @@ export class UploadArtworkComponent implements OnInit {
   /** Empresas de transporte disponibles para el desplegable. */
   protected readonly companies = signal<TransportCompanyProfile[]>([]);
 
-  /** Archivos seleccionados (preview en cliente antes de subir). */
-  protected files: Array<{ file: File; previewUrl: string }> = [];
+  /** Estándar mínimo de resolución (por debajo, aviso amarillo). */
+  protected readonly MIN_WIDTH = 1200;
+  protected readonly MIN_HEIGHT = 900;
+  /** Resolución recomendada (objetivo de calidad para contrato y zoom). */
+  protected readonly RECOMMENDED_WIDTH = 2000;
+  protected readonly RECOMMENDED_HEIGHT = 1500;
+  /** Tamaño máximo aceptado por el back (multipart limit). */
+  protected readonly MAX_FILE_MB = 10;
+
+  /**
+   * Archivos seleccionados (preview en cliente antes de subir).
+   * Usamos signal para que las dimensiones leídas asíncronamente disparen
+   * recompute del template (avisos low-res, etc.).
+   */
+  protected readonly files = signal<
+    Array<{ file: File; previewUrl: string; width?: number; height?: number; oversized?: boolean }>
+  >([]);
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -112,16 +127,44 @@ export class UploadArtworkComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
     const list = Array.from(input.files).filter((f) => f.type.startsWith('image/'));
+    const maxBytes = this.MAX_FILE_MB * 1024 * 1024;
+
     list.forEach((f) => {
       const url = URL.createObjectURL(f);
-      this.files.push({ file: f, previewUrl: url });
+      const oversized = f.size > maxBytes;
+      // Insertamos primero el placeholder; las dimensiones se rellenan asíncronamente.
+      this.files.update((arr) => [...arr, { file: f, previewUrl: url, oversized }]);
+
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        this.files.update((arr) =>
+          arr.map((e) => (e.previewUrl === url ? { ...e, width: w, height: h } : e)),
+        );
+      };
+      img.src = url;
     });
     input.value = '';
   }
 
   removeFile(index: number): void {
-    URL.revokeObjectURL(this.files[index].previewUrl);
-    this.files.splice(index, 1);
+    const target = this.files()[index];
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    this.files.update((arr) => arr.filter((_, i) => i !== index));
+  }
+
+  /** ¿Esta imagen está por debajo del mínimo recomendado? */
+  isLowRes(f: { width?: number; height?: number }): boolean {
+    if (f.width == null || f.height == null) return false;
+    return f.width < this.MIN_WIDTH || f.height < this.MIN_HEIGHT;
+  }
+
+  /** Tamaño humano: "2.4 MB", "780 KB". */
+  humanSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   submit(): void {
@@ -192,7 +235,7 @@ export class UploadArtworkComponent implements OnInit {
       collectorId,
     };
 
-    const filesToUpload = this.files.map((f) => f.file);
+    const filesToUpload = this.files().map((f) => f.file);
 
     this.artworkService
       .create(body)
@@ -218,5 +261,20 @@ export class UploadArtworkComponent implements OnInit {
 
   fieldErr(name: string): string | null {
     return this.fieldErrors()[name] ?? null;
+  }
+
+  /** Selecciona/deselecciona la empresa preferida desde el grid de tarjetas. */
+  selectCompany(id: number): void {
+    const current = this.form.controls.preferredTransportCompanyId.value;
+    this.form.controls.preferredTransportCompanyId.setValue(current === id ? null : id);
+  }
+
+  /** Convierte "lienzo, escultura" en ["lienzo", "escultura"] (máx. 3 chips). */
+  splitSpecialties(text?: string): string[] {
+    return (text ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3);
   }
 }

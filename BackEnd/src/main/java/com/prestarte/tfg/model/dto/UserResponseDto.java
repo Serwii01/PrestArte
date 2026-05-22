@@ -8,12 +8,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO de salida para User. Nunca expone password ni archivos sensibles.
- * Devuelto por endpoints de admin, perfil propio y registro.
+ * DTO público de un usuario.
  *
- * Para KYB exponemos el id, nombre y tipo MIME del documento de verificación
- * (no los bytes): así el admin puede mostrar/descargar el adjunto desde
- * /api/files/{id} sin tener que hacer un endpoint extra.
+ * Lo utilizan los endpoints de administración, el registro y la
+ * consulta del perfil propio. No contiene nunca la contraseña ni los
+ * bytes del documento de verificación; en su lugar expone el
+ * identificador, el nombre y el tipo MIME, suficientes para que la
+ * interfaz pueda enlazar la descarga a través de
+ * {@code /api/files/{id}}.
  */
 @Data
 @Builder
@@ -29,10 +31,12 @@ public class UserResponseDto {
     private boolean enabled;
     private String taxId;
 
-    /** UUID del documento de verificación (KYB). Null si no hay. */
+    /** Identificador UUID del documento de verificación. */
     private String verificationFileId;
-    /** Nombre original del documento (ej. "DNI_juan.pdf"). */
+
+    /** Nombre original del documento (por ejemplo, "DNI_juan.pdf"). */
     private String verificationFileName;
-    /** Tipo MIME del documento (ej. "application/pdf", "image/jpeg"). */
+
+    /** Tipo MIME del documento (por ejemplo, "application/pdf"). */
     private String verificationFileType;
 }
