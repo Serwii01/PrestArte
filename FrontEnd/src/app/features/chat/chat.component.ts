@@ -26,11 +26,12 @@ import {
   MessageResponse,
 } from '../../core/models/chat.models';
 import { LoanResponse } from '../../core/models/loan.models';
+import { SecureFilePipe } from '../../shared/pipes/secure-file.pipe';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SecureFilePipe],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
@@ -232,10 +233,6 @@ export class ChatComponent implements OnInit, OnChanges, OnDestroy, AfterViewChe
 
   clearPendingFile(): void {
     this.pendingFile = null;
-  }
-
-  attachmentUrl(fileId: string): string {
-    return this.chatService.fileUrl(fileId);
   }
 
   isImageMessage(m: MessageResponse): boolean {

@@ -21,11 +21,23 @@ import {
   isArtworkDocument,
   isArtworkImage,
 } from '../../core/models/artwork.models';
+import { SecureFilePipe } from '../../shared/pipes/secure-file.pipe';
+import { FacilityReportService } from '../../core/services/facility-report.service';
+import { CompatibilityReport } from '../../core/models/facility.models';
+import { CompatibilityPanelComponent } from '../../shared/components/compatibility-panel/compatibility-panel.component';
+import { RequirementsSummaryComponent } from '../../shared/components/requirements-summary/requirements-summary.component';
 
 @Component({
   selector: 'app-artwork-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    SecureFilePipe,
+    CompatibilityPanelComponent,
+    RequirementsSummaryComponent,
+  ],
   templateUrl: './artwork-detail.component.html',
   styleUrl: './artwork-detail.component.scss',
 })
@@ -39,6 +51,9 @@ export class ArtworkDetailComponent implements OnInit {
   @Input() id?: string;
 
   protected readonly artwork = signal<ArtworkResponse | null>(null);
+  /** Solo para fundaciones: compatibilidad de la obra con sus instalaciones. */
+  protected readonly compatibility = signal<CompatibilityReport | null>(null);
+  private readonly facilityService = inject(FacilityReportService);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selectedFileIndex = signal(0);
@@ -98,9 +113,14 @@ export class ArtworkDetailComponent implements OnInit {
     return c ? CONDITION_LABEL[c] ?? c : '—';
   });
 
+  /**
+   * Valor exacto para el dueño y la administración; horquilla para el resto
+   * de usuarios verificados; nada para los visitantes.
+   */
   protected readonly formattedValue = computed(() => {
-    const v = this.artwork()?.estimatedValue;
-    if (v == null) return '—';
+    const a = this.artwork();
+    const v = a?.estimatedValue;
+    if (v == null) return a?.estimatedValueRange ?? 'Visible para instituciones verificadas';
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
@@ -131,6 +151,12 @@ export class ArtworkDetailComponent implements OnInit {
       next: (a) => {
         this.artwork.set(a);
         this.loading.set(false);
+        // Una fundación ve si sus instalaciones cumplen lo que exige la obra.
+        if (this.auth.role() === 'FOUNDATION') {
+          this.facilityService.artworkCompatibility(a.id).subscribe({
+            next: (r) => this.compatibility.set(r),
+          });
+        }
       },
       error: (err) => {
         this.loading.set(false);

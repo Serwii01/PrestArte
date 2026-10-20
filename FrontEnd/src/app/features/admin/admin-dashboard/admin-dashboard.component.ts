@@ -7,12 +7,13 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { Role, UserResponse } from '../../../core/models/user.models';
 import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
+import { SecureFilePipe } from '../../../shared/pipes/secure-file.pipe';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, StatCardComponent, ChatsShortcutComponent],
+  imports: [CommonModule, FormsModule, StatCardComponent, ChatsShortcutComponent, SecureFilePipe],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
 })
@@ -118,11 +119,6 @@ export class AdminDashboardComponent implements OnInit {
   /** Inicial para el avatar circular. */
   initial(name: string): string {
     return name?.charAt(0).toUpperCase() ?? '?';
-  }
-
-  /** URL pública del adjunto de verificación (GET /api/files/{id} es permitAll). */
-  fileUrl(fileId: string): string {
-    return `${environment.apiBaseUrl}/files/${fileId}`;
   }
 
   /** Detecta si el adjunto es imagen para renderizar miniatura inline. */

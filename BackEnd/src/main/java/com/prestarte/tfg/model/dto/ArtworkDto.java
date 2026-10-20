@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.dto;
 
+import com.prestarte.tfg.model.entity.LoanRequirements;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,11 +29,26 @@ public class ArtworkDto {
     /** Estado de conservación: EXCELLENT, GOOD, FAIR, POOR o DAMAGED. */
     private String condition;
     private String description;
+    /** Valor exacto: solo para el dueño y la administración. */
     private Double estimatedValue;
+    /** Horquilla de valor (p. ej. "100.000 – 250.000 €"): para usuarios verificados. */
+    private String estimatedValueRange;
     private String loanConditions;
+    /** Requisitos estructurados de préstamo; nulo si la obra no tiene ninguno. */
+    private LoanRequirements requirements;
+    /** Ciudad o provincia (pública). */
     private String location;
+    /** Dirección exacta: dueño, administración y transportista con envío en curso. */
+    private String pickupAddress;
+    /** Nulo para terceros cuando la obra es anónima. */
     private Long collectorId;
+    /** "Colección particular" para terceros cuando la obra es anónima. */
     private String collectorName;
+    /** Ajustes de privacidad: solo se devuelven al dueño y a la administración. */
+    private Boolean showOwnerName;
+    private String visibility;
+    /** NONE, INVENTORIED o BIC. */
+    private String heritageStatus;
     private Long preferredTransportCompanyId;
     private String preferredTransportCompanyName;
     private boolean preferredTransportMandatory;

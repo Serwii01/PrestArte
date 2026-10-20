@@ -166,14 +166,14 @@
         <label class="block">
           <p class="text-text-main text-sm font-medium pb-2">
             Documento de verificación <span class="text-red-500">*</span>
-            <span class="text-text-secondary font-normal">(PDF, JPG o PNG, máx. 10 MB)</span>
+            <span class="text-text-secondary font-normal">(PDF, JPG, PNG o WEBP, máx. 10 MB)</span>
           </p>
 
           <label class="flex items-center justify-center gap-3 h-24 rounded-lg border-2 border-dashed
                         hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-colors"
                  [class.border-red-400]="submitted() && !file"
                  [class.border-border]="!(submitted() && !file)">
-            <input type="file" (change)="onFile($event)" accept=".pdf,image/jpeg,image/png" class="hidden" />
+            <input type="file" (change)="onFile($event)" accept=".pdf,image/jpeg,image/png,image/webp" class="hidden" />
             <span class="material-symbols-outlined text-primary" style="font-size:28px;">upload_file</span>
             <div>
               @if (file) {

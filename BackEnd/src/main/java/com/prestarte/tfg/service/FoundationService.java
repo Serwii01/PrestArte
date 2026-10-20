@@ -1,10 +1,8 @@
 package com.prestarte.tfg.service;
 
-import com.prestarte.tfg.model.entity.Foundation;
 import com.prestarte.tfg.model.entity.LoanRequest;
-import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.model.entity.Shipment;
-import com.prestarte.tfg.repository.FoundationRepository;
+import com.prestarte.tfg.security.CurrentUser;
 import com.prestarte.tfg.repository.LoanRequestRepository;
 import com.prestarte.tfg.repository.ShipmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,37 +18,28 @@ import java.util.stream.Collectors;
 /**
  * Servicio que ofrece operaciones específicas para el rol fundación.
  *
- * Incluye el alta directa de fundaciones y la composición del panel
- * resumen, que separa las solicitudes a la espera de respuesta del
- * coleccionista y las obras que la fundación ya tiene físicamente en
- * su poder.
+ * Compone el panel resumen, que separa las solicitudes a la espera de
+ * respuesta del coleccionista y las obras que la fundación ya tiene
+ * físicamente en su poder.
  */
 @Service
 @RequiredArgsConstructor
 public class FoundationService {
 
-    private final FoundationRepository foundationRepository;
     private final LoanRequestRepository loanRequestRepository;
     private final ShipmentRepository shipmentRepository;
-
-    /** Persiste una nueva fundación con su rol correspondiente. */
-    @Transactional
-    public Foundation createFoundation(Foundation foundation) {
-        foundation.setRole(Role.FOUNDATION);
-        return foundationRepository.save(foundation);
-    }
-
-    /** Devuelve el listado completo de fundaciones registradas. */
-    public List<Foundation> getAllFoundations() {
-        return foundationRepository.findAll();
-    }
+    private final CurrentUser currentUser;
 
     /**
      * Construye el resumen del panel de la fundación: peticiones
-     * pendientes de respuesta y obras ya recibidas en el museo.
+     * pendientes de respuesta y obras ya recibidas en el museo. Solo lo
+     * puede consultar la propia fundación o un administrador.
      */
     @Transactional(readOnly = true)
     public FoundationDashboardDto getDashboard(Long foundationId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(foundationId);
+        }
         List<LoanRequest> pending = loanRequestRepository.findByFoundationIdAndStatus(
                 foundationId, LoanRequest.Status.REQUESTED);
 

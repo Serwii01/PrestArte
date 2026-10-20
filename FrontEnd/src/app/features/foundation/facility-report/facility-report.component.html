@@ -1,0 +1,171 @@
+<div class="mb-6">
+  <a routerLink="/app/foundation"
+     class="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    Volver a mi fundación
+  </a>
+</div>
+
+<header class="mb-6">
+  <h1 class="text-3xl md:text-4xl font-black text-text-main tracking-tight">Informe de instalaciones</h1>
+  <p class="text-text-secondary mt-2 max-w-3xl">
+    Describe una sola vez el clima, la iluminación, la seguridad y los accesos de tu sede.
+    PrestArte lo compara con los requisitos de cada obra antes de que la pidas, y el
+    coleccionista lo verá al revisar tu solicitud. Solo lo ven los coleccionistas a los que
+    pides obras.
+  </p>
+</header>
+
+@if (loading()) {
+  <div class="stitch-card p-12 text-center text-text-secondary">Cargando…</div>
+} @else {
+  @if (report(); as r) {
+    <div class="mb-4 text-sm rounded-lg p-3 flex items-start gap-2"
+         [class.bg-emerald-50]="r.current" [class.text-emerald-800]="r.current"
+         [class.bg-amber-50]="!r.current" [class.text-amber-900]="!r.current">
+      <span class="material-symbols-outlined" style="font-size:18px;">{{ r.current ? 'verified' : 'update' }}</span>
+      <span>
+        Última actualización: {{ r.updatedAt | date:'mediumDate' }}.
+        @if (!r.current) { Tiene más de 12 meses: revísalo y guárdalo de nuevo. }
+      </span>
+    </div>
+  } @else {
+    <div class="mb-4 text-sm rounded-lg p-3 bg-amber-50 text-amber-900 flex items-start gap-2">
+      <span class="material-symbols-outlined" style="font-size:18px;">info</span>
+      <span>Aún no has rellenado tu informe. Sin él, los coleccionistas no pueden saber si tu sede es adecuada.</span>
+    </div>
+  }
+
+  @if (message()) {
+    <div class="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">{{ message() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{{ errorMessage() }}</div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6 max-w-3xl">
+    <!-- Clima -->
+    <section class="stitch-card p-6">
+      <h2 class="text-lg font-bold text-text-main mb-1 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">thermostat</span> Clima
+      </h2>
+      <p class="text-sm text-text-secondary mb-4">Rango que la sala mantiene de forma estable todo el año.</p>
+      <label class="flex items-center gap-3 mb-4 cursor-pointer">
+        <input type="checkbox" formControlName="climateControlled" class="h-5 w-5 rounded border-border text-primary" />
+        <span class="text-sm font-medium text-text-main">Climatización controlada y registrada (datalogger)</span>
+      </label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">Temp. mín. (°C)</p>
+          <input type="number" step="0.5" formControlName="tempMin" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">Temp. máx. (°C)</p>
+          <input type="number" step="0.5" formControlName="tempMax" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">HR mín. (%)</p>
+          <input type="number" step="1" formControlName="rhMin" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">HR máx. (%)</p>
+          <input type="number" step="1" formControlName="rhMax" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+      </div>
+    </section>
+
+    <!-- Iluminación -->
+    <section class="stitch-card p-6">
+      <h2 class="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">light_mode</span> Iluminación
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+        <label class="block">
+          <p class="text-xs font-medium text-text-secondary pb-1">Luz mínima a la que podéis limitar una obra (lux)</p>
+          <input type="number" step="1" formControlName="minAchievableLux" placeholder="Ej. 50"
+                 class="w-full rounded-lg border border-border h-10 px-3 text-sm" />
+        </label>
+        <label class="flex items-center gap-3 cursor-pointer h-10">
+          <input type="checkbox" formControlName="uvFiltered" class="h-5 w-5 rounded border-border text-primary" />
+          <span class="text-sm font-medium text-text-main">Filtrado de radiación UV</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Seguridad -->
+    <section class="stitch-card p-6">
+      <h2 class="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">security</span> Seguridad
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @for (f of securityFlags; track f.key) {
+          <label class="flex items-center gap-3 p-3 rounded-lg border border-border cursor-pointer">
+            <input type="checkbox" [formControlName]="f.key" class="h-5 w-5 rounded border-border text-primary" />
+            <span class="material-symbols-outlined text-text-secondary" style="font-size:18px;">{{ f.icon }}</span>
+            <span class="text-sm font-medium text-text-main">{{ f.label }}</span>
+          </label>
+        }
+      </div>
+      <label class="block mt-4">
+        <p class="text-xs font-medium text-text-secondary pb-1">Sistema de extinción</p>
+        <input formControlName="fireSuppression" placeholder="Ej. gas inerte en salas, rociadores en zonas comunes"
+               class="w-full rounded-lg border border-border h-10 px-3 text-sm" />
+      </label>
+    </section>
+
+    <!-- Accesos -->
+    <section class="stitch-card p-6">
+      <h2 class="text-lg font-bold text-text-main mb-1 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">door_front</span> Accesos
+      </h2>
+      <p class="text-sm text-text-secondary mb-4">Medidas del paso más estrecho desde el muelle hasta la sala.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 items-end">
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">Ancho (cm)</p>
+          <input type="number" step="1" formControlName="accessWidthCm" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+        <label class="block"><p class="text-xs font-medium text-text-secondary pb-1">Alto (cm)</p>
+          <input type="number" step="1" formControlName="accessHeightCm" class="w-full rounded-lg border border-border h-10 px-3 text-sm" /></label>
+        <label class="flex items-center gap-3 cursor-pointer h-10">
+          <input type="checkbox" formControlName="loadingDock" class="h-5 w-5 rounded border-border text-primary" />
+          <span class="text-sm font-medium text-text-main">Muelle de carga</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Notas -->
+    <section class="stitch-card p-6">
+      <label class="block">
+        <p class="text-sm font-medium text-text-main pb-2">Observaciones</p>
+        <textarea rows="3" formControlName="notes"
+                  placeholder="Cualquier detalle útil para un prestador: horarios de carga, plantas, almacén de tránsito…"
+                  class="w-full rounded-lg border border-border px-3 py-2 text-sm"></textarea>
+      </label>
+    </section>
+
+    <div class="flex justify-end">
+      <button type="submit" [disabled]="form.invalid || saving()"
+              class="inline-flex items-center gap-2 rounded-lg h-11 px-6 bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+        <span class="material-symbols-outlined" style="font-size:18px;">save</span>
+        {{ saving() ? 'Guardando…' : 'Guardar informe' }}
+      </button>
+    </div>
+  </form>
+
+  <!-- PDF oficial -->
+  <section class="stitch-card p-6 mt-6 max-w-3xl">
+    <h2 class="text-lg font-bold text-text-main mb-1 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">picture_as_pdf</span> Informe oficial (opcional)
+    </h2>
+    <p class="text-sm text-text-secondary mb-4">
+      Si tu institución ya tiene un informe en formato estándar (UKRG, AAM…), adjúntalo en PDF.
+    </p>
+    @if (report()?.documentFileId) {
+      <a [href]="report()!.documentFileId | secureFile | async" [download]="report()!.documentFileName"
+         class="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline mb-3">
+        <span class="material-symbols-outlined" style="font-size:18px;">download</span>
+        {{ report()!.documentFileName }}
+      </a>
+    }
+    <label class="inline-flex items-center gap-2 rounded-lg h-10 px-4 border border-border text-sm font-medium cursor-pointer hover:bg-gray-soft"
+           [class.opacity-50]="!report() || uploading()">
+      <span class="material-symbols-outlined" style="font-size:18px;">upload_file</span>
+      {{ uploading() ? 'Subiendo…' : (report()?.documentFileId ? 'Sustituir PDF' : 'Adjuntar PDF') }}
+      <input type="file" accept="application/pdf" class="hidden" [disabled]="!report() || uploading()"
+             (change)="onDocumentSelected($event)" />
+    </label>
+    @if (!report()) {
+      <p class="text-xs text-text-secondary mt-2">Guarda primero el informe para poder adjuntar el PDF.</p>
+    }
+  </section>
+}

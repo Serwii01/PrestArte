@@ -1,3 +1,5 @@
+import { Condition } from './artwork.models';
+
 export type ShipmentStatus =
   | 'REQUESTED'
   | 'QUOTED'
@@ -19,6 +21,8 @@ export interface ShipmentResponse {
   transportCompanyName: string;
   artworkTitle: string;
   price?: number;
+  /** Precio comprometido para la devolución (en el envío de ida). */
+  returnPrice?: number | null;
   insuranceCost?: number;
   insuranceValue?: number;
   insurancePolicy?: string;
@@ -33,13 +37,38 @@ export interface ShipmentResponse {
 
 export interface ProposeQuoteRequest {
   price: number;
+  returnPrice: number;
   insuranceCost: number;
   insurancePolicy?: string;
 }
 
-export interface ConfirmReceiptRequest {
-  receivedBy: string;
+/**
+ * Informe de estado que acompaña a la recogida y a la entrega. Las fotos
+ * viajan aparte en la petición multipart.
+ */
+export interface ConditionReportRequest {
+  condition: Condition;
+  damageReported: boolean;
   notes?: string;
+  /** Solo en la entrega. */
+  receivedBy?: string;
+}
+
+export type ConditionReportStage = 'PICKUP' | 'DELIVERY';
+
+export interface ConditionReportResponse {
+  id: number;
+  shipmentId: number;
+  direction: ShipmentDirection;
+  stage: ConditionReportStage;
+  condition: Condition;
+  damageReported: boolean;
+  notes?: string | null;
+  authorName: string;
+  authorRole: string;
+  /** UUIDs de las fotos (requieren sesión: usar el pipe secureFile). */
+  photoIds: string[];
+  createdAt: string;
 }
 
 export const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {

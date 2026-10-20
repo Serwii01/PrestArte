@@ -10,6 +10,8 @@ interface NavLink {
   label: string;
   path: string;
   icon: string;
+  /** Activo solo en la ruta exacta (cuando otras rutas del menú cuelgan de ella). */
+  exact?: boolean;
 }
 
 @Component({
@@ -54,7 +56,9 @@ export class MainLayoutComponent {
         return [{ label: 'Mi colección', path: '/app/collector', icon: 'palette' }];
       case 'FOUNDATION':
         return [
-          { label: 'Mi fundación', path: '/app/foundation', icon: 'account_balance' },
+          { label: 'Mi fundación', path: '/app/foundation', icon: 'account_balance', exact: true },
+          { label: 'Exposiciones', path: '/app/foundation/exhibitions', icon: 'museum' },
+          { label: 'Instalaciones', path: '/app/foundation/facility', icon: 'fact_check' },
           // El catálogo es público y único: la única diferencia para una
           // fundación con sesión activa es que en la ficha aparece el botón
           // "Solicitar préstamo".

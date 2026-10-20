@@ -39,6 +39,14 @@ public class LoanRequest {
     private Foundation foundation;
 
     /** Fecha de inicio del préstamo. */
+    /**
+     * Exposición para la que se pide la obra. Obligatoria en las
+     * solicitudes nuevas; puede ser nula en préstamos antiguos.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exhibition_id")
+    private Exhibition exhibition;
+
     private LocalDate startDate;
 
     /** Fecha de fin del préstamo. */
@@ -61,12 +69,26 @@ public class LoanRequest {
     @Builder.Default
     private boolean transportCompanyMandatory = false;
 
+    /**
+     * Valor asegurado acordado (€). Lo fija el coleccionista al aceptar y
+     * ningún certificado de seguro puede cubrir menos.
+     */
+    private Double agreedValue;
+
     /** Motivo de cancelación. Solo se rellena cuando el estado es CANCELLED. */
     @Column(length = 500)
     private String cancellationReason;
 
     /** Momento en que se canceló el préstamo. */
     private LocalDateTime cancelledAt;
+
+    /**
+     * Motivo del rechazo, indicado por el coleccionista o generado por el
+     * sistema cuando la obra se reserva para otra solicitud en las mismas
+     * fechas.
+     */
+    @Column(length = 500)
+    private String rejectionReason;
 
     /** Estados posibles por los que pasa un préstamo a lo largo de su ciclo de vida. */
     public enum Status {

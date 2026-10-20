@@ -41,10 +41,6 @@ export class ChatService {
     );
   }
 
-  /** URL pública del archivo adjunto (sirve el endpoint GET /api/files/{id}). */
-  fileUrl(fileId: string): string {
-    return `${this.base}/files/${fileId}`;
-  }
 
   closeChat(chatSessionId: number): Observable<ChatSessionResponse> {
     return this.http.put<ChatSessionResponse>(`${this.base}/chat-sessions/${chatSessionId}/close`, {});

@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.dto;
 
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -32,4 +33,12 @@ public class UpdateTransportCompanyRequest {
 
     @Size(max = 50)
     private String coverageArea;
+
+    /** Tarifa orientativa: fijo por trayecto (€), precio por km y caja a medida (€). */
+    @PositiveOrZero
+    private Double tariffBaseFee;
+    @PositiveOrZero
+    private Double tariffPerKm;
+    @PositiveOrZero
+    private Double tariffCrate;
 }

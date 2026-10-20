@@ -1,5 +1,7 @@
 package com.prestarte.tfg.model.dto;
 
+import com.prestarte.tfg.model.entity.Artwork;
+import com.prestarte.tfg.model.entity.LoanRequirements;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -44,6 +46,19 @@ public class UpdateArtworkRequest {
 
     @Size(max = 150)
     private String location;
+
+    @Size(max = 500)
+    private String pickupAddress;
+
+    /** Si se envía, sustituye por completo los requisitos anteriores. */
+    private LoanRequirements requirements;
+
+    private Boolean showOwnerName;
+
+    private Artwork.Visibility visibility;
+
+    /** Protección patrimonial (BIC, inventariada...). Si no se indica, NONE. */
+    private Artwork.HeritageStatus heritageStatus;
 
     private Long preferredTransportCompanyId;
 

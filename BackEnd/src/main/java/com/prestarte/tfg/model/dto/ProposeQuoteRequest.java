@@ -20,6 +20,11 @@ public class ProposeQuoteRequest {
     @Positive(message = "El precio debe ser mayor que 0")
     private Double price;
 
+    /** Precio de la devolución: se presupuesta a la vez que la ida. */
+    @NotNull(message = "El precio de la devolución es obligatorio")
+    @PositiveOrZero(message = "El precio de la devolución no puede ser negativo")
+    private Double returnPrice;
+
     @NotNull(message = "El coste del seguro es obligatorio")
     @PositiveOrZero(message = "El coste del seguro no puede ser negativo")
     private Double insuranceCost;

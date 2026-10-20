@@ -16,6 +16,23 @@
   </a>
 </div>
 
+@if (facilityStatus() === 'missing' || facilityStatus() === 'outdated') {
+  <a routerLink="/app/foundation/facility"
+     class="mb-6 flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors">
+    <span class="material-symbols-outlined text-amber-700">fact_check</span>
+    <div>
+      <p class="text-sm font-bold text-amber-900">
+        {{ facilityStatus() === 'missing'
+          ? 'Completa tu informe de instalaciones'
+          : 'Tu informe de instalaciones tiene más de 12 meses' }}
+      </p>
+      <p class="text-sm text-amber-900">
+        Los coleccionistas lo usan para decidir si prestan sus obras. Sin él, tus solicitudes llegan con avisos.
+      </p>
+    </div>
+  </a>
+}
+
 <!-- Stat cards -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
   <app-stat-card label="Total solicitudes"

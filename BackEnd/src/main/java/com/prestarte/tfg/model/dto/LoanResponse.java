@@ -29,6 +29,13 @@ public class LoanResponse {
     private Long foundationId;
     private String foundationName;
 
+    /** Exposición para la que se pide la obra (nula en préstamos antiguos). */
+    private Long exhibitionId;
+    private String exhibitionTitle;
+    private String exhibitionVenue;
+    private LocalDate exhibitionOpeningDate;
+    private LocalDate exhibitionClosingDate;
+
     private LocalDate startDate;
     private LocalDate endDate;
     private String agreedConditions;
@@ -46,4 +53,7 @@ public class LoanResponse {
 
     private LocalDateTime cancelledAt;
     private String cancellationReason;
+    private String rejectionReason;
+    /** Valor asegurado acordado al aceptar (€). */
+    private Double agreedValue;
 }

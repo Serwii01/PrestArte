@@ -50,6 +50,31 @@
       </section>
 
       <section class="stitch-card p-6">
+        <h2 class="text-lg font-bold text-text-main mb-1">Tarifa orientativa</h2>
+        <p class="text-sm text-text-secondary mb-4">
+          Las fundaciones ven un coste estimado con tu tarifa antes de pedir una obra. No es vinculante:
+          el precio real lo fijas en cada presupuesto. Si lo dejas vacío se usa una tarifa de referencia.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Fijo por trayecto (€)</p>
+            <input type="number" step="1" formControlName="tariffBaseFee" placeholder="400"
+              class="w-full rounded-lg border border-border bg-white h-11 px-4 text-base" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Precio por km (€)</p>
+            <input type="number" step="0.1" formControlName="tariffPerKm" placeholder="1.8"
+              class="w-full rounded-lg border border-border bg-white h-11 px-4 text-base" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Caja a medida, ~1 m² (€)</p>
+            <input type="number" step="1" formControlName="tariffCrate" placeholder="1200"
+              class="w-full rounded-lg border border-border bg-white h-11 px-4 text-base" />
+          </label>
+        </div>
+      </section>
+
+      <section class="stitch-card p-6">
         <h2 class="text-lg font-bold text-text-main mb-4">Sobre la empresa</h2>
         <label class="block">
           <p class="text-text-main text-sm font-medium pb-2">Descripción</p>

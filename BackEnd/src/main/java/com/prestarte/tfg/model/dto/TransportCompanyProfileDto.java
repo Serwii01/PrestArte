@@ -26,4 +26,7 @@ public class TransportCompanyProfileDto {
     private String specialties;
     private String locations;
     private String coverageArea;
+    private Double tariffBaseFee;
+    private Double tariffPerKm;
+    private Double tariffCrate;
 }

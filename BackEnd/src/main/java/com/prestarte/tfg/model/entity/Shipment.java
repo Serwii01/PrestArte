@@ -54,8 +54,15 @@ public class Shipment {
 
     // ===== Datos económicos y de seguro =====
 
-    /** Precio total del servicio de transporte. */
+    /** Precio del trayecto de este envío (en el envío de ida, la ida). */
     private Double price;
+
+    /**
+     * Solo en el envío de ida: precio comprometido para la devolución.
+     * Se presupuesta junto con la ida para que el coste total se conozca
+     * desde el principio; el envío de vuelta lo hereda.
+     */
+    private Double returnPrice;
 
     /** Coste de la póliza de seguro contratada. */
     private Double insuranceCost;

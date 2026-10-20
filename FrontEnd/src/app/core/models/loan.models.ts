@@ -22,6 +22,12 @@ export interface LoanResponse {
   collectorName: string;
   foundationId: number;
   foundationName: string;
+  /** Exposición para la que se pide la obra (nula en préstamos antiguos). */
+  exhibitionId?: number | null;
+  exhibitionTitle?: string | null;
+  exhibitionVenue?: string | null;
+  exhibitionOpeningDate?: string | null;
+  exhibitionClosingDate?: string | null;
   startDate: string;
   endDate: string;
   agreedConditions?: string;
@@ -33,11 +39,27 @@ export interface LoanResponse {
   returnShipmentId?: number | null;
   cancelledAt?: string | null;
   cancellationReason?: string | null;
+  rejectionReason?: string | null;
+  /** Valor asegurado acordado al aceptar (€). */
+  agreedValue?: number | null;
+}
+
+/** Entrada del historial del préstamo. */
+export interface LoanEventResponse {
+  id: number;
+  fromStatus?: LoanStatus | null;
+  toStatus?: LoanStatus | null;
+  message: string;
+  /** null cuando el hito lo generó el sistema. */
+  actorName?: string | null;
+  actorRole?: string | null;
+  createdAt: string;
 }
 
 export interface CreateLoanRequest {
   artworkId: number;
   foundationId: number;
+  exhibitionId: number;
   startDate: string; // ISO yyyy-MM-dd
   endDate: string;
   agreedConditions?: string;
@@ -46,6 +68,8 @@ export interface CreateLoanRequest {
 export interface AcceptLoanRequest {
   transportCompanyId: number;
   transportCompanyMandatory: boolean;
+  /** Valor asegurado acordado (€). Si no se indica, el valor estimado de la obra. */
+  agreedValue?: number;
 }
 
 export interface CancelLoanRequest {
@@ -68,3 +92,55 @@ export const LOAN_STATUS_LABEL: Record<LoanStatus, string> = {
   REJECTED: 'Rechazado',
   CANCELLED: 'Cancelado',
 };
+
+export type CoverageType = 'BORROWER_POLICY' | 'LENDER_POLICY' | 'STATE_INDEMNITY';
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export const COVERAGE_LABEL: Record<CoverageType, string> = {
+  BORROWER_POLICY: 'Póliza de la institución',
+  LENDER_POLICY: 'Póliza del prestador',
+  STATE_INDEMNITY: 'Garantía del Estado',
+};
+
+export interface InsuranceCertificateRequest {
+  coverageType: CoverageType;
+  insurer: string;
+  policyNumber: string;
+  insuredAmount: number;
+  /** ISO yyyy-MM-dd */
+  coverageStart: string;
+  coverageEnd: string;
+}
+
+export interface ExportPermitRequest {
+  resolutionNumber: string;
+  issuedBy: string;
+  issueDate: string;
+  returnDeadline: string;
+}
+
+/** Estado del seguro y del permiso de exportación antes de que la obra salga. */
+export interface LoanDocumentsResponse {
+  agreedValue: number;
+  insurance?: (InsuranceCertificateRequest & {
+    id: number;
+    documentFileId: string;
+    documentFileName: string;
+    status: ReviewStatus;
+    reviewNote?: string | null;
+    uploadedByName: string;
+    createdAt: string;
+    reviewedAt?: string | null;
+  }) | null;
+  permitRequired: boolean;
+  permitReason: string;
+  permit?: (ExportPermitRequest & {
+    id: number;
+    documentFileId: string;
+    documentFileName: string;
+    uploadedByName: string;
+    createdAt: string;
+  }) | null;
+  readyForShipment: boolean;
+  missing: string[];
+}

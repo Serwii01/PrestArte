@@ -19,6 +19,10 @@ export interface TransportCompanyProfile {
   specialties?: string;
   locations?: string;
   coverageArea?: string;
+  /** Tarifa orientativa: fijo por trayecto (€), €/km y caja a medida (€). */
+  tariffBaseFee?: number | null;
+  tariffPerKm?: number | null;
+  tariffCrate?: number | null;
 }
 
 /** Body para PUT /api/transport-companies/{id}/profile. */
@@ -30,4 +34,8 @@ export interface UpdateTransportCompanyRequest {
   specialties?: string;
   locations?: string;
   coverageArea?: string;
+  /** Tarifa orientativa: fijo por trayecto (€), €/km y caja a medida (€). */
+  tariffBaseFee?: number | null;
+  tariffPerKm?: number | null;
+  tariffCrate?: number | null;
 }

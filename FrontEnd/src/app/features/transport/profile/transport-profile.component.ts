@@ -36,6 +36,10 @@ export class TransportProfileComponent implements OnInit {
     specialties: ['', [Validators.maxLength(500)]],
     locations: [''],
     coverageArea: ['', [Validators.maxLength(50)]],
+    /** Tarifa orientativa para las estimaciones de coste. */
+    tariffBaseFee: [null as number | null, [Validators.min(0)]],
+    tariffPerKm: [null as number | null, [Validators.min(0)]],
+    tariffCrate: [null as number | null, [Validators.min(0)]],
   });
 
   ngOnInit(): void {
@@ -51,6 +55,9 @@ export class TransportProfileComponent implements OnInit {
           specialties: p.specialties ?? '',
           locations: p.locations ?? '',
           coverageArea: p.coverageArea ?? '',
+          tariffBaseFee: p.tariffBaseFee ?? null,
+          tariffPerKm: p.tariffPerKm ?? null,
+          tariffCrate: p.tariffCrate ?? null,
         });
         this.loading.set(false);
       },

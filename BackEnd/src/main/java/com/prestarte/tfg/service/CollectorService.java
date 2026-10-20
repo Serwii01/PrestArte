@@ -6,10 +6,10 @@ import com.prestarte.tfg.model.dto.LoanResponse;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.ArtworkRepository;
-import com.prestarte.tfg.repository.CollectorRepository;
 import com.prestarte.tfg.repository.LoanRequestRepository;
 import com.prestarte.tfg.repository.ShipmentRepository;
-import jakarta.transaction.Transactional;
+import com.prestarte.tfg.security.CurrentUser;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,37 +18,28 @@ import java.util.List;
 /**
  * Servicio que ofrece operaciones específicas para el rol coleccionista.
  *
- * Cubre el alta directa de coleccionistas (utilizado por las rutinas
- * de inicialización y pruebas) y la composición del panel resumen que
- * agrupa sus obras, las solicitudes pendientes y los envíos activos.
+ * Compone el panel resumen que agrupa sus obras, las solicitudes
+ * pendientes y los envíos activos.
  */
 @Service
 @RequiredArgsConstructor
 public class CollectorService {
 
-    private final CollectorRepository collectorRepository;
     private final ArtworkRepository artworkRepository;
     private final LoanRequestRepository loanRequestRepository;
     private final ShipmentRepository shipmentRepository;
-
-    /** Persiste un nuevo coleccionista, asignándole el rol correspondiente. */
-    @Transactional
-    public Collector createCollector(Collector collector) {
-        collector.setRole(Role.COLLECTOR);
-        return collectorRepository.save(collector);
-    }
-
-    /** Devuelve el listado completo de coleccionistas. */
-    public List<Collector> getAllCollectors() {
-        return collectorRepository.findAll();
-    }
+    private final CurrentUser currentUser;
 
     /**
      * Compone el panel resumen del coleccionista: obras disponibles,
-     * solicitudes pendientes de respuesta y envíos en marcha. Se usa
-     * desde la pantalla principal del rol.
+     * solicitudes pendientes de respuesta y envíos en marcha. Solo lo
+     * puede consultar el propio coleccionista o un administrador.
      */
+    @Transactional
     public CollectorDashboardDTO getDashboard(Long collectorId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(collectorId);
+        }
         List<Artwork> myArtworks = artworkRepository.findByCollectorId(collectorId);
 
         List<LoanResponse> pending = loanRequestRepository.findAll().stream()

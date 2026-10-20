@@ -10,6 +10,9 @@ import { TransportCompanyService } from '../../../core/services/transport-compan
 import {
   Condition,
   CONDITION_OPTIONS,
+  ArtworkVisibility,
+  CourierMode,
+  HeritageStatus,
   CreateArtworkRequest,
 } from '../../../core/models/artwork.models';
 import { TransportCompanyProfile } from '../../../core/models/transport-company.models';
@@ -73,11 +76,43 @@ export class UploadArtworkComponent implements OnInit {
     description: [''],
     loanConditions: [''],
     location: ['', [Validators.maxLength(150)]],
+    /** Dirección exacta de recogida: privada. */
+    pickupAddress: ['', [Validators.maxLength(500)]],
+    /** Por defecto la obra aparece como "Colección particular". */
+    showOwnerName: [false],
+    visibility: ['PUBLIC' as ArtworkVisibility],
+    heritageStatus: ['NONE' as HeritageStatus],
+    /** Requisitos estructurados (se comparan con el informe de instalaciones). */
+    requirements: this.fb.group({
+      tempMin: [null as number | null, [Validators.min(-10), Validators.max(40)]],
+      tempMax: [null as number | null, [Validators.min(-10), Validators.max(40)]],
+      rhMin: [null as number | null, [Validators.min(0), Validators.max(100)]],
+      rhMax: [null as number | null, [Validators.min(0), Validators.max(100)]],
+      maxLux: [null as number | null, [Validators.min(0)]],
+      climateControl: [false],
+      displayCase: [false],
+      guards24h: [false],
+      cctv: [false],
+      intrusionAlarm: [false],
+      fireDetection: [false],
+      minNoticeDays: [null as number | null, [Validators.min(0), Validators.max(1095)]],
+      courierMode: ['NONE' as CourierMode],
+    }),
     /** Si está marcado, se exige una empresa de transporte concreta. */
     requirePreferredTransport: [false],
     preferredTransportCompanyId: [null as number | null],
     preferredTransportMandatory: [false],
   });
+
+  /** Requisitos sí/no, para pintarlos en bucle. */
+  protected readonly requirementFlags: { key: string; label: string }[] = [
+    { key: 'climateControl', label: 'Climatización controlada' },
+    { key: 'displayCase', label: 'Exposición en vitrina' },
+    { key: 'guards24h', label: 'Vigilancia 24 h' },
+    { key: 'cctv', label: 'Videovigilancia (CCTV)' },
+    { key: 'intrusionAlarm', label: 'Alarma de intrusión' },
+    { key: 'fireDetection', label: 'Detección de incendios' },
+  ];
 
   ngOnInit(): void {
     this.transportCompanyService.getAll().subscribe({
@@ -101,6 +136,25 @@ export class UploadArtworkComponent implements OnInit {
             description: a.description ?? '',
             loanConditions: a.loanConditions ?? '',
             location: a.location ?? '',
+            pickupAddress: a.pickupAddress ?? '',
+            showOwnerName: a.showOwnerName ?? false,
+            visibility: a.visibility ?? 'PUBLIC',
+            heritageStatus: a.heritageStatus ?? 'NONE',
+            requirements: {
+              tempMin: a.requirements?.tempMin ?? null,
+              tempMax: a.requirements?.tempMax ?? null,
+              rhMin: a.requirements?.rhMin ?? null,
+              rhMax: a.requirements?.rhMax ?? null,
+              maxLux: a.requirements?.maxLux ?? null,
+              climateControl: !!a.requirements?.climateControl,
+              displayCase: !!a.requirements?.displayCase,
+              guards24h: !!a.requirements?.guards24h,
+              cctv: !!a.requirements?.cctv,
+              intrusionAlarm: !!a.requirements?.intrusionAlarm,
+              fireDetection: !!a.requirements?.fireDetection,
+              minNoticeDays: a.requirements?.minNoticeDays ?? null,
+              courierMode: a.requirements?.courierMode ?? 'NONE',
+            },
             requirePreferredTransport: !!a.preferredTransportCompanyId,
             preferredTransportCompanyId: a.preferredTransportCompanyId ?? null,
             preferredTransportMandatory: a.preferredTransportMandatory ?? false,
@@ -195,6 +249,12 @@ export class UploadArtworkComponent implements OnInit {
           description: v.description || undefined,
           loanConditions: v.loanConditions || undefined,
           location: v.location || undefined,
+          // Cadena vacía (no undefined) para poder borrar la dirección.
+          pickupAddress: v.pickupAddress.trim(),
+          showOwnerName: v.showOwnerName,
+          visibility: v.visibility,
+          heritageStatus: v.heritageStatus,
+          requirements: v.requirements,
           preferredTransportCompanyId: v.requirePreferredTransport
             ? v.preferredTransportCompanyId
             : null,
@@ -226,6 +286,11 @@ export class UploadArtworkComponent implements OnInit {
       description: v.description || undefined,
       loanConditions: v.loanConditions || undefined,
       location: v.location || undefined,
+      pickupAddress: v.pickupAddress.trim() || undefined,
+      showOwnerName: v.showOwnerName,
+      visibility: v.visibility,
+      heritageStatus: v.heritageStatus,
+      requirements: v.requirements,
       preferredTransportCompanyId: v.requirePreferredTransport
         ? v.preferredTransportCompanyId
         : null,

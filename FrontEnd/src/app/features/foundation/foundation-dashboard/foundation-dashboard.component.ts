@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { LoanService } from '../../../core/services/loan.service';
+import { FacilityReportService } from '../../../core/services/facility-report.service';
 import { LoanResponse } from '../../../core/models/loan.models';
 import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
@@ -20,8 +21,12 @@ export class FoundationDashboardComponent implements OnInit {
   private readonly loanService = inject(LoanService);
   protected readonly auth = inject(AuthService);
 
+  private readonly facilityService = inject(FacilityReportService);
+
   protected readonly loans = signal<LoanResponse[]>([]);
   protected readonly loading = signal(true);
+  /** Estado del informe de instalaciones, para avisar si falta o caducó. */
+  protected readonly facilityStatus = signal<'unknown' | 'missing' | 'outdated' | 'ok'>('unknown');
 
   /* ===== Stats ===== */
 
@@ -59,6 +64,10 @@ export class FoundationDashboardComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+
+    this.facilityService.getMine().subscribe({
+      next: (r) => this.facilityStatus.set(!r ? 'missing' : r.current ? 'ok' : 'outdated'),
     });
   }
 }

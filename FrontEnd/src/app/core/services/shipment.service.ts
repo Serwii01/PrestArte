@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
-  ConfirmReceiptRequest,
+  ConditionReportRequest,
   ProposeQuoteRequest,
   ShipmentResponse,
 } from '../models/shipment.models';
@@ -35,16 +35,32 @@ export class ShipmentService {
     return this.http.post<ShipmentResponse>(`${this.base}/${id}/reject-quote`, body);
   }
 
-  markPickedUp(id: number): Observable<ShipmentResponse> {
-    return this.http.post<ShipmentResponse>(`${this.base}/${id}/picked-up`, {});
+  /** Confirma la recogida con el informe de estado de salida y sus fotos. */
+  markPickedUp(id: number, report: ConditionReportRequest, photos: File[]): Observable<ShipmentResponse> {
+    return this.http.post<ShipmentResponse>(
+      `${this.base}/${id}/picked-up`,
+      this.reportForm(report, photos),
+    );
   }
 
   markInTransit(id: number): Observable<ShipmentResponse> {
     return this.http.post<ShipmentResponse>(`${this.base}/${id}/in-transit`, {});
   }
 
-  confirmDelivery(id: number, body: ConfirmReceiptRequest): Observable<ShipmentResponse> {
-    return this.http.post<ShipmentResponse>(`${this.base}/${id}/delivered`, body);
+  /** Confirma la entrega con el informe de estado de llegada y sus fotos. */
+  confirmDelivery(id: number, report: ConditionReportRequest, photos: File[]): Observable<ShipmentResponse> {
+    return this.http.post<ShipmentResponse>(
+      `${this.base}/${id}/delivered`,
+      this.reportForm(report, photos),
+    );
+  }
+
+  /** Multipart: parte `data` en JSON + una parte `photos` por foto. */
+  private reportForm(report: ConditionReportRequest, photos: File[]): FormData {
+    const form = new FormData();
+    form.append('data', new Blob([JSON.stringify(report)], { type: 'application/json' }));
+    photos.forEach((p) => form.append('photos', p));
+    return form;
   }
 
   downloadContract(id: number): Observable<Blob> {

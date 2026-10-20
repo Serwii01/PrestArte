@@ -27,6 +27,8 @@ public class ShipmentResponse {
 
     // Datos económicos y de seguro
     private Double price;
+    /** Precio comprometido para la devolución (en el envío de ida). */
+    private Double returnPrice;
     private Double insuranceCost;
     private Double insuranceValue;
     private String insurancePolicy;

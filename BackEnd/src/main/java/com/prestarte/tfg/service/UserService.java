@@ -62,11 +62,11 @@ public class UserService {
         }
         request.setTaxId(taxId);
 
-        validateVerificationFile(file);
+        String fileType = UploadValidator.requireType(file, UploadValidator.IMAGES_AND_PDF);
 
         DBFile verificationDoc = DBFile.builder()
-                .fileName(file.getOriginalFilename())
-                .fileType(file.getContentType())
+                .fileName(UploadValidator.safeFileName(file.getOriginalFilename(), "verificacion"))
+                .fileType(fileType)
                 .data(file.getBytes())
                 .fileSize(file.getSize())
                 .build();
@@ -214,20 +214,6 @@ public class UserService {
             return control == (char) ('0' + controlDigit) || control == controlLetter;
         }
         return false;
-    }
-
-    /** Verifica que el documento de verificación venga presente y en un formato admitido. */
-    private void validateVerificationFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("El archivo de verificación es obligatorio");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null ||
-                !(contentType.equals("application/pdf")
-                        || contentType.equals("image/jpeg")
-                        || contentType.equals("image/png"))) {
-            throw new IllegalArgumentException("Tipo de archivo no permitido. Solo PDF, JPEG o PNG.");
-        }
     }
 
     /** Envía el correo informando al usuario de que su cuenta queda en revisión. */

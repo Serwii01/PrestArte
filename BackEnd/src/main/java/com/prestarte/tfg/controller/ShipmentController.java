@@ -1,7 +1,7 @@
 package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.CancelLoanRequest;
-import com.prestarte.tfg.model.dto.ConfirmReceiptRequest;
+import com.prestarte.tfg.model.dto.ConditionReportRequest;
 import com.prestarte.tfg.model.dto.ProposeQuoteRequest;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.Shipment;
@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.List;
 
@@ -71,10 +74,17 @@ public class ShipmentController {
         return ResponseEntity.ok(shipmentService.rejectQuote(id, reason));
     }
 
-    /** La empresa de transporte indica que ha recogido la obra. */
-    @PostMapping("/{id}/picked-up")
-    public ResponseEntity<ShipmentResponse> markPickedUp(@PathVariable Long id) {
-        return ResponseEntity.ok(shipmentService.markPickedUp(id));
+    /**
+     * La empresa de transporte indica que ha recogido la obra. Exige el
+     * informe de estado de salida: parte {@code data} (JSON) y una o
+     * varias partes {@code photos}.
+     */
+    @PostMapping(value = "/{id}/picked-up", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ShipmentResponse> markPickedUp(
+            @PathVariable Long id,
+            @Valid @RequestPart("data") ConditionReportRequest data,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) throws IOException {
+        return ResponseEntity.ok(shipmentService.markPickedUp(id, data, photos));
     }
 
     /** La empresa de transporte marca el envío como en tránsito. */
@@ -83,11 +93,16 @@ public class ShipmentController {
         return ResponseEntity.ok(shipmentService.markInTransit(id));
     }
 
-    /** Confirmación de entrega del envío en su destino. */
-    @PostMapping("/{id}/delivered")
-    public ResponseEntity<ShipmentResponse> confirmDelivery(@PathVariable Long id,
-                                                            @Valid @RequestBody ConfirmReceiptRequest body) {
-        return ResponseEntity.ok(shipmentService.confirmDelivery(id, body));
+    /**
+     * Confirmación de entrega del envío en su destino. Exige el informe
+     * de estado de llegada (con {@code receivedBy}) y sus fotografías.
+     */
+    @PostMapping(value = "/{id}/delivered", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ShipmentResponse> confirmDelivery(
+            @PathVariable Long id,
+            @Valid @RequestPart("data") ConditionReportRequest data,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) throws IOException {
+        return ResponseEntity.ok(shipmentService.confirmDelivery(id, data, photos));
     }
 
     // ===== Descarga del contrato en PDF =====

@@ -3,16 +3,36 @@ import { Component, computed, inject, Input, OnInit, signal } from '@angular/cor
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+
 import { ArtworkService } from '../../../core/services/artwork.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ExhibitionService } from '../../../core/services/exhibition.service';
+import { FacilityReportService } from '../../../core/services/facility-report.service';
 import { LoanService } from '../../../core/services/loan.service';
 import { ArtworkResponse, isArtworkImage } from '../../../core/models/artwork.models';
+import { ExhibitionResponse } from '../../../core/models/exhibition.models';
+import { CompatibilityReport } from '../../../core/models/facility.models';
 import { CreateLoanRequest } from '../../../core/models/loan.models';
+import { CompatibilityPanelComponent } from '../../../shared/components/compatibility-panel/compatibility-panel.component';
+import { CostEstimatePanelComponent } from '../../../shared/components/cost-estimate-panel/cost-estimate-panel.component';
+import { CostEstimate } from '../../../core/models/cost.models';
+import { RequirementsSummaryComponent } from '../../../shared/components/requirements-summary/requirements-summary.component';
+
+/** Margen propuesto antes y después de la exposición para transporte y montaje. */
+const INSTALL_MARGIN_DAYS = 14;
 
 @Component({
   selector: 'app-request-loan',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    CompatibilityPanelComponent,
+    CostEstimatePanelComponent,
+    RequirementsSummaryComponent,
+  ],
   templateUrl: './request-loan.component.html',
   styleUrl: './request-loan.component.scss',
 })
@@ -20,8 +40,14 @@ export class RequestLoanComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly artworkService = inject(ArtworkService);
   private readonly loanService = inject(LoanService);
+  private readonly exhibitionService = inject(ExhibitionService);
+  private readonly facilityService = inject(FacilityReportService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  protected readonly exhibitions = signal<ExhibitionResponse[]>([]);
+  protected readonly compatibility = signal<CompatibilityReport | null>(null);
+  protected readonly costEstimate = signal<CostEstimate | null>(null);
 
   /** Vinculado a `:artworkId` por withComponentInputBinding(). */
   @Input() artworkId?: string;
@@ -36,6 +62,7 @@ export class RequestLoanComponent implements OnInit {
   protected readonly todayIso = new Date().toISOString().slice(0, 10);
 
   protected readonly form = this.fb.nonNullable.group({
+    exhibitionId: [null as number | null, [Validators.required]],
     startDate: ['', [Validators.required]],
     endDate: ['', [Validators.required]],
     agreedConditions: [''],
@@ -239,6 +266,61 @@ export class RequestLoanComponent implements OnInit {
 
     // Refrescamos los computeds (duración, labels) cada vez que cambia el form.
     this.form.valueChanges.subscribe(() => this.formTick.update((n) => n + 1));
+
+    this.exhibitionService.getMine().subscribe({
+      next: (list) => {
+        // Solo exposiciones que aún no han cerrado.
+        const open = list.filter((e) => e.closingDate >= this.todayIso);
+        this.exhibitions.set(open);
+        if (open.length === 1) this.form.controls.exhibitionId.setValue(open[0].id);
+      },
+    });
+
+    // Al elegir exposición, proponemos fechas con margen para transporte y montaje.
+    // Coste y huella estimados para la exposición elegida.
+    this.form.controls.exhibitionId.valueChanges.subscribe((id) => {
+      const artworkId = Number(this.artworkId);
+      if (!id || !artworkId) return;
+      this.loanService.estimateForRequest(artworkId, id).subscribe({
+        next: (e) => this.costEstimate.set(e),
+        error: () => this.costEstimate.set(null),
+      });
+    });
+
+    this.form.controls.exhibitionId.valueChanges.subscribe((id) => {
+      const e = this.exhibitions().find((x) => x.id === id);
+      if (!e) return;
+      const start = this.addDays(e.openingDate, -INSTALL_MARGIN_DAYS);
+      this.form.patchValue({
+        startDate: start < this.todayIso ? this.todayIso : start,
+        endDate: this.addDays(e.closingDate, INSTALL_MARGIN_DAYS),
+      });
+      const d = new Date(this.form.controls.startDate.value);
+      this.viewMonth.set(d.getMonth());
+      this.viewYear.set(d.getFullYear());
+    });
+
+    // Compatibilidad con nuestras instalaciones (y antelación según la fecha de inicio).
+    this.form.controls.startDate.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((start) => this.loadCompatibility(start || undefined));
+    this.loadCompatibility();
+  }
+
+  private loadCompatibility(startDate?: string): void {
+    const id = Number(this.artworkId);
+    if (!id) return;
+    this.facilityService.artworkCompatibility(id, startDate).subscribe({
+      next: (r) => this.compatibility.set(r),
+      error: () => this.compatibility.set(null),
+    });
+  }
+
+  /** Suma días a una fecha yyyy-MM-dd. */
+  private addDays(iso: string, days: number): string {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return this.toIso(d);
   }
 
   /** "12 de mayo de 2026" o '' si la fecha no es válida. */
@@ -301,6 +383,7 @@ export class RequestLoanComponent implements OnInit {
     const body: CreateLoanRequest = {
       artworkId: a.id,
       foundationId,
+      exhibitionId: v.exhibitionId!,
       startDate: v.startDate,
       endDate: v.endDate,
       agreedConditions: v.agreedConditions || undefined,

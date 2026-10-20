@@ -1,5 +1,7 @@
 package com.prestarte.tfg.model.dto;
 
+import com.prestarte.tfg.model.entity.Artwork;
+import com.prestarte.tfg.model.entity.LoanRequirements;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -54,8 +56,25 @@ public class CreateArtworkRequest {
     private String loanConditions;
 
     /** Ciudad o localidad donde se encuentra físicamente la obra. */
+    /** Requisitos estructurados de préstamo (clima, luz, seguridad, antelación). */
+    private LoanRequirements requirements;
+
+    /** Ciudad o provincia (pública). */
     @Size(max = 150)
     private String location;
+
+    /** Dirección exacta de recogida (privada). */
+    @Size(max = 500)
+    private String pickupAddress;
+
+    /** Mostrar el nombre del coleccionista en lugar de "Colección particular". */
+    private boolean showOwnerName;
+
+    /** Visibilidad en el catálogo. Si no se indica, PUBLIC. */
+    private Artwork.Visibility visibility;
+
+    /** Protección patrimonial (BIC, inventariada...). Si no se indica, NONE. */
+    private Artwork.HeritageStatus heritageStatus;
 
     /** Empresa de transporte preferida por el coleccionista, si la hay. */
     private Long preferredTransportCompanyId;

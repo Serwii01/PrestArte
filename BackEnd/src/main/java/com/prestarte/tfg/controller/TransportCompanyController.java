@@ -2,7 +2,6 @@ package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.TransportCompanyProfileDto;
 import com.prestarte.tfg.model.dto.UpdateTransportCompanyRequest;
-import com.prestarte.tfg.model.entity.TransportCompany;
 import com.prestarte.tfg.service.TransportCompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,12 +35,6 @@ public class TransportCompanyController {
     @GetMapping("/{id}")
     public ResponseEntity<TransportCompanyProfileDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(transportCompanyService.getPublicProfile(id));
-    }
-
-    /** Da de alta una empresa directamente desde una llamada interna. */
-    @PostMapping
-    public ResponseEntity<TransportCompany> create(@RequestBody TransportCompany company) {
-        return ResponseEntity.ok(transportCompanyService.registerCompany(company));
     }
 
     /** Actualiza el perfil público de la empresa. */

@@ -1,7 +1,7 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
-import com.prestarte.tfg.model.dto.ConfirmReceiptRequest;
+import com.prestarte.tfg.model.dto.ConditionReportRequest;
 import com.prestarte.tfg.model.dto.ProposeQuoteRequest;
 import com.prestarte.tfg.model.dto.ShipmentResponse;
 import com.prestarte.tfg.model.entity.*;
@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +37,9 @@ public class ShipmentService {
     private final LoanRequestRepository loanRequestRepository;
     private final ShipmentStateMachine shipmentStateMachine;
     private final CurrentUser currentUser;
+    private final ConditionReportService conditionReportService;
+    private final LoanDocumentsService loanDocumentsService;
+    private final SupervisionService supervisionService;
 
     // Se inyecta con @Lazy porque existe una dependencia cíclica entre
     // ShipmentService y LoanRequestService.
@@ -57,7 +62,7 @@ public class ShipmentService {
                 .direction(Shipment.ShipmentDirection.OUTBOUND)
                 .trackingNumber("REQ-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .priceAccepted(false)
-                .insuranceValue(loan.getArtwork().getEstimatedValue())
+                .insuranceValue(loan.getAgreedValue() != null ? loan.getAgreedValue() : loan.getArtwork().getEstimatedValue())
                 .build();
         return shipmentRepository.save(shipment);
     }
@@ -83,7 +88,9 @@ public class ShipmentService {
                 .direction(Shipment.ShipmentDirection.RETURN)
                 .trackingNumber("RET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .priceAccepted(true)
-                .insuranceValue(loan.getArtwork().getEstimatedValue())
+                // La devolución se presupuestó y aprobó junto con la ida.
+                .price(outbound.getReturnPrice())
+                .insuranceValue(loan.getAgreedValue() != null ? loan.getAgreedValue() : loan.getArtwork().getEstimatedValue())
                 .build();
         return shipmentRepository.save(ret);
     }
@@ -102,12 +109,13 @@ public class ShipmentService {
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.QUOTED);
 
         shipment.setPrice(req.getPrice());
+        shipment.setReturnPrice(req.getReturnPrice());
         shipment.setInsuranceCost(req.getInsuranceCost());
         shipment.setInsurancePolicy(req.getInsurancePolicy());
         shipment.setStatus(Shipment.ShipmentStatus.QUOTED);
         shipmentRepository.save(shipment);
 
-        loanRequestService.onShipmentQuoted(shipment.getLoanRequest());
+        loanRequestService.onShipmentQuoted(shipment.getLoanRequest(), shipment);
         return mapToResponse(shipment);
     }
 
@@ -156,22 +164,46 @@ public class ShipmentService {
     }
 
     /**
-     * La empresa de transporte indica que ha recogido la obra. Solo el
-     * envío de ida desencadena la transición del préstamo a
-     * IN_TRANSIT; el envío de retorno mantiene al préstamo en
-     * RETURNING hasta que se confirme la entrega final.
+     * La empresa de transporte indica que ha recogido la obra y levanta
+     * el informe de estado de salida, con fotografías. Solo el envío de
+     * ida desencadena la transición del préstamo a IN_TRANSIT; el envío
+     * de retorno mantiene al préstamo en RETURNING hasta que se confirme
+     * la entrega final.
      */
     @Transactional
-    public ShipmentResponse markPickedUp(Long shipmentId) {
+    public ShipmentResponse markPickedUp(Long shipmentId, ConditionReportRequest report,
+                                         List<MultipartFile> photos) throws IOException {
         Shipment shipment = findOrThrow(shipmentId);
         currentUser.requireUserId(shipment.getTransportCompany().getId());
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.PICKED_UP);
 
+        boolean isReturn = shipment.getDirection() == Shipment.ShipmentDirection.RETURN;
+        LoanRequest loan = shipment.getLoanRequest();
+        if (!isReturn && loan.getStatus() != LoanRequest.Status.READY_FOR_PICKUP) {
+            throw new IllegalStateException(
+                    "El coleccionista todavía no ha indicado que la obra esté lista para recoger.");
+        }
+        if (!isReturn) {
+            // Doble comprobación: el seguro o el permiso podrían haber cambiado
+            // desde que el coleccionista marcó la obra como lista.
+            loanDocumentsService.requireReadyForShipment(loan);
+        }
+        // Con correo virtual, el coleccionista debe haber aprobado el embalaje.
+        supervisionService.requireApprovedPacking(loan, isReturn);
+
+        conditionReportService.create(shipment, ConditionReport.Stage.PICKUP, report, photos);
         shipment.setStatus(Shipment.ShipmentStatus.PICKED_UP);
         shipmentRepository.save(shipment);
 
-        if (shipment.getDirection() == Shipment.ShipmentDirection.OUTBOUND) {
-            loanRequestService.onShipmentPickedUp(shipment.getLoanRequest());
+        if (isReturn) {
+            loanRequestService.recordShipmentEvent(loan, shipment.getTransportCompany().getCompanyName()
+                    + " recoge la obra en la institución para devolverla y levanta el informe de estado."
+                    + damageSuffix(report));
+        } else {
+            loanRequestService.onShipmentPickedUp(loan, shipment);
+            if (report.isDamageReported()) {
+                loanRequestService.recordShipmentEvent(loan, "Incidencia en la recogida." + damageSuffix(report));
+            }
         }
         return mapToResponse(shipment);
     }
@@ -185,17 +217,24 @@ public class ShipmentService {
 
         shipment.setStatus(Shipment.ShipmentStatus.IN_TRANSIT);
         shipmentRepository.save(shipment);
+
+        boolean isReturn = shipment.getDirection() == Shipment.ShipmentDirection.RETURN;
+        loanRequestService.recordShipmentEvent(shipment.getLoanRequest(),
+                "La obra está en tránsito " + (isReturn ? "de vuelta al coleccionista" : "hacia la institución")
+                        + " (seguimiento " + shipment.getTrackingNumber() + ").");
         return mapToResponse(shipment);
     }
 
     /**
-     * Confirma la entrega de un envío. Si es el de ida, lo confirma el
-     * museo y el préstamo avanza a DELIVERED y luego a ON_LOAN. Si es
-     * el de retorno, lo confirma el coleccionista y el préstamo se
-     * cierra como RETURNED.
+     * Confirma la entrega de un envío y levanta el informe de estado de
+     * llegada, con fotografías. Si es el de ida, lo confirma el museo y
+     * el préstamo avanza a DELIVERED y luego a ON_LOAN. Si es el de
+     * retorno, lo confirma el coleccionista y el préstamo se cierra como
+     * RETURNED.
      */
     @Transactional
-    public ShipmentResponse confirmDelivery(Long shipmentId, ConfirmReceiptRequest request) {
+    public ShipmentResponse confirmDelivery(Long shipmentId, ConditionReportRequest report,
+                                            List<MultipartFile> photos) throws IOException {
         Shipment shipment = findOrThrow(shipmentId);
 
         boolean isReturn = shipment.getDirection() == Shipment.ShipmentDirection.RETURN;
@@ -206,16 +245,27 @@ public class ShipmentService {
 
         shipmentStateMachine.validate(shipment.getStatus(), Shipment.ShipmentStatus.DELIVERED);
 
+        String receivedBy = report != null && report.getReceivedBy() != null
+                ? report.getReceivedBy().trim() : "";
+        if (receivedBy.isEmpty()) {
+            throw new IllegalArgumentException("Indica quién recibe la obra.");
+        }
+
+        conditionReportService.create(shipment, ConditionReport.Stage.DELIVERY, report, photos);
         shipment.setStatus(Shipment.ShipmentStatus.DELIVERED);
-        shipment.setReceivedBy(request.getReceivedBy());
-        shipment.setNotes(request.getNotes());
+        shipment.setReceivedBy(receivedBy);
+        shipment.setNotes(report.getNotes());
         shipment.setDeliveryDate(LocalDateTime.now());
         shipmentRepository.save(shipment);
 
+        LoanRequest loan = shipment.getLoanRequest();
         if (isReturn) {
-            loanRequestService.onReturnDelivered(shipment.getLoanRequest());
+            loanRequestService.onReturnDelivered(loan, receivedBy);
         } else {
-            loanRequestService.onShipmentDelivered(shipment.getLoanRequest());
+            loanRequestService.onShipmentDelivered(loan, receivedBy);
+        }
+        if (report.isDamageReported()) {
+            loanRequestService.recordShipmentEvent(loan, "Incidencia en la entrega." + damageSuffix(report));
         }
         return mapToResponse(shipment);
     }
@@ -264,6 +314,14 @@ public class ShipmentService {
 
     // ===== Helpers privados =====
 
+    /** Texto que se añade al historial cuando el informe marca daños. */
+    private static String damageSuffix(ConditionReportRequest report) {
+        if (report == null || !report.isDamageReported()) return "";
+        String notes = report.getNotes() != null && !report.getNotes().isBlank()
+                ? " Observaciones: " + report.getNotes().trim() : "";
+        return " Se han notificado daños o incidencias en la obra." + notes;
+    }
+
     private Shipment findOrThrow(Long id) {
         return shipmentRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Envío", id));
@@ -298,6 +356,7 @@ public class ShipmentService {
                 .transportCompanyName(s.getTransportCompany().getCompanyName())
                 .artworkTitle(s.getLoanRequest().getArtwork().getTitle())
                 .price(s.getPrice())
+                .returnPrice(s.getReturnPrice())
                 .insuranceCost(s.getInsuranceCost())
                 .insuranceValue(s.getInsuranceValue())
                 .insurancePolicy(s.getInsurancePolicy())

@@ -1,6 +1,7 @@
 package com.prestarte.tfg.config;
 
 import com.prestarte.tfg.security.JwtAuthenticationFilter;
+import com.prestarte.tfg.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -54,7 +55,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos del flujo de autenticación.
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Descarga de archivos por UUID: accesible para mostrar imágenes.
+                        // Descarga de archivos por UUID: las fotos y documentos públicos se
+                        // sirven sin sesión; FileStorageService comprueba el resto.
                         .requestMatchers(HttpMethod.GET, "/api/files/*").permitAll()
                         // Las obras del catálogo y sus fichas son públicas; sin embargo,
                         // el listado por coleccionista exige sesión para evitar fugas.
@@ -68,6 +70,7 @@ public class SecurityConfig {
                         // Cualquier otro endpoint requiere autenticación válida.
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(new RateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

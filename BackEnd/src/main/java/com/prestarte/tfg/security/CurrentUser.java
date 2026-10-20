@@ -58,6 +58,17 @@ public class CurrentUser {
         return null;
     }
 
+    /** Rol del usuario autenticado, o {@code null} si no hay sesión. */
+    public Role roleOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return null;
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUser().getRole();
+        }
+        return null;
+    }
+
     /** Indica si la sesión actual pertenece a un administrador, o {@code false} si no hay sesión. */
     public boolean isAdminOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

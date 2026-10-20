@@ -149,12 +149,12 @@
             <div class="flex items-end gap-2 justify-end">
               <div class="max-w-[70%] bg-primary text-white rounded-2xl rounded-br-md px-4 py-2 shadow-sm">
                 @if (m.attachmentId && isImageMessage(m)) {
-                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener">
-                    <img [src]="attachmentUrl(m.attachmentId)" [alt]="m.attachmentFileName"
+                  <a [href]="m.attachmentId | secureFile | async" target="_blank" rel="noopener">
+                    <img [src]="m.attachmentId | secureFile | async" [alt]="m.attachmentFileName"
                          class="rounded-lg mb-2 max-h-80 object-cover" />
                   </a>
                 } @else if (m.attachmentId) {
-                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener" download
+                  <a [href]="m.attachmentId | secureFile | async" target="_blank" rel="noopener" [download]="m.attachmentFileName"
                      class="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
                     <span class="material-symbols-outlined" style="font-size:20px;">description</span>
                     <span class="text-xs font-bold truncate">{{ m.attachmentFileName }}</span>
@@ -177,12 +177,12 @@
               <div class="max-w-[70%] bg-white border border-border rounded-2xl rounded-bl-md px-4 py-2 shadow-sm">
                 <p class="text-[11px] font-bold text-primary mb-0.5">{{ m.senderName }}</p>
                 @if (m.attachmentId && isImageMessage(m)) {
-                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener">
-                    <img [src]="attachmentUrl(m.attachmentId)" [alt]="m.attachmentFileName"
+                  <a [href]="m.attachmentId | secureFile | async" target="_blank" rel="noopener">
+                    <img [src]="m.attachmentId | secureFile | async" [alt]="m.attachmentFileName"
                          class="rounded-lg mb-2 max-h-80 object-cover" />
                   </a>
                 } @else if (m.attachmentId) {
-                  <a [href]="attachmentUrl(m.attachmentId)" target="_blank" rel="noopener" download
+                  <a [href]="m.attachmentId | secureFile | async" target="_blank" rel="noopener" [download]="m.attachmentFileName"
                      class="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-gray-soft hover:bg-gray-200 transition-colors text-text-main">
                     <span class="material-symbols-outlined text-primary" style="font-size:20px;">description</span>
                     <span class="text-xs font-bold truncate">{{ m.attachmentFileName }}</span>
@@ -220,7 +220,7 @@
                       bg-gray-soft hover:bg-gray-200 text-text-main cursor-pointer
                       [&:has(input:disabled)]:opacity-50 [&:has(input:disabled)]:cursor-not-allowed">
           <input type="file" (change)="onFileSelected($event)" [disabled]="chatClosed()" class="hidden"
-                 accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
+                 accept="image/jpeg,image/png,image/webp,application/pdf" />
           <span class="material-symbols-outlined" style="font-size:20px;">attach_file</span>
         </label>
         <textarea

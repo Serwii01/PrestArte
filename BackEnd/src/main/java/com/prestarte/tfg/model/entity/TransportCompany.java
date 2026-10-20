@@ -54,4 +54,15 @@ public class TransportCompany extends User {
      */
     @Column(columnDefinition = "TEXT")
     private String locations;
+
+    // ===== Tarifa orientativa (para las estimaciones de coste) =====
+
+    /** Importe fijo por cada trayecto (€): salida del vehículo, manipulación, documentación. */
+    private Double tariffBaseFee;
+
+    /** Precio por kilómetro de un vehículo climatizado de arte (€/km). */
+    private Double tariffPerKm;
+
+    /** Precio de una caja de transporte a medida para una obra mediana (€). */
+    private Double tariffCrate;
 }

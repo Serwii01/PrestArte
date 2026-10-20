@@ -46,4 +46,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** Comprueba si ya existe una cuenta con ese DNI / NIE / CIF. */
     boolean existsByTaxId(String taxId);
+
+    /** Busca el usuario cuyo documento de verificación es el archivo indicado. */
+    Optional<User> findByVerificationFileId(String fileId);
 }

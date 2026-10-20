@@ -76,7 +76,13 @@ public class GlobalExceptionHandler {
         for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
             fields.put(fe.getField(), fe.getDefaultMessage());
         }
-        return build(HttpStatus.BAD_REQUEST, "Validación fallida", req, fields);
+        // El primer mensaje concreto es más útil para el usuario que un genérico.
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .filter(m -> m != null && !m.isBlank())
+                .findFirst()
+                .orElse("Validación fallida");
+        return build(HttpStatus.BAD_REQUEST, message, req, fields);
     }
 
     /** Archivo subido por encima del tamaño máximo permitido. */

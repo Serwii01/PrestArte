@@ -31,10 +31,12 @@ public class MessageService {
     private final ChatSessionRepository chatSessionRepository;
     private final UserRepository userRepository;
     private final DBFileRepository dbFileRepository;
+    private final ShipmentRepository shipmentRepository;
     private final CurrentUser currentUser;
     private final ChatSessionService chatSessionService;
 
     /** Devuelve el histórico de una sesión, accesible solo a sus participantes. */
+    @Transactional(readOnly = true)
     public List<MessageResponse> getMessagesByChatSessionId(Long chatSessionId) {
         ChatSession chat = chatSessionRepository.findById(chatSessionId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Sesión de chat", chatSessionId));
@@ -111,24 +113,22 @@ public class MessageService {
         if (chatSession.getEstado() == ChatSession.EstadoChat.CERRADO) {
             throw new IllegalStateException("No se pueden enviar mensajes a un chat cerrado");
         }
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Adjunto vacío o no proporcionado");
-        }
-
         chatSessionService.requireParticipant(chatSession.getLoanRequest());
+
+        String type = UploadValidator.requireType(file, UploadValidator.IMAGES_AND_PDF);
 
         User sender = userRepository.findById(currentUser.currentId())
                 .orElseThrow(() -> new AccessDeniedException("Sesión no reconocida"));
 
         DBFile dbFile = DBFile.builder()
-                .fileName(file.getOriginalFilename())
-                .fileType(file.getContentType())
+                .fileName(UploadValidator.safeFileName(file.getOriginalFilename(), "adjunto"))
+                .fileType(type)
                 .data(file.getBytes())
                 .fileSize(file.getSize())
                 .build();
         dbFileRepository.save(dbFile);
 
-        boolean isImage = file.getContentType() != null && file.getContentType().startsWith("image/");
+        boolean isImage = type.startsWith("image/");
         Message.TipoMensaje tipo = isImage ? Message.TipoMensaje.IMAGEN : Message.TipoMensaje.DOCUMENTO;
 
         Message msg = Message.builder()
@@ -149,7 +149,7 @@ public class MessageService {
                 .id(message.getId())
                 .chatSessionId(message.getChatSession().getId())
                 .senderId(message.getSender().getId())
-                .senderName(message.getSender().getName())
+                .senderName(senderNameFor(message))
                 .content(message.getContent())
                 .sentAt(message.getSentAt())
                 .tipo(message.getTipo())
@@ -157,5 +157,27 @@ public class MessageService {
                 .attachmentFileName(att != null ? att.getFileName() : null)
                 .attachmentFileType(att != null ? att.getFileType() : null)
                 .build();
+    }
+
+    /**
+     * Nombre del remitente respetando el anonimato del coleccionista: si
+     * la obra es anónima y el préstamo aún no se ha aceptado (no hay
+     * envío), los demás ven "Colección particular".
+     */
+    private String senderNameFor(Message message) {
+        User sender = message.getSender();
+        LoanRequest loan = message.getChatSession().getLoanRequest();
+        Long collectorId = loan.getArtwork().getCollector().getId();
+        if (!sender.getId().equals(collectorId)
+                || loan.getArtwork().isShowOwnerName()
+                || collectorId.equals(currentUser.currentIdOrNull())
+                || currentUser.isAdminOrNull()) {
+            return sender.getName();
+        }
+        boolean accepted = shipmentRepository
+                .findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loan.getId(), Shipment.ShipmentDirection.OUTBOUND)
+                .isPresent();
+        return accepted ? sender.getName() : ArtworkService.ANONYMOUS_OWNER;
     }
 }

@@ -1,7 +1,10 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
+import com.prestarte.tfg.model.dto.CompatibilityReport;
+import com.prestarte.tfg.model.dto.ConditionReportResponse;
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
+import com.prestarte.tfg.model.dto.LoanEventResponse;
 import com.prestarte.tfg.model.dto.LoanResponse;
 import com.prestarte.tfg.model.entity.*;
 import com.prestarte.tfg.repository.*;
@@ -13,8 +16,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Servicio que orquesta el ciclo de vida de un préstamo.
@@ -24,8 +31,9 @@ import java.util.List;
  * y elección de empresa de transporte, rechazos, cancelaciones,
  * reasignación de transporte tras un presupuesto rechazado, marcaje
  * de preparación, inicio y cierre del retorno. Cada acción comprueba
- * los permisos del usuario que la ejecuta y delega en
- * {@link LoanStateMachine} la validación de la transición.
+ * los permisos del usuario que la ejecuta, delega en
+ * {@link LoanStateMachine} la validación de la transición y deja
+ * constancia del hito en el historial ({@link LoanEventService}).
  */
 @Service
 @RequiredArgsConstructor
@@ -42,6 +50,11 @@ public class LoanRequestService {
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
     private final ShipmentService shipmentService;
+    private final LoanEventService loanEventService;
+    private final ConditionReportService conditionReportService;
+    private final ExhibitionService exhibitionService;
+    private final FacilityReportService facilityReportService;
+    private final LoanDocumentsService loanDocumentsService;
     private final LoanStateMachine stateMachine;
     private final CurrentUser currentUser;
 
@@ -51,8 +64,9 @@ public class LoanRequestService {
      * Crea una nueva solicitud de préstamo en estado REQUESTED.
      *
      * La acción la ejecuta la propia fundación; el método comprueba
-     * que la obra exista y esté disponible para préstamo antes de
-     * persistir la solicitud.
+     * que la obra exista, esté disponible para préstamo y no esté ya
+     * comprometida en esas fechas, y que la fundación no tenga ya otra
+     * solicitud pendiente para la misma obra y fechas.
      */
     @Transactional
     public LoanResponse createRequest(CreateLoanRequest dto) {
@@ -65,21 +79,63 @@ public class LoanRequestService {
             throw new IllegalStateException(
                     "Esta obra no está disponible para préstamo en este momento.");
         }
+        if (dto.getEndDate() == null || dto.getStartDate() == null
+                || !dto.getEndDate().isAfter(dto.getStartDate())) {
+            throw new IllegalArgumentException("La fecha de fin debe ser posterior a la de inicio.");
+        }
+        if (loanRequestRepository.existsOverlappingLoan(
+                artwork.getId(), null, dto.getStartDate(), dto.getEndDate())) {
+            throw new IllegalStateException(
+                    "La obra ya está reservada para otro préstamo en esas fechas.");
+        }
+        boolean duplicate = loanRequestRepository.findOverlapping(
+                        artwork.getId(), -1L, dto.getStartDate(), dto.getEndDate(),
+                        EnumSet.of(LoanRequest.Status.REQUESTED))
+                .stream()
+                .anyMatch(l -> l.getFoundation().getId().equals(dto.getFoundationId()));
+        if (duplicate) {
+            throw new IllegalStateException(
+                    "Ya tienes una solicitud pendiente para esta obra en esas fechas.");
+        }
+
+        Exhibition exhibition = exhibitionService.getForLoanRequest(dto.getExhibitionId(), dto.getFoundationId());
+        if (dto.getStartDate().isAfter(exhibition.getOpeningDate())
+                || dto.getEndDate().isBefore(exhibition.getClosingDate())) {
+            throw new IllegalArgumentException(
+                    "El préstamo debe cubrir toda la exposición (del " + exhibition.getOpeningDate()
+                            + " al " + exhibition.getClosingDate() + "), con margen para transporte y montaje.");
+        }
+
+        LoanRequirements req = artwork.getRequirements();
+        if (req != null && req.getMinNoticeDays() != null) {
+            long notice = ChronoUnit.DAYS.between(LocalDate.now(), dto.getStartDate());
+            if (notice < req.getMinNoticeDays()) {
+                throw new IllegalArgumentException(
+                        "Esta obra debe solicitarse con al menos " + req.getMinNoticeDays()
+                                + " días de antelación respecto al inicio del préstamo.");
+            }
+        }
 
         Foundation foundation = foundationRepository.findById(dto.getFoundationId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Fundación", dto.getFoundationId()));
 
-        LoanRequest request = LoanRequest.builder()
+        LoanRequest request = loanRequestRepository.save(LoanRequest.builder()
                 .artwork(artwork)
                 .foundation(foundation)
+                .exhibition(exhibition)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .agreedConditions(dto.getAgreedConditions())
                 .status(LoanRequest.Status.REQUESTED)
                 .transportCompanyMandatory(false)
-                .build();
+                .build());
 
-        return convertToResponse(loanRequestRepository.save(request));
+        loanEventService.recordTransition(request, null, LoanRequest.Status.REQUESTED,
+                foundation.getName() + " solicita el préstamo para la exposición «"
+                        + exhibition.getTitle() + "» (" + exhibition.getVenueName() + ", "
+                        + exhibition.getVenueCity() + "), del " + dto.getStartDate()
+                        + " al " + dto.getEndDate() + ".");
+        return convertToResponse(request);
     }
 
     // ===== Acciones del flujo (dispara el coleccionista o la fundación) =====
@@ -88,17 +144,20 @@ public class LoanRequestService {
      * El coleccionista acepta la solicitud y elige la empresa de
      * transporte. Tras la aceptación se crea de inmediato el envío
      * OUTBOUND en estado REQUESTED y el préstamo avanza a
-     * QUOTE_PENDING, a la espera del presupuesto. Antes de aceptar se
-     * comprueba que la obra no tenga otro préstamo aceptado en las
-     * mismas fechas.
+     * QUOTE_PENDING, a la espera del presupuesto.
+     *
+     * Antes de aceptar se comprueba que la obra no esté comprometida
+     * con otro préstamo en las mismas fechas. Después, el resto de
+     * solicitudes pendientes que se solapan se rechazan automáticamente
+     * para que esas fundaciones no se queden esperando.
      */
     @Transactional
-    public LoanResponse accept(Long loanId, Long transportCompanyId, boolean mandatory) {
+    public LoanResponse accept(Long loanId, Long transportCompanyId, boolean mandatory, Double agreedValue) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getArtwork().getCollector().getId());
 
         boolean overlapping = loanRequestRepository.existsOverlappingLoan(
-                loan.getArtwork().getId(), loan.getStartDate(), loan.getEndDate());
+                loan.getArtwork().getId(), loan.getId(), loan.getStartDate(), loan.getEndDate());
         if (overlapping) {
             throw new IllegalStateException(
                     "Esta obra ya está reservada para las fechas seleccionadas.");
@@ -107,26 +166,34 @@ public class LoanRequestService {
         TransportCompany company = transportCompanyRepository.findById(transportCompanyId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Empresa de transporte", transportCompanyId));
 
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.ACCEPTED);
-        loan.setStatus(LoanRequest.Status.ACCEPTED);
         loan.setTransportCompanyMandatory(mandatory);
-        loanRequestRepository.save(loan);
+        // El valor asegurado acordado: el que indique el coleccionista o, si no,
+        // el valor estimado de la obra. Ningún seguro podrá cubrir menos.
+        loan.setAgreedValue(agreedValue != null ? agreedValue : loan.getArtwork().getEstimatedValue());
+        transition(loan, LoanRequest.Status.ACCEPTED,
+                "El coleccionista acepta el préstamo con un valor asegurado de "
+                        + euros(loan.getAgreedValue()) + " y elige a " + company.getCompanyName()
+                        + (mandatory ? " como transportista obligatorio." : " como transportista."));
 
         shipmentService.createOutboundShipment(loan, company);
-        stateMachine.validate(LoanRequest.Status.ACCEPTED, LoanRequest.Status.QUOTE_PENDING);
-        loan.setStatus(LoanRequest.Status.QUOTE_PENDING);
+        transition(loan, LoanRequest.Status.QUOTE_PENDING,
+                "Se solicita presupuesto a " + company.getCompanyName() + ".");
 
-        return convertToResponse(loanRequestRepository.save(loan));
+        rejectOverlappingRequests(loan);
+        return convertToResponse(loan);
     }
 
     /** El coleccionista rechaza la solicitud de manera definitiva. */
     @Transactional
-    public LoanResponse reject(Long loanId) {
+    public LoanResponse reject(Long loanId, String reason) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getArtwork().getCollector().getId());
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.REJECTED);
-        loan.setStatus(LoanRequest.Status.REJECTED);
-        return convertToResponse(loanRequestRepository.save(loan));
+        String cleanReason = reason != null && !reason.isBlank() ? reason.trim() : null;
+        loan.setRejectionReason(cleanReason);
+        transition(loan, LoanRequest.Status.REJECTED,
+                "El coleccionista rechaza la solicitud"
+                        + (cleanReason != null ? ": " + cleanReason : "."));
+        return convertToResponse(loan);
     }
 
     /**
@@ -179,6 +246,8 @@ public class LoanRequestService {
         }
 
         shipmentService.createOutboundShipment(loan, company);
+        loanEventService.record(loan, "Se asigna una nueva empresa de transporte: "
+                + company.getCompanyName() + ". Se le solicita presupuesto.");
         return convertToResponse(loan);
     }
 
@@ -193,11 +262,14 @@ public class LoanRequestService {
         currentUser.requireAnyUserId(
                 loan.getArtwork().getCollector().getId(),
                 loan.getFoundation().getId());
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.CANCELLED);
-        loan.setStatus(LoanRequest.Status.CANCELLED);
+        String cleanReason = reason != null && !reason.isBlank() ? reason.trim() : null;
         loan.setCancelledAt(LocalDateTime.now());
-        loan.setCancellationReason(reason);
-        return convertToResponse(loanRequestRepository.save(loan));
+        loan.setCancellationReason(cleanReason);
+        boolean byCollector = currentUser.isAnyOf(loan.getArtwork().getCollector().getId());
+        transition(loan, LoanRequest.Status.CANCELLED,
+                (byCollector ? "El coleccionista" : "La fundación") + " cancela el préstamo"
+                        + (cleanReason != null ? ": " + cleanReason : "."));
+        return convertToResponse(loan);
     }
 
     /**
@@ -209,9 +281,10 @@ public class LoanRequestService {
     public LoanResponse markReadyForPickup(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getArtwork().getCollector().getId());
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.READY_FOR_PICKUP);
-        loan.setStatus(LoanRequest.Status.READY_FOR_PICKUP);
-        return convertToResponse(loanRequestRepository.save(loan));
+        loanDocumentsService.requireReadyForShipment(loan);
+        transition(loan, LoanRequest.Status.READY_FOR_PICKUP,
+                "El coleccionista indica que la obra está lista para su recogida.");
+        return convertToResponse(loan);
     }
 
     /**
@@ -224,12 +297,11 @@ public class LoanRequestService {
     public LoanResponse startReturn(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getFoundation().getId());
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNING);
-        loan.setStatus(LoanRequest.Status.RETURNING);
-        LoanRequest saved = loanRequestRepository.save(loan);
+        transition(loan, LoanRequest.Status.RETURNING,
+                "La fundación inicia la devolución de la obra.");
 
-        shipmentService.createReturnShipment(saved);
-        return convertToResponse(saved);
+        shipmentService.createReturnShipment(loan);
+        return convertToResponse(loan);
     }
 
     /**
@@ -238,20 +310,23 @@ public class LoanRequestService {
      * confirmar la entrega del envío RETURN.
      */
     @Transactional
-    public void onReturnDelivered(LoanRequest loan) {
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.RETURNED);
-        loan.setStatus(LoanRequest.Status.RETURNED);
-        loanRequestRepository.save(loan);
+    public void onReturnDelivered(LoanRequest loan, String receivedBy) {
+        transition(loan, LoanRequest.Status.RETURNED,
+                "El coleccionista confirma que la obra ha vuelto"
+                        + (receivedBy != null ? " (recibida por " + receivedBy + ")" : "")
+                        + ". Préstamo cerrado.");
     }
 
     // ===== Sincronizaciones disparadas desde ShipmentService =====
 
     /** Avanza el préstamo a QUOTE_PROPOSED cuando el transportista sube su presupuesto. */
     @Transactional
-    public void onShipmentQuoted(LoanRequest loan) {
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.QUOTE_PROPOSED);
-        loan.setStatus(LoanRequest.Status.QUOTE_PROPOSED);
-        loanRequestRepository.save(loan);
+    public void onShipmentQuoted(LoanRequest loan, Shipment shipment) {
+        transition(loan, LoanRequest.Status.QUOTE_PROPOSED,
+                shipment.getTransportCompany().getCompanyName() + " envía su presupuesto: "
+                        + euros(shipment.getPrice()) + " de ida, "
+                        + euros(shipment.getReturnPrice()) + " de vuelta y "
+                        + euros(shipment.getInsuranceCost()) + " de seguro.");
     }
 
     /**
@@ -261,9 +336,8 @@ public class LoanRequestService {
      */
     @Transactional
     public void onPaymentSucceeded(LoanRequest loan) {
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.PAID);
-        loan.setStatus(LoanRequest.Status.PAID);
-        loanRequestRepository.save(loan);
+        transition(loan, LoanRequest.Status.PAID,
+                "La fundación aprueba el presupuesto. Contrato formalizado y enviado a las partes.");
         notifyPartiesOnAcceptance(loan);
     }
 
@@ -275,25 +349,27 @@ public class LoanRequestService {
      */
     @Transactional
     public void onQuoteRejected(LoanRequest loan, String reason) {
+        String cleanReason = reason != null && !reason.isBlank() ? reason.trim() : null;
+        String suffix = cleanReason != null ? ": " + cleanReason : ".";
         if (loan.isTransportCompanyMandatory()) {
-            stateMachine.validate(loan.getStatus(), LoanRequest.Status.CANCELLED);
-            loan.setStatus(LoanRequest.Status.CANCELLED);
             loan.setCancelledAt(LocalDateTime.now());
-            loan.setCancellationReason(reason != null ? reason
+            loan.setCancellationReason(cleanReason != null ? cleanReason
                     : "Presupuesto rechazado y la empresa de transporte era obligatoria.");
+            transition(loan, LoanRequest.Status.CANCELLED,
+                    "La fundación rechaza el presupuesto y, como el transportista era obligatorio, "
+                            + "el préstamo se cancela" + suffix);
         } else {
-            stateMachine.validate(loan.getStatus(), LoanRequest.Status.QUOTE_PENDING);
-            loan.setStatus(LoanRequest.Status.QUOTE_PENDING);
+            transition(loan, LoanRequest.Status.QUOTE_PENDING,
+                    "La fundación rechaza el presupuesto" + suffix);
         }
-        loanRequestRepository.save(loan);
     }
 
     /** Avanza el préstamo a IN_TRANSIT cuando el transportista confirma la recogida. */
     @Transactional
-    public void onShipmentPickedUp(LoanRequest loan) {
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.IN_TRANSIT);
-        loan.setStatus(LoanRequest.Status.IN_TRANSIT);
-        loanRequestRepository.save(loan);
+    public void onShipmentPickedUp(LoanRequest loan, Shipment shipment) {
+        transition(loan, LoanRequest.Status.IN_TRANSIT,
+                shipment.getTransportCompany().getCompanyName()
+                        + " recoge la obra y levanta el informe de estado de salida.");
     }
 
     /**
@@ -302,13 +378,46 @@ public class LoanRequestService {
      * que la obra ya se encuentra en exposición.
      */
     @Transactional
-    public void onShipmentDelivered(LoanRequest loan) {
-        stateMachine.validate(loan.getStatus(), LoanRequest.Status.DELIVERED);
-        loan.setStatus(LoanRequest.Status.DELIVERED);
-        loanRequestRepository.save(loan);
-        stateMachine.validate(LoanRequest.Status.DELIVERED, LoanRequest.Status.ON_LOAN);
-        loan.setStatus(LoanRequest.Status.ON_LOAN);
-        loanRequestRepository.save(loan);
+    public void onShipmentDelivered(LoanRequest loan, String receivedBy) {
+        transition(loan, LoanRequest.Status.DELIVERED,
+                "La fundación confirma la recepción de la obra"
+                        + (receivedBy != null ? " (recibida por " + receivedBy + ")" : "")
+                        + " y levanta el informe de estado de llegada.");
+        transition(loan, LoanRequest.Status.ON_LOAN, "La obra queda en préstamo en la institución.");
+    }
+
+    /** Registra en el historial un hito del envío que no cambia el estado del préstamo. */
+    @Transactional
+    public void recordShipmentEvent(LoanRequest loan, String message) {
+        loanEventService.record(loan, message);
+    }
+
+    // ===== Historial e informes de estado =====
+
+    /** Historial del préstamo, si la sesión actual puede consultarlo. */
+    @Transactional(readOnly = true)
+    public List<LoanEventResponse> getHistory(Long loanId) {
+        requireLoanAccess(findOrThrow(loanId));
+        return loanEventService.getHistory(loanId);
+    }
+
+    /**
+     * Compatibilidad entre los requisitos de la obra y las instalaciones
+     * de la fundación que la pide, si la sesión actual puede consultar el
+     * préstamo. Es lo que ve el coleccionista antes de aceptar.
+     */
+    @Transactional(readOnly = true)
+    public CompatibilityReport getCompatibility(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        requireLoanAccess(loan);
+        return facilityReportService.checkLoan(loan);
+    }
+
+    /** Informes de estado del préstamo, si la sesión actual puede consultarlo. */
+    @Transactional(readOnly = true)
+    public List<ConditionReportResponse> getConditionReports(Long loanId) {
+        requireLoanAccess(findOrThrow(loanId));
+        return conditionReportService.getByLoan(loanId);
     }
 
     // ===== Lecturas =====
@@ -367,6 +476,60 @@ public class LoanRequestService {
     }
 
     // ===== Helpers privados =====
+
+    /**
+     * Valida la transición con la máquina de estados, la aplica y la
+     * deja registrada en el historial con el usuario de la sesión.
+     */
+    private void transition(LoanRequest loan, LoanRequest.Status to, String message) {
+        LoanRequest.Status from = loan.getStatus();
+        stateMachine.validate(from, to);
+        loan.setStatus(to);
+        loanRequestRepository.save(loan);
+        loanEventService.recordTransition(loan, from, to, message);
+    }
+
+    /**
+     * Rechaza automáticamente las solicitudes pendientes de la misma obra
+     * cuyas fechas se solapan con el préstamo recién aceptado, y avisa por
+     * email a las fundaciones afectadas.
+     */
+    private void rejectOverlappingRequests(LoanRequest accepted) {
+        List<LoanRequest> pending = loanRequestRepository.findOverlapping(
+                accepted.getArtwork().getId(), accepted.getId(),
+                accepted.getStartDate(), accepted.getEndDate(),
+                EnumSet.of(LoanRequest.Status.REQUESTED));
+
+        String reason = "La obra se ha reservado para otra institución en fechas que coinciden con tu solicitud.";
+        for (LoanRequest other : pending) {
+            LoanRequest.Status from = other.getStatus();
+            stateMachine.validate(from, LoanRequest.Status.REJECTED);
+            other.setStatus(LoanRequest.Status.REJECTED);
+            other.setRejectionReason(reason);
+            loanRequestRepository.save(other);
+            loanEventService.recordSystemTransition(other, from, LoanRequest.Status.REJECTED,
+                    "Solicitud rechazada automáticamente: " + reason);
+
+            String email = other.getFoundation().getEmail();
+            if (email != null) {
+                emailService.sendSimpleEmail(email,
+                        "Solicitud de préstamo no disponible: " + other.getArtwork().getTitle(),
+                        "Hola " + other.getFoundation().getName() + ",\n\n" +
+                        "Tu solicitud de préstamo de \"" + other.getArtwork().getTitle() + "\" del " +
+                        other.getStartDate() + " al " + other.getEndDate() + " ya no puede atenderse: " +
+                        reason + "\n\nPuedes solicitarla para otras fechas desde el catálogo.\n\n" +
+                        "Un saludo,\nEl equipo de Prestarte.");
+            }
+        }
+        if (!pending.isEmpty()) {
+            log.info("Préstamo {} aceptado: {} solicitudes solapadas rechazadas automáticamente.",
+                    accepted.getId(), pending.size());
+        }
+    }
+
+    private static String euros(Double amount) {
+        return amount == null ? "—" : String.format(Locale.forLanguageTag("es-ES"), "%,.2f €", amount);
+    }
 
     private LoanRequest findOrThrow(Long id) {
         return loanRequestRepository.findById(id)
@@ -461,13 +624,28 @@ public class LoanRequestService {
                         l.getId(), Shipment.ShipmentDirection.RETURN)
                 .orElse(null);
 
+        // Si la obra es anónima, la identidad del coleccionista solo se
+        // revela a terceros cuando acepta el préstamo (existe envío).
+        Long collectorId = l.getArtwork().getCollector().getId();
+        boolean revealOwner = l.getArtwork().isShowOwnerName()
+                || outbound != null
+                || currentUser.isAdminOrNull()
+                || collectorId.equals(currentUser.currentIdOrNull());
+
         return LoanResponse.builder()
                 .id(l.getId())
                 .artworkId(l.getArtwork().getId())
                 .artworkTitle(l.getArtwork().getTitle())
                 .artworkArtist(l.getArtwork().getArtist())
-                .collectorId(l.getArtwork().getCollector().getId())
-                .collectorName(l.getArtwork().getCollector().getName())
+                .exhibitionId(l.getExhibition() != null ? l.getExhibition().getId() : null)
+                .exhibitionTitle(l.getExhibition() != null ? l.getExhibition().getTitle() : null)
+                .exhibitionVenue(l.getExhibition() != null
+                        ? l.getExhibition().getVenueName() + ", " + l.getExhibition().getVenueCity() : null)
+                .exhibitionOpeningDate(l.getExhibition() != null ? l.getExhibition().getOpeningDate() : null)
+                .exhibitionClosingDate(l.getExhibition() != null ? l.getExhibition().getClosingDate() : null)
+                .collectorId(revealOwner ? collectorId : null)
+                .collectorName(revealOwner ? l.getArtwork().getCollector().getName()
+                        : ArtworkService.ANONYMOUS_OWNER)
                 .foundationId(l.getFoundation().getId())
                 .foundationName(l.getFoundation().getName())
                 .startDate(l.getStartDate())
@@ -479,6 +657,8 @@ public class LoanRequestService {
                 .returnShipmentId(returnShip != null ? returnShip.getId() : null)
                 .cancelledAt(l.getCancelledAt())
                 .cancellationReason(l.getCancellationReason())
+                .rejectionReason(l.getRejectionReason())
+                .agreedValue(l.getAgreedValue())
                 .build();
     }
 }

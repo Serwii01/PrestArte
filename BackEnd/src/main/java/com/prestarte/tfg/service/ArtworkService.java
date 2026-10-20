@@ -8,26 +8,32 @@ import com.prestarte.tfg.model.dto.UpdateArtworkRequest;
 import com.prestarte.tfg.model.entity.Artwork;
 import com.prestarte.tfg.model.entity.ArtworkFile;
 import com.prestarte.tfg.model.entity.Collector;
+import com.prestarte.tfg.model.entity.CourierMode;
 import com.prestarte.tfg.model.entity.DBFile;
 import com.prestarte.tfg.model.entity.LoanRequest;
+import com.prestarte.tfg.model.entity.LoanRequirements;
+import com.prestarte.tfg.model.entity.Role;
+import com.prestarte.tfg.model.entity.Shipment;
 import com.prestarte.tfg.model.entity.TransportCompany;
 import com.prestarte.tfg.repository.ArtworkFileRepository;
 import com.prestarte.tfg.repository.ArtworkRepository;
 import com.prestarte.tfg.repository.CollectorRepository;
 import com.prestarte.tfg.repository.LoanRequestRepository;
+import com.prestarte.tfg.repository.ShipmentRepository;
 import com.prestarte.tfg.repository.TransportCompanyRepository;
 import com.prestarte.tfg.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -35,9 +41,14 @@ import java.util.stream.Collectors;
  *
  * Cubre la creación, edición, eliminación y deshabilitación temporal de
  * las obras, junto con la subida y borrado de documentos adjuntos
- * (seguros, certificados, informes). La conversión a DTO filtra los
- * documentos marcados como confidenciales cuando el usuario que
- * consulta no es el dueño ni un administrador.
+ * (seguros, certificados, informes).
+ *
+ * La conversión a DTO protege la privacidad del coleccionista: a quien
+ * no es el dueño ni un administrador se le ocultan los documentos
+ * confidenciales, el valor exacto (los usuarios verificados ven solo una
+ * horquilla y los visitantes nada), la dirección de recogida (salvo al
+ * transportista con un envío en curso) y, si la obra es anónima, la
+ * identidad del coleccionista.
  */
 @Service
 @RequiredArgsConstructor
@@ -48,7 +59,17 @@ public class ArtworkService {
     private final CollectorRepository collectorRepository;
     private final TransportCompanyRepository transportCompanyRepository;
     private final LoanRequestRepository loanRequestRepository;
+    private final ShipmentRepository shipmentRepository;
     private final CurrentUser currentUser;
+
+    /** Nombre que ven los terceros cuando la obra es anónima. */
+    public static final String ANONYMOUS_OWNER = "Colección particular";
+
+    /** Estados del envío en los que el transportista necesita la dirección de recogida. */
+    private static final Set<Shipment.ShipmentStatus> PICKUP_STATUSES = EnumSet.of(
+            Shipment.ShipmentStatus.APPROVED,
+            Shipment.ShipmentStatus.PICKED_UP,
+            Shipment.ShipmentStatus.IN_TRANSIT);
 
     /**
      * Crea una nueva obra para el coleccionista indicado.
@@ -59,6 +80,10 @@ public class ArtworkService {
      */
     @Transactional
     public ArtworkDto createArtwork(CreateArtworkRequest request) {
+        // Solo se pueden crear obras propias (o cualquiera, si eres admin).
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(request.getCollectorId());
+        }
         Collector collector = collectorRepository.findById(request.getCollectorId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Coleccionista", request.getCollectorId()));
 
@@ -80,6 +105,13 @@ public class ArtworkService {
                 .estimatedValue(request.getEstimatedValue())
                 .loanConditions(request.getLoanConditions())
                 .location(request.getLocation())
+                .requirements(cleanRequirements(request.getRequirements()))
+                .pickupAddress(blankToNull(request.getPickupAddress()))
+                .showOwnerName(request.isShowOwnerName())
+                .heritageStatus(request.getHeritageStatus() != null
+                        ? request.getHeritageStatus() : Artwork.HeritageStatus.NONE)
+                .visibility(request.getVisibility() != null
+                        ? request.getVisibility() : Artwork.Visibility.PUBLIC)
                 .collector(collector)
                 .preferredTransportCompany(preferred)
                 .preferredTransportMandatory(
@@ -91,24 +123,43 @@ public class ArtworkService {
         return convertToDto(saved);
     }
 
-    /** Devuelve el catálogo completo de obras. */
+    /**
+     * Devuelve el catálogo. Los visitantes sin sesión solo ven las obras
+     * públicas; las marcadas como MEMBERS solo aparecen a usuarios
+     * verificados.
+     */
+    @Transactional(readOnly = true)
     public List<ArtworkDto> getAllArtworks() {
+        Viewer viewer = viewer();
         return artworkRepository.findAll().stream()
-                .map(this::convertToDto)
+                .filter(a -> viewer.isMember() || isPublic(a))
+                .map(a -> convertToDto(a, viewer))
                 .collect(Collectors.toList());
     }
 
-    /** Devuelve la ficha de una obra a partir de su identificador. */
+    /** Devuelve la ficha de una obra, respetando su visibilidad. */
+    @Transactional(readOnly = true)
     public ArtworkDto getArtworkById(Long id) {
+        Viewer viewer = viewer();
         Artwork artwork = artworkRepository.findById(id)
+                .filter(a -> viewer.isMember() || isPublic(a))
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", id));
-        return convertToDto(artwork);
+        return convertToDto(artwork, viewer);
     }
 
-    /** Devuelve todas las obras pertenecientes a un coleccionista. */
+    /**
+     * Devuelve todas las obras de un coleccionista. Solo para el propio
+     * coleccionista o la administración: de lo contrario permitiría
+     * relacionar entre sí las obras de un coleccionista anónimo.
+     */
+    @Transactional(readOnly = true)
     public List<ArtworkDto> getArtworksByCollector(Long collectorId) {
+        if (!currentUser.isAdmin()) {
+            currentUser.requireUserId(collectorId);
+        }
+        Viewer viewer = viewer();
         return artworkRepository.findByCollectorId(collectorId).stream()
-                .map(this::convertToDto)
+                .map(a -> convertToDto(a, viewer))
                 .collect(Collectors.toList());
     }
 
@@ -134,6 +185,11 @@ public class ArtworkService {
         if (req.getEstimatedValue() != null) a.setEstimatedValue(req.getEstimatedValue());
         if (req.getLoanConditions() != null) a.setLoanConditions(req.getLoanConditions());
         if (req.getLocation() != null) a.setLocation(req.getLocation());
+        if (req.getPickupAddress() != null) a.setPickupAddress(blankToNull(req.getPickupAddress()));
+        if (req.getRequirements() != null) a.setRequirements(cleanRequirements(req.getRequirements()));
+        if (req.getShowOwnerName() != null) a.setShowOwnerName(req.getShowOwnerName());
+        if (req.getVisibility() != null) a.setVisibility(req.getVisibility());
+        if (req.getHeritageStatus() != null) a.setHeritageStatus(req.getHeritageStatus());
 
         if (req.getPreferredTransportCompanyId() != null) {
             TransportCompany tc = transportCompanyRepository.findById(req.getPreferredTransportCompanyId())
@@ -206,15 +262,12 @@ public class ArtworkService {
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", artworkId));
         requireOwnership(artwork);
 
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("El archivo es obligatorio.");
-        }
-        String name = StringUtils.cleanPath(
-                file.getOriginalFilename() == null ? "documento" : file.getOriginalFilename());
+        String type = UploadValidator.requireType(file, UploadValidator.IMAGES_AND_PDF);
+        String name = UploadValidator.safeFileName(file.getOriginalFilename(), "documento");
 
         DBFile dbFile = DBFile.builder()
                 .fileName(name)
-                .fileType(file.getContentType())
+                .fileType(type)
                 .data(file.getBytes())
                 .fileSize(file.getSize())
                 .build();
@@ -266,15 +319,113 @@ public class ArtworkService {
     }
 
     /**
-     * Transforma una obra en su DTO público, ocultando los documentos
-     * marcados como confidenciales cuando el usuario que mira no es el
-     * dueño ni un administrador.
+     * Quién está mirando: id (o null si es un visitante), si es
+     * administrador y, si es un transportista, las obras para las que
+     * tiene un envío aprobado y en curso (necesita su dirección).
      */
+    private record Viewer(Long id, boolean admin, Set<Long> pickupArtworkIds) {
+        boolean isMember() {
+            return id != null;
+        }
+
+        boolean owns(Artwork a) {
+            return id != null && a.getCollector() != null && id.equals(a.getCollector().getId());
+        }
+    }
+
+    private Viewer viewer() {
+        Long id = currentUser.currentIdOrNull();
+        Role role = currentUser.roleOrNull();
+        Set<Long> pickupIds = Set.of();
+        if (id != null && role == Role.TRANSPORT) {
+            pickupIds = shipmentRepository.findByTransportCompanyId(id).stream()
+                    .filter(s -> PICKUP_STATUSES.contains(s.getStatus()))
+                    .map(s -> s.getLoanRequest().getArtwork().getId())
+                    .collect(Collectors.toSet());
+        }
+        return new Viewer(id, role == Role.ADMIN, pickupIds);
+    }
+
+    private static boolean isPublic(Artwork a) {
+        return a.getVisibility() == null || a.getVisibility() == Artwork.Visibility.PUBLIC;
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
+    }
+
+    /**
+     * Valida los requisitos de préstamo y normaliza: las casillas no
+     * marcadas se guardan como nulo ("sin requisito").
+     */
+    private static LoanRequirements cleanRequirements(LoanRequirements r) {
+        if (r == null) return null;
+        checkRange(r.getTempMin(), r.getTempMax(), -10, 40, "temperatura");
+        checkRange(r.getRhMin(), r.getRhMax(), 0, 100, "humedad relativa");
+        if (r.getMaxLux() != null && r.getMaxLux() < 0) {
+            throw new IllegalArgumentException("Los lux no pueden ser negativos.");
+        }
+        if (r.getMinNoticeDays() != null && (r.getMinNoticeDays() < 0 || r.getMinNoticeDays() > 1095)) {
+            throw new IllegalArgumentException("La antelación mínima debe estar entre 0 y 1095 días.");
+        }
+        return LoanRequirements.builder()
+                .tempMin(r.getTempMin())
+                .tempMax(r.getTempMax())
+                .rhMin(r.getRhMin())
+                .rhMax(r.getRhMax())
+                .maxLux(r.getMaxLux())
+                .climateControl(trueOrNull(r.getClimateControl()))
+                .displayCase(trueOrNull(r.getDisplayCase()))
+                .guards24h(trueOrNull(r.getGuards24h()))
+                .cctv(trueOrNull(r.getCctv()))
+                .intrusionAlarm(trueOrNull(r.getIntrusionAlarm()))
+                .fireDetection(trueOrNull(r.getFireDetection()))
+                .minNoticeDays(r.getMinNoticeDays())
+                .courierMode(r.getCourierMode() == CourierMode.NONE ? null : r.getCourierMode())
+                .build();
+    }
+
+    private static void checkRange(Double min, Double max, double lo, double hi, String what) {
+        if ((min != null && (min < lo || min > hi)) || (max != null && (max < lo || max > hi))) {
+            throw new IllegalArgumentException("Valor de " + what + " fuera de rango.");
+        }
+        if (min != null && max != null && min > max) {
+            throw new IllegalArgumentException("El mínimo de " + what + " no puede ser mayor que el máximo.");
+        }
+    }
+
+    private static Boolean trueOrNull(Boolean b) {
+        return Boolean.TRUE.equals(b) ? Boolean.TRUE : null;
+    }
+
+    /** Horquilla de valor que se muestra en lugar del importe exacto. */
+    static String valueRange(Double value) {
+        if (value == null) return null;
+        double v = value;
+        if (v < 10_000) return "Menos de 10.000 €";
+        if (v < 50_000) return "10.000 – 50.000 €";
+        if (v < 100_000) return "50.000 – 100.000 €";
+        if (v < 250_000) return "100.000 – 250.000 €";
+        if (v < 500_000) return "250.000 – 500.000 €";
+        if (v < 1_000_000) return "500.000 – 1.000.000 €";
+        if (v < 5_000_000) return "1 – 5 millones €";
+        return "Más de 5 millones €";
+    }
+
+    /** Conversión para las operaciones del propio dueño (crear, editar...). */
     private ArtworkDto convertToDto(Artwork artwork) {
+        return convertToDto(artwork, viewer());
+    }
+
+    /**
+     * Transforma una obra en su DTO aplicando las reglas de privacidad
+     * según quién mira (ver la documentación de la clase).
+     */
+    private ArtworkDto convertToDto(Artwork artwork, Viewer viewer) {
         Long ownerId = artwork.getCollector() != null ? artwork.getCollector().getId() : null;
-        Long viewerId = currentUser.currentIdOrNull();
-        boolean privileged = currentUser.isAdminOrNull()
-                || (viewerId != null && viewerId.equals(ownerId));
+        boolean privileged = viewer.admin() || viewer.owns(artwork);
+        boolean showOwner = privileged || artwork.isShowOwnerName();
+        boolean seesPickup = privileged || viewer.pickupArtworkIds().contains(artwork.getId());
 
         List<FileDto> fileDtos = new ArrayList<>();
         if (artwork.getFiles() != null) {
@@ -305,14 +456,24 @@ public class ArtworkService {
                 .depthCm(artwork.getDepthCm())
                 .condition(artwork.getCondition() != null ? artwork.getCondition().name() : null)
                 .description(artwork.getDescription())
-                .estimatedValue(artwork.getEstimatedValue())
+                .estimatedValue(privileged ? artwork.getEstimatedValue() : null)
+                .estimatedValueRange(viewer.isMember() ? valueRange(artwork.getEstimatedValue()) : null)
                 .loanConditions(artwork.getLoanConditions())
+                .requirements(artwork.getRequirements())
                 .location(artwork.getLocation())
-                .collectorId(ownerId)
-                .collectorName(artwork.getCollector() != null ? artwork.getCollector().getName() : "Anónim@")
+                .pickupAddress(seesPickup ? artwork.getPickupAddress() : null)
+                .collectorId(showOwner ? ownerId : null)
+                .collectorName(showOwner && artwork.getCollector() != null
+                        ? artwork.getCollector().getName() : ANONYMOUS_OWNER)
+                .showOwnerName(privileged ? artwork.isShowOwnerName() : null)
+                .visibility(privileged
+                        ? (isPublic(artwork) ? Artwork.Visibility.PUBLIC : Artwork.Visibility.MEMBERS).name()
+                        : null)
                 .preferredTransportCompanyId(preferred != null ? preferred.getId() : null)
                 .preferredTransportCompanyName(preferred != null ? preferred.getCompanyName() : null)
                 .preferredTransportMandatory(artwork.isPreferredTransportMandatory())
+                .heritageStatus(artwork.getHeritageStatus() != null
+                        ? artwork.getHeritageStatus().name() : Artwork.HeritageStatus.NONE.name())
                 .availableForLoan(artwork.isAvailableForLoan())
                 .files(fileDtos)
                 .createdAt(artwork.getCreatedAt())

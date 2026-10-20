@@ -71,9 +71,51 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String loanConditions;
 
-    /** Ciudad o localidad donde se encuentra físicamente la obra. */
+    /**
+     * Requisitos estructurados de préstamo, comparables con el informe de
+     * instalaciones de la fundación. Puede ser nulo si no hay ninguno.
+     */
+    @Embedded
+    private LoanRequirements requirements;
+
+    /**
+     * Ciudad o provincia donde se encuentra la obra. Es el único dato de
+     * ubicación que se muestra públicamente.
+     */
     @Column(length = 150)
     private String location;
+
+    /**
+     * Dirección exacta de recogida. Es privada: solo la ven el dueño, la
+     * administración y la empresa de transporte con un envío aprobado y
+     * en curso para esta obra.
+     */
+    @Column(length = 500)
+    private String pickupAddress;
+
+    /**
+     * Si es false (por defecto), la obra aparece como "Colección
+     * particular" y el nombre del coleccionista no se muestra a terceros
+     * hasta que acepta un préstamo.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean showOwnerName = false;
+
+    /**
+     * Protección patrimonial de la obra. Junto con su antigüedad decide
+     * si necesita permiso de exportación para salir de España. Nulo
+     * equivale a NONE.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private HeritageStatus heritageStatus;
+
+    /** Quién puede ver la obra en el catálogo. Nulo equivale a PUBLIC. */
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Visibility visibility = Visibility.PUBLIC;
 
     /** Coleccionista propietario de la obra. Toda obra tiene siempre un dueño. */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -118,5 +160,23 @@ public class Artwork {
     /** Estado de conservación posible de una obra. */
     public enum Condition {
         EXCELLENT, GOOD, FAIR, POOR, DAMAGED
+    }
+
+    /** Protección patrimonial según la Ley 16/1985. */
+    public enum HeritageStatus {
+        /** Sin protección específica. */
+        NONE,
+        /** Incluida en el Inventario General de Bienes Muebles. */
+        INVENTORIED,
+        /** Declarada Bien de Interés Cultural. */
+        BIC
+    }
+
+    /** Visibilidad de la obra en el catálogo. */
+    public enum Visibility {
+        /** Cualquier visitante, con o sin cuenta. */
+        PUBLIC,
+        /** Solo usuarios verificados de la red (con sesión iniciada). */
+        MEMBERS
     }
 }

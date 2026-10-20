@@ -1,6 +1,7 @@
 package com.prestarte.tfg.model.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 /**
@@ -20,4 +21,11 @@ public class AcceptLoanRequest {
 
     /** Marca la empresa elegida como obligatoria para este préstamo. */
     private boolean transportCompanyMandatory;
+
+    /**
+     * Valor asegurado acordado (€). Si no se indica, se usa el valor
+     * estimado de la obra.
+     */
+    @Positive(message = "El valor asegurado debe ser mayor que 0")
+    private Double agreedValue;
 }

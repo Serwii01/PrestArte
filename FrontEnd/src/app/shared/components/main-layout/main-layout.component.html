@@ -11,7 +11,7 @@
           @for (link of navLinks(); track link.path) {
             <a [routerLink]="link.path"
                routerLinkActive="text-primary bg-primary/5"
-               [routerLinkActiveOptions]="{ exact: false }"
+               [routerLinkActiveOptions]="{ exact: link.exact ?? false }"
                class="text-text-main text-sm font-semibold hover:text-primary
                       transition-colors px-3 py-1.5 rounded-lg flex items-center gap-2">
               <span class="material-symbols-outlined" style="font-size:18px;">{{ link.icon }}</span>

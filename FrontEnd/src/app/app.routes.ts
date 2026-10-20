@@ -157,6 +157,27 @@ export const routes: Routes = [
             pathMatch: 'full',
           },
           {
+            path: 'facility',
+            loadComponent: () =>
+              import('./features/foundation/facility-report/facility-report.component').then(
+                (m) => m.FacilityReportComponent,
+              ),
+          },
+          {
+            path: 'exhibitions',
+            loadComponent: () =>
+              import('./features/foundation/exhibitions/exhibitions.component').then(
+                (m) => m.ExhibitionsComponent,
+              ),
+          },
+          {
+            path: 'exhibitions/:id',
+            loadComponent: () =>
+              import('./features/foundation/exhibitions/exhibition-detail.component').then(
+                (m) => m.ExhibitionDetailComponent,
+              ),
+          },
+          {
             path: 'request-loan/:artworkId',
             loadComponent: () =>
               import('./features/foundation/request-loan/request-loan.component').then(

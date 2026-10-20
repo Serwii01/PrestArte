@@ -98,8 +98,11 @@
         <p class="text-sm font-bold text-red-800">
           {{ l.status === 'CANCELLED' ? 'Préstamo cancelado' : 'Solicitud rechazada' }}
         </p>
-        @if (l.cancellationReason) {
+        @if (l.status === 'CANCELLED' && l.cancellationReason) {
           <p class="text-xs text-red-700 mt-1">Motivo: {{ l.cancellationReason }}</p>
+        }
+        @if (l.status === 'REJECTED' && l.rejectionReason) {
+          <p class="text-xs text-red-700 mt-1">Motivo: {{ l.rejectionReason }}</p>
         }
       </div>
     }
@@ -132,8 +135,17 @@
                 }
                 <div>
                   <p class="text-xs uppercase font-bold tracking-wider text-text-secondary">Coleccionista</p>
-                  <p class="font-bold text-text-main">{{ a.collectorName }}</p>
+                  <p class="font-bold text-text-main">{{ l.collectorName }}</p>
                 </div>
+                @if (a.pickupAddress) {
+                  <div class="col-span-2">
+                    <p class="text-xs uppercase font-bold tracking-wider text-text-secondary flex items-center gap-1">
+                      Dirección de recogida
+                      <span class="material-symbols-outlined text-emerald-700" style="font-size:14px;" title="Privada">lock</span>
+                    </p>
+                    <p class="font-bold text-text-main whitespace-pre-line">{{ a.pickupAddress }}</p>
+                  </div>
+                }
               </div>
               <a [routerLink]="['/app/artworks', a.id]"
                  class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
@@ -143,6 +155,263 @@
             </div>
           </div>
         </section>
+      }
+
+      @if (l.exhibitionTitle) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">museum</span>
+            Exposición
+          </h3>
+          <p class="font-bold text-text-main">{{ l.exhibitionTitle }}</p>
+          <p class="text-sm text-text-secondary">
+            {{ l.exhibitionVenue }} · {{ l.exhibitionOpeningDate | date:'mediumDate' }} → {{ l.exhibitionClosingDate | date:'mediumDate' }}
+          </p>
+          @if (isFoundation()) {
+            <a [routerLink]="['/app/foundation/exhibitions', l.exhibitionId]"
+               class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+              Ver todas las obras de la exposición
+              <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
+            </a>
+          }
+        </section>
+      }
+
+      @if (compatibility() && (isCollector() || isFoundation() || isAdmin())) {
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">fact_check</span>
+            Requisitos de la obra e instalaciones
+          </h3>
+          <app-requirements-summary [requirements]="artwork()?.requirements" />
+          <div class="mt-4">
+            <app-compatibility-panel [report]="compatibility()"
+                                     [perspective]="isFoundation() ? 'foundation' : 'collector'" />
+          </div>
+        </section>
+      }
+
+      <!-- Coste y huella estimados -->
+      @if (costEstimate() && (isCollector() || isFoundation() || isAdmin())) {
+        <section class="stitch-card p-6">
+          <h3 class="text-lg font-bold text-text-main mb-1 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">payments</span>
+            Coste y huella estimados
+          </h3>
+          <p class="text-sm text-text-secondary mb-4">
+            Orientativo. El precio real es el del presupuesto del transportista.
+          </p>
+          <app-cost-estimate-panel [estimate]="costEstimate()" />
+        </section>
+      }
+
+      <!-- Supervisión remota -->
+      @if (courierMode() === 'VIRTUAL' || supervision().length > 0 || canAddCheckpoint()) {
+        @if (l.status !== 'REQUESTED' && l.status !== 'REJECTED') {
+          <section class="stitch-card p-6">
+            <div class="flex items-start justify-between gap-3 mb-1 flex-wrap">
+              <h3 class="text-lg font-bold text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">videocam</span>
+                Supervisión remota
+              </h3>
+              @if (courierMode() === 'VIRTUAL') {
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">Correo virtual exigido</span>
+              }
+            </div>
+            <p class="text-sm text-text-secondary mb-4">
+              Quien manipula la obra documenta cada fase con fotos y el coleccionista la revisa, sin necesidad de
+              que un correo viaje con ella.
+              @if (courierMode() === 'VIRTUAL') {
+                La obra no se recoge hasta que el coleccionista aprueba el embalaje.
+              }
+            </p>
+
+            @if (supervision().length === 0) {
+              <p class="text-sm text-text-secondary">Todavía no hay fases documentadas.</p>
+            }
+            <div class="space-y-3">
+              @for (c of supervision(); track c.id) {
+                <article class="rounded-xl border p-4"
+                         [class.border-border]="c.status !== 'CHANGES_REQUESTED'"
+                         [class.border-amber-300]="c.status === 'CHANGES_REQUESTED'">
+                  <div class="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <p class="text-sm font-bold text-text-main">{{ stageLabel[c.stage] }}</p>
+                      <p class="text-xs text-text-secondary">{{ c.authorName }} · {{ roleLabel(c.authorRole) }} · {{ c.createdAt | date:'medium' }}</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                          [class.bg-emerald-100]="c.status === 'APPROVED'" [class.text-emerald-800]="c.status === 'APPROVED'"
+                          [class.bg-gray-soft]="c.status === 'PENDING'" [class.text-text-main]="c.status === 'PENDING'"
+                          [class.bg-amber-100]="c.status === 'CHANGES_REQUESTED'" [class.text-amber-800]="c.status === 'CHANGES_REQUESTED'">
+                      {{ c.status === 'APPROVED' ? 'Visto bueno' : c.status === 'PENDING' ? 'Pendiente de revisión' : 'Cambios pedidos' }}
+                    </span>
+                  </div>
+                  @if (c.note) { <p class="mt-2 text-sm text-text-main whitespace-pre-line">{{ c.note }}</p> }
+                  @if (c.reviewNote) { <p class="mt-2 text-xs text-amber-800">Coleccionista: {{ c.reviewNote }}</p> }
+                  <div class="mt-3 grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    @for (photoId of c.photoIds; track photoId) {
+                      <a [href]="photoId | secureFile | async" target="_blank" rel="noopener"
+                         class="block aspect-square rounded-lg overflow-hidden border border-border bg-gray-soft">
+                        <img [src]="photoId | secureFile | async" alt="Foto de supervisión" class="w-full h-full object-cover" />
+                      </a>
+                    }
+                  </div>
+                  @if (isCollector() && c.status === 'PENDING') {
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="approveCheckpoint(c)" [disabled]="busy()"
+                              class="inline-flex items-center gap-1 rounded-lg h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold disabled:opacity-50">
+                        <span class="material-symbols-outlined" style="font-size:16px;">check</span> Dar el visto bueno
+                      </button>
+                      <button type="button" (click)="openCheckpointChanges(c)" [disabled]="busy()"
+                              class="inline-flex items-center gap-1 rounded-lg h-9 px-3 border border-amber-300 text-amber-800 hover:bg-amber-50 text-xs font-bold disabled:opacity-50">
+                        <span class="material-symbols-outlined" style="font-size:16px;">edit</span> Pedir cambios
+                      </button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+
+            @if (canAddCheckpoint()) {
+              <button type="button" (click)="openCheckpoint()" [disabled]="busy()"
+                      class="mt-4 inline-flex items-center gap-1 rounded-lg h-9 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold disabled:opacity-50">
+                <span class="material-symbols-outlined" style="font-size:16px;">add_a_photo</span> Documentar una fase
+              </button>
+            }
+          </section>
+        }
+      }
+
+      <!-- Seguro y permiso de exportación -->
+      @if (documents(); as d) {
+        @if (l.status !== 'REQUESTED' && l.status !== 'REJECTED') {
+          <section class="stitch-card p-6">
+            <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
+              <div>
+                <h3 class="text-lg font-bold text-text-main flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary">verified_user</span>
+                  Seguro y permisos
+                </h3>
+                <p class="text-sm text-text-secondary">
+                  Valor asegurado acordado: <strong class="text-text-main">{{ d.agreedValue | number:'1.0-0' }} €</strong>
+                </p>
+              </div>
+              @if (d.readyForShipment) {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                  <span class="material-symbols-outlined" style="font-size:14px;">check</span> Lista para salir
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                  <span class="material-symbols-outlined" style="font-size:14px;">lock</span> La obra no puede salir aún
+                </span>
+              }
+            </div>
+
+            <!-- Seguro -->
+            <div class="rounded-xl border border-border p-4">
+              <div class="flex items-start justify-between gap-3 flex-wrap">
+                <p class="text-sm font-bold text-text-main">Seguro clavo a clavo</p>
+                @if (d.insurance; as ins) {
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                        [class.bg-emerald-100]="ins.status === 'APPROVED'" [class.text-emerald-800]="ins.status === 'APPROVED'"
+                        [class.bg-amber-100]="ins.status === 'PENDING'" [class.text-amber-800]="ins.status === 'PENDING'"
+                        [class.bg-red-100]="ins.status === 'REJECTED'" [class.text-red-800]="ins.status === 'REJECTED'">
+                    {{ ins.status === 'APPROVED' ? 'Aprobado' : ins.status === 'PENDING' ? 'Pendiente de aprobación' : 'Rechazado' }}
+                  </span>
+                }
+              </div>
+              @if (d.insurance; as ins) {
+                <dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <div><dt class="text-xs text-text-secondary">Cobertura</dt><dd class="font-medium">{{ coverageLabel[ins.coverageType] }}</dd></div>
+                  <div><dt class="text-xs text-text-secondary">Aseguradora</dt><dd class="font-medium">{{ ins.insurer }}</dd></div>
+                  <div><dt class="text-xs text-text-secondary">Póliza</dt><dd class="font-mono">{{ ins.policyNumber }}</dd></div>
+                  <div><dt class="text-xs text-text-secondary">Suma asegurada</dt><dd class="font-medium">{{ ins.insuredAmount | number:'1.0-0' }} €</dd></div>
+                  <div class="sm:col-span-2"><dt class="text-xs text-text-secondary">Periodo</dt>
+                    <dd class="font-medium">{{ ins.coverageStart | date:'mediumDate' }} → {{ ins.coverageEnd | date:'mediumDate' }}</dd></div>
+                </dl>
+                <a [href]="ins.documentFileId | secureFile | async" [download]="ins.documentFileName"
+                   class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                  <span class="material-symbols-outlined" style="font-size:14px;">picture_as_pdf</span> {{ ins.documentFileName }}
+                </a>
+                @if (ins.status === 'REJECTED' && ins.reviewNote) {
+                  <p class="mt-2 text-xs text-red-700">Motivo del rechazo: {{ ins.reviewNote }}</p>
+                }
+              } @else {
+                <p class="mt-1 text-sm text-text-secondary">
+                  La institución debe aportar el certificado de su póliza (o de la Garantía del Estado). Si prefieres
+                  asegurar tú la obra con tu propia póliza, puedes subirla y la institución te reembolsará la prima.
+                </p>
+              }
+              <div class="mt-3 flex flex-wrap gap-2">
+                @if (canReviewInsurance()) {
+                  <button type="button" (click)="approveInsurance()" [disabled]="busy()"
+                          class="inline-flex items-center gap-1 rounded-lg h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold disabled:opacity-50">
+                    <span class="material-symbols-outlined" style="font-size:16px;">check</span> Aprobar seguro
+                  </button>
+                  <button type="button" (click)="openRejectInsurance()" [disabled]="busy()"
+                          class="inline-flex items-center gap-1 rounded-lg h-9 px-3 border border-red-300 text-red-600 hover:bg-red-50 text-xs font-bold disabled:opacity-50">
+                    <span class="material-symbols-outlined" style="font-size:16px;">close</span> Rechazar
+                  </button>
+                }
+                @if (canUploadInsurance()) {
+                  <button type="button" (click)="openInsurance()" [disabled]="busy()"
+                          class="inline-flex items-center gap-1 rounded-lg h-9 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold disabled:opacity-50">
+                    <span class="material-symbols-outlined" style="font-size:16px;">upload_file</span>
+                    {{ isCollector() ? 'Asegurar con mi póliza' : 'Subir certificado de seguro' }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Permiso de exportación -->
+            <div class="rounded-xl border border-border p-4 mt-3">
+              <div class="flex items-start justify-between gap-3 flex-wrap">
+                <p class="text-sm font-bold text-text-main">Permiso de exportación temporal</p>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                      [class.bg-gray-soft]="!d.permitRequired" [class.text-text-secondary]="!d.permitRequired"
+                      [class.bg-emerald-100]="d.permitRequired && d.permit" [class.text-emerald-800]="d.permitRequired && d.permit"
+                      [class.bg-amber-100]="d.permitRequired && !d.permit" [class.text-amber-800]="d.permitRequired && !d.permit">
+                  {{ !d.permitRequired ? 'No necesario' : d.permit ? 'Adjuntado' : 'Obligatorio' }}
+                </span>
+              </div>
+              <p class="mt-1 text-sm text-text-secondary">{{ d.permitReason }}</p>
+              @if (d.permit; as p) {
+                <dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <div><dt class="text-xs text-text-secondary">Resolución</dt><dd class="font-mono">{{ p.resolutionNumber }}</dd></div>
+                  <div><dt class="text-xs text-text-secondary">Emitida por</dt><dd class="font-medium">{{ p.issuedBy }} · {{ p.issueDate | date:'mediumDate' }}</dd></div>
+                  <div class="sm:col-span-2"><dt class="text-xs text-text-secondary">Retorno obligatorio antes del</dt>
+                    <dd class="font-bold text-text-main">{{ p.returnDeadline | date:'longDate' }}</dd></div>
+                </dl>
+                <a [href]="p.documentFileId | secureFile | async" [download]="p.documentFileName"
+                   class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                  <span class="material-symbols-outlined" style="font-size:14px;">picture_as_pdf</span> {{ p.documentFileName }}
+                </a>
+              } @else if (d.permitRequired) {
+                <p class="mt-2 text-xs text-amber-800">
+                  Se solicita al Ministerio de Cultura (Junta de Calificación, Valoración y Exportación). La tramitación
+                  puede llevar varios meses: empezad cuanto antes. Información orientativa; confirmadlo con el Ministerio.
+                </p>
+              }
+              @if (canUploadPermit()) {
+                <button type="button" (click)="openPermit()" [disabled]="busy()"
+                        class="mt-3 inline-flex items-center gap-1 rounded-lg h-9 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold disabled:opacity-50">
+                  <span class="material-symbols-outlined" style="font-size:16px;">upload_file</span>
+                  {{ d.permit ? 'Sustituir permiso' : 'Adjuntar permiso' }}
+                </button>
+              }
+            </div>
+
+            @if (!d.readyForShipment && d.missing.length > 0) {
+              <ul class="mt-4 space-y-1">
+                @for (m of d.missing; track m) {
+                  <li class="text-xs text-amber-900 flex items-start gap-1">
+                    <span class="material-symbols-outlined" style="font-size:14px;">pending</span>{{ m }}
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
       }
 
       @if (l.agreedConditions) {
@@ -173,8 +442,11 @@
             </div>
             @if (s.price) {
               <div>
-                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Precio del transporte</dt>
-                <dd class="mt-1 font-bold text-text-main">{{ s.price | number:'1.2-2' }} €</dd>
+                <dt class="text-xs uppercase font-bold tracking-wider text-text-secondary">Transporte</dt>
+                <dd class="mt-1 font-bold text-text-main">
+                  {{ s.price | number:'1.2-2' }} € ida
+                  @if (s.returnPrice != null) { + {{ s.returnPrice | number:'1.2-2' }} € vuelta }
+                </dd>
               </div>
             }
             @if (s.insuranceCost) {
@@ -260,6 +532,90 @@
           }
         </section>
       }
+
+      <!-- Informes de estado de la obra -->
+      @if (conditionReports().length > 0) {
+        <section class="stitch-card p-6">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary">fact_check</span>
+            <h3 class="text-lg font-bold text-text-main">Informes de estado</h3>
+          </div>
+          <p class="text-sm text-text-secondary mb-4">
+            Fotografías y estado de conservación documentados en cada recogida y entrega.
+          </p>
+          <div class="space-y-4">
+            @for (r of conditionReports(); track r.id) {
+              <article class="rounded-xl border p-4"
+                       [class.border-border]="!r.damageReported"
+                       [class.border-red-300]="r.damageReported"
+                       [class.bg-red-50]="r.damageReported">
+                <div class="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p class="text-sm font-bold text-text-main">{{ reportTitle(r) }}</p>
+                    <p class="text-xs text-text-secondary">
+                      {{ r.authorName }} · {{ roleLabel(r.authorRole) }} · {{ r.createdAt | date:'medium' }}
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    @if (r.damageReported) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800">
+                        <span class="material-symbols-outlined" style="font-size:14px;">warning</span>
+                        Incidencia
+                      </span>
+                    }
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-soft text-text-main">
+                      {{ conditionLabel(r.condition) }}
+                    </span>
+                  </div>
+                </div>
+                @if (r.notes) {
+                  <p class="mt-3 text-sm text-text-main whitespace-pre-line">{{ r.notes }}</p>
+                }
+                <div class="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  @for (photoId of r.photoIds; track photoId) {
+                    <a [href]="photoId | secureFile | async" target="_blank" rel="noopener"
+                       class="block aspect-square rounded-lg overflow-hidden border border-border bg-gray-soft">
+                      <img [src]="photoId | secureFile | async" alt="Foto del informe de estado"
+                           class="w-full h-full object-cover" />
+                    </a>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Historial del préstamo -->
+      @if (history().length > 0) {
+        <section class="stitch-card p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">history</span>
+            <h3 class="text-lg font-bold text-text-main">Historial</h3>
+          </div>
+          <ol class="relative border-l border-border ml-2 space-y-5">
+            @for (e of history(); track e.id) {
+              <li class="ml-5">
+                <span class="absolute -left-[7px] mt-1.5 size-3 rounded-full border-2 border-white"
+                      [class.bg-primary]="e.toStatus"
+                      [class.bg-slate-300]="!e.toStatus"></span>
+                <p class="text-sm text-text-main">{{ e.message }}</p>
+                <p class="text-xs text-text-secondary mt-0.5">
+                  {{ e.createdAt | date:'medium' }} ·
+                  @if (e.actorName) {
+                    {{ e.actorName }} ({{ roleLabel(e.actorRole) }})
+                  } @else {
+                    Sistema
+                  }
+                  @if (e.toStatus) {
+                    · <span class="font-medium">{{ loanStatusLabel(e.toStatus) }}</span>
+                  }
+                </p>
+              </li>
+            }
+          </ol>
+        </section>
+      }
     </div>
 
     <!-- Sidebar de acciones -->
@@ -276,7 +632,7 @@
           </button>
         }
         @if (canReject()) {
-          <button type="button" (click)="rejectLoan()" [disabled]="busy()"
+          <button type="button" (click)="openReject()" [disabled]="busy()"
             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
                    bg-white border border-red-300 text-red-600 hover:bg-red-50 text-sm font-bold disabled:opacity-50">
             <span class="material-symbols-outlined" style="font-size:18px;">close</span>
@@ -324,8 +680,18 @@
             </button>
           </div>
         }
+        @if (canMarkPickedUp() && packingApprovalMissing()) {
+          <p class="mb-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2">
+            Correo virtual: documenta el embalaje en «Supervisión remota» y espera el visto bueno del coleccionista.
+          </p>
+        }
+        @if ((canMarkReady() || (canMarkPickedUp() && l.status !== 'RETURNING')) && shipmentBlocked()) {
+          <p class="mb-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2">
+            La obra no puede salir hasta completar el seguro{{ documents()?.permitRequired ? ' y el permiso de exportación' : '' }}.
+          </p>
+        }
         @if (canMarkReady()) {
-          <button type="button" (click)="markReady()" [disabled]="busy()"
+          <button type="button" (click)="markReady()" [disabled]="busy() || shipmentBlocked()"
             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
                    bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
             <span class="material-symbols-outlined" style="font-size:18px;">inventory_2</span>
@@ -333,7 +699,7 @@
           </button>
         }
         @if (canMarkPickedUp()) {
-          <button type="button" (click)="markPickedUp()" [disabled]="busy()"
+          <button type="button" (click)="openPickup()" [disabled]="busy() || (shipmentBlocked() && l.status !== 'RETURNING') || packingApprovalMissing()"
             class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 mb-2
                    bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
             <span class="material-symbols-outlined" style="font-size:18px;">inventory</span>
@@ -430,6 +796,16 @@
             </select>
           </label>
 
+          <label class="block mb-3">
+            <p class="text-text-main text-sm font-medium pb-2">Valor asegurado acordado (€)</p>
+            <input type="number" step="1" formControlName="agreedValue"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            <p class="text-xs text-text-secondary mt-1">
+              El seguro de la institución tendrá que cubrir al menos esta cantidad, de clavo a clavo.
+            </p>
+          </label>
+
           <label class="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer mb-4">
             <input type="checkbox" formControlName="transportCompanyMandatory"
                    class="h-5 w-5 mt-0.5 rounded border-border text-primary focus:ring-primary" />
@@ -494,10 +870,19 @@
         <p class="text-sm text-text-secondary mb-4">El museo verá estos importes para decidir si aprueba.</p>
         <form [formGroup]="quoteForm" (ngSubmit)="confirmQuote()" class="space-y-3">
           <label class="block">
-            <p class="text-text-main text-sm font-medium pb-2">Precio del transporte (€)</p>
+            <p class="text-text-main text-sm font-medium pb-2">Precio de la ida (€)</p>
             <input type="number" step="0.01" formControlName="price"
               class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Precio de la devolución (€)</p>
+            <input type="number" step="0.01" formControlName="returnPrice"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            <p class="text-xs text-text-secondary mt-1">
+              Se presupuesta ahora para que la institución conozca el coste completo desde el principio.
+            </p>
           </label>
           <label class="block">
             <p class="text-text-main text-sm font-medium pb-2">Coste del seguro (€)</p>
@@ -606,13 +991,313 @@
     </div>
   }
 
-  <!-- Confirmar entrega -->
-  @if (showDeliveryDialog()) {
+  <!-- Documentar una fase (supervisión remota) -->
+  @if (showCheckpointDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold text-text-main mb-1">Documentar una fase</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          Fotografía la obra y lo que la protege (embalaje, caja, anclajes, montaje) para que el coleccionista pueda supervisarlo.
+        </p>
+        <form [formGroup]="checkpointForm" (ngSubmit)="confirmCheckpoint()" class="space-y-4">
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Fase</p>
+            <select formControlName="stage" class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm">
+              @for (s of stages; track s) { <option [value]="s">{{ stageLabel[s] }}</option> }
+            </select>
+          </label>
+          <ng-container [ngTemplateOutlet]="photoPicker" />
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Comentario <span class="text-text-secondary font-normal">(opcional)</span></p>
+            <textarea rows="3" formControlName="note" class="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                      placeholder="Materiales del embalaje, estado de la caja, observaciones…"></textarea>
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showCheckpointDialog.set(false)"
+                    class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">Cancelar</button>
+            <button type="submit" [disabled]="checkpointForm.invalid || reportPhotos().length === 0 || busy()"
+                    class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">Enviar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Pedir cambios en una fase -->
+  @if (showCheckpointChangesDialog(); as c) {
     <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Pedir cambios: {{ stageLabel[c.stage] }}</h3>
+        <p class="text-sm text-text-secondary mb-4">Explica qué hay que corregir; tendrán que documentarlo de nuevo.</p>
+        <form [formGroup]="checkpointChangesForm" (ngSubmit)="confirmCheckpointChanges()">
+          <textarea rows="3" formControlName="reason" maxlength="500"
+                    placeholder="Ej. Falta el papel neutro entre la obra y la espuma."
+                    class="w-full rounded-lg border border-border px-3 py-2 text-sm mb-4"></textarea>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showCheckpointChangesDialog.set(null)"
+                    class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">Volver</button>
+            <button type="submit" [disabled]="checkpointChangesForm.invalid || busy()"
+                    class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold disabled:opacity-50">Pedir cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Subir certificado de seguro -->
+  @if (showInsuranceDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold text-text-main mb-1">Certificado de seguro</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          Debe cubrir al menos {{ documents()?.agreedValue | number:'1.0-0' }} € y todo el periodo del préstamo
+          ({{ l.startDate | date:'mediumDate' }} → {{ l.endDate | date:'mediumDate' }}), transporte incluido.
+        </p>
+        <form [formGroup]="insuranceForm" (ngSubmit)="confirmInsurance()" class="space-y-3">
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Tipo de cobertura</p>
+            <select formControlName="coverageType" class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm">
+              <option value="BORROWER_POLICY">Póliza de la institución</option>
+              <option value="STATE_INDEMNITY">Garantía del Estado (museos estatales)</option>
+              @if (isCollector()) {
+                <option value="LENDER_POLICY">Póliza del prestador (con reembolso de la prima)</option>
+              }
+            </select>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Aseguradora</p>
+              <input formControlName="insurer" placeholder="Ej. AXA Art" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Nº de póliza / orden</p>
+              <input formControlName="policyNumber" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+          </div>
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Suma asegurada (€)</p>
+            <input type="number" step="1" formControlName="insuredAmount" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Cubre desde</p>
+              <input type="date" formControlName="coverageStart" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Hasta</p>
+              <input type="date" formControlName="coverageEnd" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+          </div>
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Certificado (PDF)</p>
+            <input type="file" accept="application/pdf" (change)="onDocumentFileSelected($event)" class="text-sm" />
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showInsuranceDialog.set(false)"
+                    class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">Cancelar</button>
+            <button type="submit" [disabled]="insuranceForm.invalid || !documentFile() || busy()"
+                    class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">Subir certificado</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Rechazar certificado de seguro -->
+  @if (showRejectInsuranceDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Rechazar certificado de seguro</h3>
+        <p class="text-sm text-text-secondary mb-4">Explica qué falta para que la institución pueda corregirlo.</p>
+        <form [formGroup]="rejectInsuranceForm" (ngSubmit)="confirmRejectInsurance()">
+          <textarea rows="3" formControlName="reason" maxlength="500"
+                    placeholder="Ej. La póliza no cubre el transporte de vuelta."
+                    class="w-full rounded-lg border border-border px-3 py-2 text-sm mb-4"></textarea>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showRejectInsuranceDialog.set(false)"
+                    class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">Volver</button>
+            <button type="submit" [disabled]="rejectInsuranceForm.invalid || busy()"
+                    class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-50">Rechazar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Adjuntar permiso de exportación -->
+  @if (showPermitDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold text-text-main mb-1">Permiso de exportación temporal</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          La fecha límite de retorno debe ser posterior al fin del préstamo ({{ l.endDate | date:'mediumDate' }}).
+        </p>
+        <form [formGroup]="permitForm" (ngSubmit)="confirmPermit()" class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Nº de resolución</p>
+              <input formControlName="resolutionNumber" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Emitida por</p>
+              <input formControlName="issuedBy" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Fecha de la resolución</p>
+              <input type="date" formControlName="issueDate" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+            <label class="block">
+              <p class="text-sm font-medium text-text-main pb-1">Retorno antes del</p>
+              <input type="date" formControlName="returnDeadline" class="w-full rounded-lg border border-border h-11 px-3 text-sm" />
+            </label>
+          </div>
+          <label class="block">
+            <p class="text-sm font-medium text-text-main pb-1">Resolución (PDF)</p>
+            <input type="file" accept="application/pdf" (change)="onDocumentFileSelected($event)" class="text-sm" />
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showPermitDialog.set(false)"
+                    class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">Cancelar</button>
+            <button type="submit" [disabled]="permitForm.invalid || !documentFile() || busy()"
+                    class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">Adjuntar permiso</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Rechazar solicitud -->
+  @if (showRejectDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-text-main mb-1">Rechazar solicitud</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          La fundación verá el motivo. Esta acción no se puede deshacer.
+        </p>
+        <form [formGroup]="rejectForm" (ngSubmit)="confirmReject()">
+          <label class="block mb-4">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Motivo <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
+            <textarea rows="3" formControlName="reason" maxlength="500"
+              placeholder="Por ejemplo: la obra no puede viajar en esas fechas por una restauración."
+              class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+          </label>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="showRejectDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Volver
+            </button>
+            <button type="submit" [disabled]="rejectForm.invalid || busy()"
+              class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-50">
+              Rechazar solicitud
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Selector de fotos compartido por los informes de estado -->
+  <ng-template #photoPicker>
+    <div>
+      <p class="text-text-main text-sm font-medium pb-2">
+        Fotografías de la obra
+        <span class="text-text-secondary font-normal">(mín. 1, máx. {{ maxReportPhotos }})</span>
+      </p>
+      <div class="grid grid-cols-4 gap-2">
+        @for (p of reportPhotos(); track $index) {
+          <div class="relative aspect-square rounded-lg border border-border bg-gray-soft flex items-center justify-center p-1">
+            <span class="text-[10px] text-text-secondary text-center break-all line-clamp-3">{{ p.name }}</span>
+            <button type="button" (click)="removeReportPhoto($index)" title="Quitar"
+              class="absolute -top-2 -right-2 size-6 rounded-full bg-white border border-border shadow
+                     flex items-center justify-center text-text-secondary hover:text-red-600">
+              <span class="material-symbols-outlined" style="font-size:14px;">close</span>
+            </button>
+          </div>
+        }
+        @if (reportPhotos().length < maxReportPhotos) {
+          <label class="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary
+                        flex flex-col items-center justify-center cursor-pointer text-text-secondary hover:text-primary">
+            <span class="material-symbols-outlined" style="font-size:22px;">add_a_photo</span>
+            <span class="text-[10px] font-medium mt-1">Añadir</span>
+            <input type="file" multiple accept="image/jpeg,image/png,image/webp" class="hidden"
+                   (change)="onReportPhotosSelected($event)" />
+          </label>
+        }
+      </div>
+      @if (reportPhotos().length === 0) {
+        <p class="text-xs text-amber-700 mt-2">Añade al menos una foto: sin fotos el informe no sirve como prueba.</p>
+      }
+    </div>
+  </ng-template>
+
+  <!-- Confirmar recogida (informe de estado de salida) -->
+  @if (showPickupDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold text-text-main mb-1">Confirmar recogida</h3>
+        <p class="text-sm text-text-secondary mb-4">
+          Documenta el estado de la obra al recogerla. Este informe protege a todas las partes si
+          aparece un daño durante el transporte.
+        </p>
+        <form [formGroup]="pickupForm" (ngSubmit)="confirmPickup()" class="space-y-4">
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">Estado de conservación</p>
+            <select formControlName="condition"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+              <option [ngValue]="null" disabled>Selecciona…</option>
+              @for (o of conditionOptions; track o.value) {
+                <option [ngValue]="o.value">{{ o.label }} · {{ o.description }}</option>
+              }
+            </select>
+          </label>
+          <ng-container [ngTemplateOutlet]="photoPicker" />
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer">
+            <input type="checkbox" formControlName="damageReported"
+                   class="h-5 w-5 mt-0.5 rounded border-border text-red-600 focus:ring-red-500" />
+            <div>
+              <p class="font-bold text-text-main text-sm">Hay daños o incidencias</p>
+              <p class="text-xs text-text-secondary mt-0.5">Descríbelos en las observaciones.</p>
+            </div>
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Observaciones <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
+            <textarea rows="3" formControlName="notes"
+              placeholder="Embalaje, marco, firma, cualquier detalle relevante…"
+              class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+          </label>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="showPickupDialog.set(false)"
+              class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="pickupForm.invalid || reportPhotos().length === 0 || busy()"
+              class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-bold disabled:opacity-50">
+              Confirmar recogida
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Confirmar entrega (informe de estado de llegada) -->
+  @if (showDeliveryDialog()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
         <h3 class="text-xl font-bold text-text-main mb-1">Confirmar entrega</h3>
-        <p class="text-sm text-text-secondary mb-4">Indica quién recibe la obra y cualquier observación.</p>
-        <form [formGroup]="deliveryForm" (ngSubmit)="confirmDelivery()" class="space-y-3">
+        <p class="text-sm text-text-secondary mb-4">
+          Indica quién recibe la obra y documenta su estado a la llegada.
+        </p>
+        <form [formGroup]="deliveryForm" (ngSubmit)="confirmDelivery()" class="space-y-4">
           <label class="block">
             <p class="text-text-main text-sm font-medium pb-2">Recibido por</p>
             <input formControlName="receivedBy" placeholder="Nombre de la persona que recibe"
@@ -620,9 +1305,33 @@
                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
           </label>
           <label class="block">
-            <p class="text-text-main text-sm font-medium pb-2">Notas</p>
+            <p class="text-text-main text-sm font-medium pb-2">Estado de conservación a la llegada</p>
+            <select formControlName="condition"
+              class="w-full rounded-lg border border-border bg-white h-11 px-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+              <option [ngValue]="null" disabled>Selecciona…</option>
+              @for (o of conditionOptions; track o.value) {
+                <option [ngValue]="o.value">{{ o.label }} · {{ o.description }}</option>
+              }
+            </select>
+          </label>
+          <ng-container [ngTemplateOutlet]="photoPicker" />
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer">
+            <input type="checkbox" formControlName="damageReported"
+                   class="h-5 w-5 mt-0.5 rounded border-border text-red-600 focus:ring-red-500" />
+            <div>
+              <p class="font-bold text-text-main text-sm">La obra ha llegado con daños o incidencias</p>
+              <p class="text-xs text-text-secondary mt-0.5">
+                Quedará marcado en el historial. Compara con las fotos de la recogida.
+              </p>
+            </div>
+          </label>
+          <label class="block">
+            <p class="text-text-main text-sm font-medium pb-2">
+              Observaciones <span class="text-text-secondary font-normal">(opcional)</span>
+            </p>
             <textarea rows="3" formControlName="notes"
-              placeholder="Estado de la obra a la recepción, observaciones del transporte…"
+              placeholder="Estado del embalaje, observaciones del transporte…"
               class="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
           </label>
@@ -631,7 +1340,7 @@
               class="px-4 py-2 rounded-lg bg-white border border-border hover:bg-gray-soft text-sm font-medium">
               Cancelar
             </button>
-            <button type="submit" [disabled]="deliveryForm.invalid || busy()"
+            <button type="submit" [disabled]="deliveryForm.invalid || reportPhotos().length === 0 || busy()"
               class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-50">
               Confirmar entrega
             </button>

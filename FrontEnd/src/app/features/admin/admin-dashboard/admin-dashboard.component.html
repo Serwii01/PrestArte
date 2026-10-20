@@ -86,15 +86,15 @@
                 @if (u.verificationFileId) {
                   <div class="flex items-center gap-3">
                     @if (isImage(u.verificationFileType)) {
-                      <a [href]="fileUrl(u.verificationFileId)" target="_blank" rel="noopener"
+                      <a [href]="u.verificationFileId | secureFile | async" target="_blank" rel="noopener"
                          [title]="u.verificationFileName || 'Documento adjunto'"
                          class="block size-12 rounded-lg overflow-hidden border border-border bg-gray-soft hover:opacity-90 transition-opacity shrink-0">
-                        <img [src]="fileUrl(u.verificationFileId)"
+                        <img [src]="u.verificationFileId | secureFile | async"
                              [alt]="u.verificationFileName || 'Documento'"
                              class="w-full h-full object-cover" />
                       </a>
                     } @else {
-                      <a [href]="fileUrl(u.verificationFileId)" target="_blank" rel="noopener"
+                      <a [href]="u.verificationFileId | secureFile | async" target="_blank" rel="noopener"
                          [title]="u.verificationFileName || 'Documento adjunto'"
                          class="size-12 rounded-lg border border-border bg-primary/5 text-primary
                                 flex items-center justify-center shrink-0 hover:bg-primary/10 transition-colors">
@@ -102,12 +102,12 @@
                       </a>
                     }
                     <div class="min-w-0">
-                      <a [href]="fileUrl(u.verificationFileId)" target="_blank" rel="noopener"
+                      <a [href]="u.verificationFileId | secureFile | async" target="_blank" rel="noopener"
                          class="text-sm font-bold text-primary hover:underline inline-flex items-center gap-1">
                         Ver
                         <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
                       </a>
-                      <a [href]="fileUrl(u.verificationFileId)" [download]="u.verificationFileName"
+                      <a [href]="u.verificationFileId | secureFile | async" [download]="u.verificationFileName"
                          class="ml-2 text-xs text-text-secondary hover:text-primary inline-flex items-center gap-1">
                         <span class="material-symbols-outlined" style="font-size:14px;">download</span>
                         Descargar
