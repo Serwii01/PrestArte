@@ -202,7 +202,7 @@ public class ShipmentService {
         } else {
             loanRequestService.onShipmentPickedUp(loan, shipment);
             if (report.isDamageReported()) {
-                loanRequestService.recordShipmentEvent(loan, "Incidencia en la recogida." + damageSuffix(report));
+                loanRequestService.recordShipmentIncident(loan, "Incidencia en la recogida." + damageSuffix(report));
             }
         }
         return mapToResponse(shipment);
@@ -265,7 +265,7 @@ public class ShipmentService {
             loanRequestService.onShipmentDelivered(loan, receivedBy);
         }
         if (report.isDamageReported()) {
-            loanRequestService.recordShipmentEvent(loan, "Incidencia en la entrega." + damageSuffix(report));
+            loanRequestService.recordShipmentIncident(loan, "Incidencia en la entrega." + damageSuffix(report));
         }
         return mapToResponse(shipment);
     }

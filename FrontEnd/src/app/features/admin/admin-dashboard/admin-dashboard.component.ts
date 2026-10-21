@@ -8,12 +8,20 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Role, UserResponse } from '../../../core/models/user.models';
 import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
 import { SecureFilePipe } from '../../../shared/pipes/secure-file.pipe';
+import { DueDiligencePanelComponent } from '../due-diligence-panel.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, StatCardComponent, ChatsShortcutComponent, SecureFilePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    StatCardComponent,
+    ChatsShortcutComponent,
+    SecureFilePipe,
+    DueDiligencePanelComponent,
+  ],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
 })

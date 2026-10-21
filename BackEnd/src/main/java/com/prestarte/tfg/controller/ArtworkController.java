@@ -1,12 +1,17 @@
 package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.ArtworkDto;
+import com.prestarte.tfg.model.dto.ArtworkPage;
+import com.prestarte.tfg.model.dto.ArtworkSearchCriteria;
+import com.prestarte.tfg.model.dto.BusyPeriod;
 import com.prestarte.tfg.model.dto.CompatibilityReport;
 import com.prestarte.tfg.model.dto.CostEstimate;
 import com.prestarte.tfg.model.dto.CreateArtworkRequest;
+import com.prestarte.tfg.model.dto.ExhibitionHistoryItem;
 import com.prestarte.tfg.model.dto.UpdateArtworkRequest;
 import com.prestarte.tfg.service.ArtworkService;
 import com.prestarte.tfg.service.CostEstimateService;
+import com.prestarte.tfg.service.ExhibitionService;
 import com.prestarte.tfg.service.FacilityReportService;
 import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.Valid;
@@ -36,6 +41,7 @@ public class ArtworkController {
     private final ArtworkService artworkService;
     private final FacilityReportService facilityReportService;
     private final CostEstimateService costEstimateService;
+    private final ExhibitionService exhibitionService;
 
     /** Da de alta una nueva obra en el catálogo. */
     @PostMapping
@@ -77,6 +83,24 @@ public class ArtworkController {
                                         @RequestParam Long exhibitionId,
                                         @RequestParam(required = false) Long transportCompanyId) {
         return costEstimateService.forRequest(id, exhibitionId, transportCompanyId);
+    }
+
+    /** Búsqueda del catálogo con filtros y paginación (parámetros en ArtworkSearchCriteria). */
+    @GetMapping("/search")
+    public ArtworkPage search(ArtworkSearchCriteria criteria) {
+        return artworkService.search(criteria);
+    }
+
+    /** Periodos en los que la obra ya está reservada (calendario de disponibilidad). */
+    @GetMapping("/{id}/availability")
+    public List<BusyPeriod> getAvailability(@PathVariable Long id) {
+        return artworkService.availability(id);
+    }
+
+    /** Historial público de exposiciones de la obra. */
+    @GetMapping("/{id}/exhibitions")
+    public List<ExhibitionHistoryItem> getExhibitionHistory(@PathVariable Long id) {
+        return exhibitionService.historyOf(id);
     }
 
     /** Devuelve todas las obras de un coleccionista concreto. */

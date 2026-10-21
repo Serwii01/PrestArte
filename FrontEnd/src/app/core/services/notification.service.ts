@@ -13,6 +13,17 @@ import { ShipmentService } from './shipment.service';
 
 export type NotificationSeverity = 'info' | 'warning' | 'success';
 
+/** Aviso guardado en el backend. */
+export interface FeedItem {
+  id: number;
+  title: string;
+  message: string;
+  /** Ruta del frontend, p. ej. /app/loans/12 */
+  link?: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
 export interface NotificationItem {
   id: string;
   icon: string;
@@ -35,9 +46,16 @@ export class NotificationService {
   private readonly loanService = inject(LoanService);
   private readonly shipmentService = inject(ShipmentService);
 
+  /** Acciones pendientes, calculadas a partir de los datos de cada rol. */
   readonly notifications = signal<NotificationItem[]>([]);
   readonly loading = signal(false);
-  readonly unreadCount = computed(() => this.notifications().length);
+
+  /** Avisos guardados en el backend (hitos de los préstamos y recordatorios). */
+  readonly feed = signal<FeedItem[]>([]);
+  readonly feedUnread = computed(() => this.feed().filter((f) => !f.read).length);
+
+  /** Número del globo: acciones pendientes + avisos sin leer. */
+  readonly unreadCount = computed(() => this.notifications().length + this.feedUnread());
 
   private pollHandle?: ReturnType<typeof setInterval>;
 
@@ -53,8 +71,27 @@ export class NotificationService {
         this.pollHandle = setInterval(() => this.refresh(), 60_000);
       } else {
         this.notifications.set([]);
+        this.feed.set([]);
       }
     });
+  }
+
+  /** Marca un aviso como leído (optimista). */
+  markRead(id: number): void {
+    this.feed.update((items) => items.map((f) => (f.id === id ? { ...f, read: true } : f)));
+    this.http.post(`${environment.apiBaseUrl}/notifications/${id}/read`, {}).subscribe({ error: () => {} });
+  }
+
+  markAllRead(): void {
+    this.feed.update((items) => items.map((f) => ({ ...f, read: true })));
+    this.http.post(`${environment.apiBaseUrl}/notifications/read-all`, {}).subscribe({ error: () => {} });
+  }
+
+  private loadFeed(): void {
+    this.http
+      .get<FeedItem[]>(`${environment.apiBaseUrl}/notifications`)
+      .pipe(catchError(() => of<FeedItem[]>([])))
+      .subscribe((items) => this.feed.set(items));
   }
 
   private stopPolling(): void {
@@ -71,6 +108,7 @@ export class NotificationService {
     if (!role || userId == null) return;
 
     this.loading.set(true);
+    this.loadFeed();
     switch (role) {
       case 'COLLECTOR':
         this.loadCollector(userId);

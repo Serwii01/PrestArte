@@ -3,7 +3,7 @@ import { Component, computed, ElementRef, HostListener, inject, signal } from '@
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { NotificationService } from '../../../core/services/notification.service';
+import { FeedItem, NotificationService } from '../../../core/services/notification.service';
 import { Role } from '../../../core/models/user.models';
 
 interface NavLink {
@@ -78,6 +78,13 @@ export class MainLayoutComponent {
 
   closeNotifications(): void {
     this.notifOpen.set(false);
+  }
+
+  /** Click en un aviso guardado: lo marca como leído y navega a su enlace. */
+  openFeedItem(f: FeedItem): void {
+    if (!f.read) this.notifications.markRead(f.id);
+    this.notifOpen.set(false);
+    if (f.link) this.router.navigateByUrl(f.link);
   }
 
   /** Click en una notificación: navega al destino y cierra el dropdown. */

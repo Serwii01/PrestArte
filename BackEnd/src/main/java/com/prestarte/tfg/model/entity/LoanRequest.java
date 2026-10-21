@@ -2,6 +2,7 @@ package com.prestarte.tfg.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,6 +82,20 @@ public class LoanRequest {
 
     /** Momento en que se canceló el préstamo. */
     private LocalDateTime cancelledAt;
+
+    /**
+     * Ampliación pendiente: nueva fecha de fin que pide la fundación mientras
+     * la obra está en préstamo. Nula si no hay ninguna pendiente.
+     */
+    private LocalDate requestedEndDate;
+
+    @Column(length = 500)
+    private String extensionReason;
+
+    /** Fecha en que se envió la solicitud (nula en solicitudes anteriores a este campo). */
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     /**
      * Motivo del rechazo, indicado por el coleccionista o generado por el

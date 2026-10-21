@@ -89,6 +89,11 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Columna principal -->
           <div class="lg:col-span-2 space-y-6">
+            <section class="stitch-card p-6">
+              <h2 class="text-lg font-bold text-text-main mb-3">Valoraciones de museos y coleccionistas</h2>
+              <app-rating-badge [userId]="p.id" [showComments]="true" />
+            </section>
+
             @if (p.description) {
               <section class="stitch-card p-6">
                 <h2 class="text-lg font-bold text-text-main mb-3">Sobre la empresa</h2>

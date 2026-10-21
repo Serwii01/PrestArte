@@ -55,6 +55,7 @@ public class LoanRequestService {
     private final ExhibitionService exhibitionService;
     private final FacilityReportService facilityReportService;
     private final LoanDocumentsService loanDocumentsService;
+    private final ProvenanceService provenanceService;
     private final LoanStateMachine stateMachine;
     private final CurrentUser currentUser;
 
@@ -75,6 +76,7 @@ public class LoanRequestService {
         Artwork artwork = artworkRepository.findById(dto.getArtworkId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", dto.getArtworkId()));
 
+        provenanceService.requireLendable(artwork);
         if (!artwork.isAvailableForLoan()) {
             throw new IllegalStateException(
                     "Esta obra no está disponible para préstamo en este momento.");
@@ -304,6 +306,77 @@ public class LoanRequestService {
         return convertToResponse(loan);
     }
 
+    // ===== Ampliación del préstamo =====
+
+    /** La fundación pide ampliar el préstamo mientras la obra está expuesta. */
+    @Transactional
+    public LoanResponse requestExtension(Long loanId, LocalDate newEnd, String reason) {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getFoundation().getId());
+        if (loan.getStatus() != LoanRequest.Status.ON_LOAN) {
+            throw new IllegalStateException("Solo se puede ampliar un préstamo con la obra expuesta.");
+        }
+        if (loan.getRequestedEndDate() != null) {
+            throw new IllegalStateException("Ya hay una ampliación pendiente de respuesta.");
+        }
+        if (!newEnd.isAfter(loan.getEndDate())) {
+            throw new IllegalArgumentException("La nueva fecha debe ser posterior a la actual (" + loan.getEndDate() + ").");
+        }
+        String cleanReason = reason != null && !reason.isBlank() ? reason.trim() : null;
+        loan.setRequestedEndDate(newEnd);
+        loan.setExtensionReason(cleanReason);
+        loanRequestRepository.save(loan);
+        loanEventService.recordImportant(loan, "La fundación pide ampliar el préstamo hasta el " + newEnd
+                + (cleanReason != null ? ": " + cleanReason : "."));
+        return convertToResponse(loan);
+    }
+
+    /**
+     * El coleccionista aprueba la ampliación. Se comprueba que la obra no
+     * esté comprometida después y que el permiso de exportación lo permita.
+     */
+    @Transactional
+    public LoanResponse approveExtension(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
+        LocalDate newEnd = loan.getRequestedEndDate();
+        if (newEnd == null) {
+            throw new IllegalStateException("No hay ninguna ampliación pendiente.");
+        }
+        boolean clash = loanRequestRepository.existsOverlappingLoan(
+                loan.getArtwork().getId(), loan.getId(), loan.getEndDate(), newEnd);
+        if (clash) {
+            throw new IllegalStateException("La obra ya está comprometida con otro préstamo en esas fechas.");
+        }
+        List<String> warnings = loanDocumentsService.extensionWarnings(loan, newEnd);
+
+        LocalDate oldEnd = loan.getEndDate();
+        loan.setEndDate(newEnd);
+        loan.setRequestedEndDate(null);
+        loan.setExtensionReason(null);
+        loanRequestRepository.save(loan);
+        loanEventService.recordImportant(loan, "El coleccionista aprueba ampliar el préstamo del " + oldEnd
+                + " al " + newEnd + "." + (warnings.isEmpty() ? "" : " " + String.join(" ", warnings)));
+        return convertToResponse(loan);
+    }
+
+    @Transactional
+    public LoanResponse rejectExtension(Long loanId, String reason) {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getArtwork().getCollector().getId());
+        if (loan.getRequestedEndDate() == null) {
+            throw new IllegalStateException("No hay ninguna ampliación pendiente.");
+        }
+        LocalDate asked = loan.getRequestedEndDate();
+        loan.setRequestedEndDate(null);
+        loan.setExtensionReason(null);
+        loanRequestRepository.save(loan);
+        String cleanReason = reason != null && !reason.isBlank() ? reason.trim() : null;
+        loanEventService.recordImportant(loan, "El coleccionista no acepta ampliar el préstamo hasta el " + asked
+                + (cleanReason != null ? ": " + cleanReason : ". Se mantiene la fecha de fin del " + loan.getEndDate() + "."));
+        return convertToResponse(loan);
+    }
+
     /**
      * Cierra el ciclo del préstamo cuando el envío de retorno se ha
      * entregado al coleccionista. La llama {@link ShipmentService} al
@@ -392,6 +465,12 @@ public class LoanRequestService {
         loanEventService.record(loan, message);
     }
 
+    /** Registra una incidencia del envío (daños): avisa a las partes también por email. */
+    @Transactional
+    public void recordShipmentIncident(LoanRequest loan, String message) {
+        loanEventService.recordImportant(loan, message);
+    }
+
     // ===== Historial e informes de estado =====
 
     /** Historial del préstamo, si la sesión actual puede consultarlo. */
@@ -411,6 +490,26 @@ public class LoanRequestService {
         LoanRequest loan = findOrThrow(loanId);
         requireLoanAccess(loan);
         return facilityReportService.checkLoan(loan);
+    }
+
+    /**
+     * Certificado de exposición en PDF. Lo pueden descargar el coleccionista,
+     * la fundación y la administración una vez que la obra ha llegado a la
+     * exposición.
+     */
+    @Transactional(readOnly = true)
+    public byte[] getExhibitionCertificate(Long loanId) {
+        LoanRequest loan = findOrThrow(loanId);
+        if (!currentUser.isAdmin()) {
+            currentUser.requireAnyUserId(loan.getArtwork().getCollector().getId(), loan.getFoundation().getId());
+        }
+        if (loan.getExhibition() == null) {
+            throw new IllegalStateException("Este préstamo no está asociado a ninguna exposición.");
+        }
+        if (!ExhibitionService.EXHIBITED.contains(loan.getStatus())) {
+            throw new IllegalStateException("El certificado está disponible cuando la obra ha llegado a la exposición.");
+        }
+        return pdfGeneratorService.generateExhibitionCertificate(loan);
     }
 
     /** Informes de estado del préstamo, si la sesión actual puede consultarlo. */
@@ -659,6 +758,8 @@ public class LoanRequestService {
                 .cancellationReason(l.getCancellationReason())
                 .rejectionReason(l.getRejectionReason())
                 .agreedValue(l.getAgreedValue())
+                .requestedEndDate(l.getRequestedEndDate())
+                .extensionReason(l.getExtensionReason())
                 .build();
     }
 }

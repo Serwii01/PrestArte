@@ -77,8 +77,28 @@ public class PdfGeneratorService {
             addSectionHeader(document, "II. ESPECIFICACIONES DE LA OBRA ASEGURADA", sectionFont, accentColor);
             PdfPTable artTable = createTable(2);
             addInfoRow(artTable, "TÍTULO:", loan.getArtwork().getTitle(), labelFont, valueFont);
-            addInfoRow(artTable, "VALOR ESTIMADO (ASEGURADO):", String.format("%.2f €", loan.getArtwork().getEstimatedValue()), labelFont, valueFont);
+            Double insured = loan.getAgreedValue() != null ? loan.getAgreedValue() : loan.getArtwork().getEstimatedValue();
+            addInfoRow(artTable, "VALOR ASEGURADO ACORDADO:", String.format("%.2f €", insured), labelFont, valueFont);
+            if (loan.getExhibition() != null) {
+                addInfoRow(artTable, "EXPOSICIÓN:", loan.getExhibition().getTitle() + " — "
+                        + loan.getExhibition().getVenueName() + ", " + loan.getExhibition().getVenueCity(), labelFont, valueFont);
+            }
+            addInfoRow(artTable, "PERIODO DEL PRÉSTAMO:", loan.getStartDate().format(formatter) + " – "
+                    + loan.getEndDate().format(formatter), labelFont, valueFont);
             document.add(artTable);
+
+            // --- Condiciones del prestador: cartela, imagen y canon ---
+            addSectionHeader(document, "CONDICIONES DEL PRESTADOR", sectionFont, accentColor);
+            PdfPTable termsTable = createTable(2);
+            String credit = loan.getArtwork().getCreditLine() != null ? loan.getArtwork().getCreditLine() : "Colección particular";
+            addInfoRow(termsTable, "MENCIÓN EN CARTELA:", credit, labelFont, valueFont);
+            addInfoRow(termsTable, "USOS DE IMAGEN AUTORIZADOS:", describeImageRights(loan.getArtwork().getImageRights()), labelFont, valueFont);
+            Double fee = loan.getArtwork().getLoanFee();
+            addInfoRow(termsTable, "CANON DE PRÉSTAMO:", fee != null && fee > 0 ? String.format("%.2f €", fee) : "Gratuito", labelFont, valueFont);
+            if (loan.getAgreedConditions() != null && !loan.getAgreedConditions().isBlank()) {
+                addInfoRow(termsTable, "CONDICIONES ACORDADAS:", loan.getAgreedConditions(), labelFont, valueFont);
+            }
+            document.add(termsTable);
 
             // --- 4. LOGÍSTICA Y SEGURO (Novedad) ---
             addSectionHeader(document, "III. LOGÍSTICA Y COBERTURA DE SEGURO NAIL-TO-NAIL", sectionFont, accentColor);
@@ -121,7 +141,95 @@ public class PdfGeneratorService {
         return out.toByteArray();
     }
 
+    /**
+     * Certificado de exposición: acredita que la obra se expuso en una
+     * institución. Forma parte del historial de la obra y aumenta su valor
+     * de procedencia, uno de los motivos por los que un coleccionista presta.
+     */
+    public byte[] generateExhibitionCertificate(LoanRequest loan) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4.rotate(), 60, 60, 60, 60);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", java.util.Locale.forLanguageTag("es-ES"));
+        Color accent = new Color(41, 128, 185);
+
+        try {
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Font small = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.GRAY);
+            Font title = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 26, new Color(44, 62, 80));
+            Font big = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, accent);
+            Font body = FontFactory.getFont(FontFactory.HELVETICA, 13, Color.DARK_GRAY);
+            Font bodyBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, Color.DARK_GRAY);
+
+            Paragraph brand = new Paragraph("PRESTARTE", small);
+            brand.setAlignment(Element.ALIGN_CENTER);
+            document.add(brand);
+
+            Paragraph t = new Paragraph("CERTIFICADO DE EXPOSICIÓN", title);
+            t.setAlignment(Element.ALIGN_CENTER);
+            t.setSpacingBefore(10);
+            t.setSpacingAfter(30);
+            document.add(t);
+
+            Paragraph intro = new Paragraph("Se certifica que la obra", body);
+            intro.setAlignment(Element.ALIGN_CENTER);
+            document.add(intro);
+
+            Paragraph art = new Paragraph("«" + loan.getArtwork().getTitle() + "»", big);
+            art.setAlignment(Element.ALIGN_CENTER);
+            art.setSpacingBefore(6);
+            document.add(art);
+
+            String artist = loan.getArtwork().getArtist()
+                    + (loan.getArtwork().getYear() != null ? ", " + loan.getArtwork().getYear() : "");
+            Paragraph a = new Paragraph(artist, bodyBold);
+            a.setAlignment(Element.ALIGN_CENTER);
+            a.setSpacingAfter(20);
+            document.add(a);
+
+            var ex = loan.getExhibition();
+            Paragraph p = new Paragraph();
+            p.setAlignment(Element.ALIGN_CENTER);
+            p.add(new Chunk("ha formado parte de la exposición ", body));
+            p.add(new Chunk("«" + ex.getTitle() + "»", bodyBold));
+            p.add(new Chunk(", organizada por ", body));
+            p.add(new Chunk(loan.getFoundation().getName(), bodyBold));
+            p.add(new Chunk(" en " + ex.getVenueName() + " (" + ex.getVenueCity() + "), del "
+                    + ex.getOpeningDate().format(formatter) + " al " + ex.getClosingDate().format(formatter) + ".", body));
+            document.add(p);
+
+            String credit = loan.getArtwork().getCreditLine() != null ? loan.getArtwork().getCreditLine() : "Colección particular";
+            Paragraph c = new Paragraph("Prestada por: " + credit, body);
+            c.setAlignment(Element.ALIGN_CENTER);
+            c.setSpacingBefore(20);
+            document.add(c);
+
+            Paragraph ref = new Paragraph("Referencia del préstamo: PA-" + loan.getId()
+                    + " · Emitido el " + java.time.LocalDate.now().format(formatter), small);
+            ref.setAlignment(Element.ALIGN_CENTER);
+            ref.setSpacingBefore(40);
+            document.add(ref);
+
+            document.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al generar el certificado de exposición: " + e.getMessage());
+        }
+        return out.toByteArray();
+    }
+
     // --- MÉTODOS AUXILIARES ---
+
+    private static String describeImageRights(com.prestarte.tfg.model.entity.ImageRights r) {
+        if (r == null) return "Ninguno (solicitar autorización expresa)";
+        java.util.List<String> uses = new java.util.ArrayList<>();
+        if (Boolean.TRUE.equals(r.getCatalog())) uses.add("catálogo");
+        if (Boolean.TRUE.equals(r.getPress())) uses.add("prensa");
+        if (Boolean.TRUE.equals(r.getSocialMedia())) uses.add("web y redes sociales");
+        if (Boolean.TRUE.equals(r.getMerchandise())) uses.add("productos de tienda");
+        if (Boolean.TRUE.equals(r.getVisitorPhotos())) uses.add("fotografía del público sin flash");
+        return uses.isEmpty() ? "Ninguno (solicitar autorización expresa)" : String.join(", ", uses);
+    }
     private void addSectionHeader(Document doc, String text, Font font, Color color) throws DocumentException {
         PdfPTable table = new PdfPTable(1);
         table.setWidthPercentage(100);

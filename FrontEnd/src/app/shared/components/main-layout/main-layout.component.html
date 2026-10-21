@@ -52,6 +52,33 @@
                 </button>
               </div>
 
+              <!-- Novedades (avisos guardados) -->
+              @if (notifications.feed().length > 0) {
+                <div class="px-4 pt-3 pb-1 flex items-center justify-between">
+                  <p class="text-[11px] uppercase font-bold tracking-wider text-text-secondary">Novedades</p>
+                  @if (notifications.feedUnread() > 0) {
+                    <button type="button" (click)="notifications.markAllRead()"
+                            class="text-[11px] font-bold text-primary hover:underline">Marcar todo como leído</button>
+                  }
+                </div>
+                <ul class="max-h-[240px] overflow-y-auto divide-y divide-border border-b border-border">
+                  @for (f of notifications.feed(); track f.id) {
+                    <li>
+                      <button type="button" (click)="openFeedItem(f)"
+                              class="w-full flex items-start gap-2 px-4 py-2.5 text-left hover:bg-gray-soft/50 transition-colors">
+                        <span class="mt-1.5 size-2 rounded-full shrink-0"
+                              [class.bg-primary]="!f.read" [class.bg-transparent]="f.read"></span>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-xs text-text-secondary">{{ f.title }} · {{ f.createdAt | date:'short' }}</p>
+                          <p class="text-sm text-text-main line-clamp-2" [class.font-bold]="!f.read">{{ f.message }}</p>
+                        </div>
+                      </button>
+                    </li>
+                  }
+                </ul>
+                <p class="px-4 pt-3 pb-1 text-[11px] uppercase font-bold tracking-wider text-text-secondary">Pendiente de ti</p>
+              }
+
               @if (notifications.loading()) {
                 <div class="py-8 text-center text-sm text-text-secondary">Cargando…</div>
               } @else if (notifications.notifications().length === 0) {

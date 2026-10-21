@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TransportCompanyService } from '../../core/services/transport-company.service';
 import { TransportCompanyProfile } from '../../core/models/transport-company.models';
+import { RatingBadgeComponent } from '../../shared/components/rating-badge/rating-badge.component';
 
 @Component({
   selector: 'app-partner-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RatingBadgeComponent],
   templateUrl: './partner-detail.component.html',
   styleUrl: './partner-detail.component.scss',
 })

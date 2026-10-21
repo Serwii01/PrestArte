@@ -22,6 +22,9 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     /** Devuelve los envíos asignados a una empresa de transporte concreta. */
     List<Shipment> findByTransportCompanyId(Long transportCompanyId);
 
+    /** Todos los envíos de un préstamo (ida, vuelta y reasignaciones). */
+    List<Shipment> findAllByLoanRequestId(Long loanId);
+
     /** Devuelve los envíos en un estado concreto de los préstamos de una fundación. */
     List<Shipment> findByLoanRequestFoundationIdAndStatus(Long foundationId, Shipment.ShipmentStatus status);
 

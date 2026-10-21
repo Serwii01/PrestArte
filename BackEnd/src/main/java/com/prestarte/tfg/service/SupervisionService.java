@@ -110,7 +110,7 @@ public class SupervisionService {
                 .author(userRepository.getReferenceById(currentUser.currentId()))
                 .build());
 
-        loanEventService.record(loan, "Se documenta el " + STAGE_LABEL.get(c.getStage())
+        loanEventService.recordImportant(loan, "Se documenta el " + STAGE_LABEL.get(c.getStage())
                 + " con " + dbFiles.size() + " foto(s) para la supervisión del coleccionista.");
         return toResponse(c);
     }
@@ -135,7 +135,7 @@ public class SupervisionService {
         c.setStatus(SupervisionCheckpoint.Status.CHANGES_REQUESTED);
         c.setReviewNote(reason.trim());
         c.setReviewedAt(LocalDateTime.now());
-        loanEventService.record(c.getLoanRequest(), "El coleccionista pide cambios en el "
+        loanEventService.recordImportant(c.getLoanRequest(), "El coleccionista pide cambios en el "
                 + STAGE_LABEL.get(c.getStage()) + ": " + reason.trim());
         return toResponse(checkpointRepository.save(c));
     }

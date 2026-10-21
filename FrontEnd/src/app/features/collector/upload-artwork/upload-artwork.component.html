@@ -87,6 +87,38 @@
       </label>
     </section>
 
+    <!-- Mención, imagen y canon -->
+    <section class="stitch-card p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="material-symbols-outlined text-primary">workspace_premium</span>
+        <h2 class="text-lg font-bold text-text-main">Mención, imagen y canon</h2>
+      </div>
+      <p class="text-sm text-text-secondary mb-4">
+        Cómo quieres aparecer y qué puede hacer la institución con la imagen de tu obra. Todo queda en el contrato.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="block">
+          <p class="text-text-main text-sm font-medium pb-2">Mención en cartela</p>
+          <input formControlName="creditLine" placeholder="Colección particular, Madrid"
+            class="w-full rounded-lg border border-border bg-white h-11 px-4 text-base" />
+        </label>
+        <label class="block">
+          <p class="text-text-main text-sm font-medium pb-2">Canon de préstamo (€) <span class="text-text-secondary font-normal">— vacío = gratuito</span></p>
+          <input type="number" step="1" formControlName="loanFee" placeholder="0"
+            class="w-full rounded-lg border border-border bg-white h-11 px-4 text-base" />
+        </label>
+      </div>
+      <p class="text-sm font-medium text-text-main mt-4 pb-2">La institución puede usar la imagen de la obra en…</p>
+      <div formGroupName="imageRights" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        @for (r of imageRightOptions; track r.key) {
+          <label class="flex items-center gap-2 p-2.5 rounded-lg border border-border cursor-pointer text-sm">
+            <input type="checkbox" [formControlName]="r.key" class="h-4 w-4 rounded border-border text-primary" />
+            {{ r.label }}
+          </label>
+        }
+      </div>
+    </section>
+
     <!-- Privacidad -->
     <section class="stitch-card p-6">
       <div class="flex items-center gap-2 mb-1">
@@ -482,8 +514,31 @@
         </div>
       }
 
+      <!-- Declaración de titularidad -->
+      @if (alreadyDeclared()) {
+        <p class="mb-3 text-xs text-emerald-800 bg-emerald-50 rounded-lg p-2 flex items-center gap-1">
+          <span class="material-symbols-outlined" style="font-size:16px;">verified</span>
+          Declaración de titularidad firmada.
+        </p>
+      } @else {
+        <label class="flex items-start gap-3 p-3 mb-3 rounded-lg border cursor-pointer"
+               [class.border-border]="form.controls.titleDeclared.value"
+               [class.border-amber-300]="!form.controls.titleDeclared.value"
+               [class.bg-amber-50]="!form.controls.titleDeclared.value">
+          <input type="checkbox" formControlName="titleDeclared"
+                 class="h-5 w-5 mt-0.5 rounded border-border text-primary focus:ring-primary shrink-0" />
+          <div>
+            <p class="font-bold text-text-main text-sm">Declaración de titularidad</p>
+            <p class="text-xs text-text-secondary mt-1 leading-relaxed">{{ titleDeclarationText }}</p>
+            @if (isEditMode()) {
+              <p class="text-xs text-amber-800 mt-1">Sin esta declaración la obra no puede recibir solicitudes.</p>
+            }
+          </div>
+        </label>
+      }
+
       <button type="submit"
-              [disabled]="form.invalid || loading()"
+              [disabled]="form.invalid || loading() || (!isEditMode() && !form.controls.titleDeclared.value)"
               class="flex w-full items-center justify-center gap-2 rounded-lg h-12 px-4
                      bg-primary hover:bg-primary-hover transition-colors
                      text-white text-base font-bold tracking-[0.015em] shadow-sm

@@ -10,6 +10,7 @@ import com.prestarte.tfg.model.dto.SupervisionCheckpointResponse;
 import com.prestarte.tfg.model.dto.LoanEventResponse;
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.dto.ExportPermitRequest;
+import com.prestarte.tfg.model.dto.ExtensionRequest;
 import com.prestarte.tfg.model.dto.InsuranceCertificateRequest;
 import com.prestarte.tfg.model.dto.LoanDocumentsResponse;
 import com.prestarte.tfg.model.dto.LoanResponse;
@@ -113,6 +114,35 @@ public class LoanRequestController {
                                                @Valid @RequestBody AcceptLoanRequest body) {
         return ResponseEntity.ok(loanRequestService.accept(
                 id, body.getTransportCompanyId(), body.isTransportCompanyMandatory(), body.getAgreedValue()));
+    }
+
+    // ===== Ampliación =====
+
+    @PostMapping("/{id}/extension")
+    public ResponseEntity<LoanResponse> requestExtension(@PathVariable Long id,
+                                                         @Valid @RequestBody ExtensionRequest body) {
+        return ResponseEntity.ok(loanRequestService.requestExtension(id, body.getNewEndDate(), body.getReason()));
+    }
+
+    @PostMapping("/{id}/extension/approve")
+    public ResponseEntity<LoanResponse> approveExtension(@PathVariable Long id) {
+        return ResponseEntity.ok(loanRequestService.approveExtension(id));
+    }
+
+    @PostMapping("/{id}/extension/reject")
+    public ResponseEntity<LoanResponse> rejectExtension(@PathVariable Long id,
+                                                        @Valid @RequestBody(required = false) CancelLoanRequest body) {
+        return ResponseEntity.ok(loanRequestService.rejectExtension(id, body != null ? body.getReason() : null));
+    }
+
+    /** Certificado de exposición en PDF (para el historial de la obra). */
+    @GetMapping("/{id}/exhibition-certificate")
+    public ResponseEntity<byte[]> getExhibitionCertificate(@PathVariable Long id) {
+        byte[] pdf = loanRequestService.getExhibitionCertificate(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Certificado_exposicion_PA-" + id + ".pdf");
+        return ResponseEntity.ok().headers(headers).body(pdf);
     }
 
     // ===== Coste estimado y huella de carbono =====

@@ -42,6 +42,9 @@ export interface LoanResponse {
   rejectionReason?: string | null;
   /** Valor asegurado acordado al aceptar (€). */
   agreedValue?: number | null;
+  /** Ampliación pendiente de aprobar por el coleccionista. */
+  requestedEndDate?: string | null;
+  extensionReason?: string | null;
 }
 
 /** Entrada del historial del préstamo. */

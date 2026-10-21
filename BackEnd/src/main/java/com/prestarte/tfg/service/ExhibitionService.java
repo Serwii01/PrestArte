@@ -1,8 +1,10 @@
 package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
+import com.prestarte.tfg.model.dto.ExhibitionHistoryItem;
 import com.prestarte.tfg.model.dto.ExhibitionRequest;
 import com.prestarte.tfg.model.dto.ExhibitionResponse;
+import com.prestarte.tfg.model.entity.Artwork;
 import com.prestarte.tfg.model.entity.Exhibition;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.model.entity.Role;
@@ -89,6 +91,35 @@ public class ExhibitionService {
         }
         return e;
     }
+
+    /**
+     * Historial público de exposiciones de una obra: las exposiciones en
+     * las que llegó a estar (entregada, en préstamo o ya devuelta). Haber
+     * sido expuesta en museos es parte del valor de una obra.
+     */
+    @Transactional(readOnly = true)
+    public List<ExhibitionHistoryItem> historyOf(Long artworkId) {
+        return loanRequestRepository.findByArtworkId(artworkId).stream()
+                .filter(l -> l.getExhibition() != null && EXHIBITED.contains(l.getStatus()))
+                .filter(l -> ProvenanceService.status(l.getArtwork()) != Artwork.DueDiligenceStatus.FLAGGED)
+                .map(LoanRequest::getExhibition)
+                .distinct()
+                .sorted(Comparator.comparing(Exhibition::getOpeningDate).reversed())
+                .map(e -> ExhibitionHistoryItem.builder()
+                        .title(e.getTitle())
+                        .venueName(e.getVenueName())
+                        .venueCity(e.getVenueCity())
+                        .foundationName(e.getFoundation().getName())
+                        .openingDate(e.getOpeningDate())
+                        .closingDate(e.getClosingDate())
+                        .build())
+                .toList();
+    }
+
+    /** Estados en los que la obra llegó a exponerse. */
+    static final java.util.Set<LoanRequest.Status> EXHIBITED = java.util.EnumSet.of(
+            LoanRequest.Status.DELIVERED, LoanRequest.Status.ON_LOAN,
+            LoanRequest.Status.RETURNING, LoanRequest.Status.RETURNED);
 
     // ===== Helpers =====
 

@@ -43,6 +43,12 @@ public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> 
     /** Devuelve todos los préstamos asociados a obras de un coleccionista. */
     List<LoanRequest> findByArtworkCollectorId(Long collectorId);
 
+    /** Indica si una fundación ha pedido alguna vez una obra concreta. */
+    boolean existsByArtworkIdAndFoundationId(Long artworkId, Long foundationId);
+
+    /** Préstamos de una obra (para su historial de exposiciones). */
+    List<LoanRequest> findByArtworkId(Long artworkId);
+
     /** Solicitudes de una exposición. */
     List<LoanRequest> findByExhibitionId(Long exhibitionId);
 

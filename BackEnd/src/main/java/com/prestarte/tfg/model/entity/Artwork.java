@@ -78,6 +78,22 @@ public class Artwork {
     @Embedded
     private LoanRequirements requirements;
 
+    // ===== Condiciones del prestador =====
+
+    /**
+     * Texto de la cartela y créditos, tal y como quiere aparecer el
+     * prestador (p. ej. "Colección particular, Madrid").
+     */
+    @Column(length = 200)
+    private String creditLine;
+
+    /** Usos autorizados de la imagen de la obra durante el préstamo. */
+    @Embedded
+    private ImageRights imageRights;
+
+    /** Canon que pide el prestador por el préstamo (€). Nulo o 0 = gratuito. */
+    private Double loanFee;
+
     /**
      * Ciudad o provincia donde se encuentra la obra. Es el único dato de
      * ubicación que se muestra públicamente.
@@ -110,6 +126,19 @@ public class Artwork {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private HeritageStatus heritageStatus;
+
+    // ===== Titularidad y procedencia =====
+
+    /**
+     * Momento en que el coleccionista firmó la declaración de titularidad
+     * ({@link #TITLE_DECLARATION}). Sin ella la obra no recibe solicitudes.
+     */
+    private LocalDateTime titleDeclaredAt;
+
+    /** Resultado vigente de la diligencia debida. Nulo equivale a PENDING. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private DueDiligenceStatus dueDiligenceStatus;
 
     /** Quién puede ver la obra en el catálogo. Nulo equivale a PUBLIC. */
     @Builder.Default
@@ -160,6 +189,23 @@ public class Artwork {
     /** Estado de conservación posible de una obra. */
     public enum Condition {
         EXCELLENT, GOOD, FAIR, POOR, DAMAGED
+    }
+
+    /** Texto de la declaración de titularidad que firma el coleccionista. */
+    public static final String TITLE_DECLARATION =
+            "Declaro que soy el legítimo propietario de esta obra o que estoy autorizado por él para "
+            + "prestarla; que, según mi conocimiento, no ha sido robada, expoliada ni exportada "
+            + "ilícitamente; y que no conozco reclamaciones de terceros sobre ella. Me comprometo a "
+            + "comunicar a PrestArte cualquier reclamación que pueda surgir.";
+
+    /** Resultado de la diligencia debida de la administración. */
+    public enum DueDiligenceStatus {
+        /** Sin revisar todavía. */
+        PENDING,
+        /** Revisada sin incidencias. */
+        CLEAR,
+        /** Hay indicios de problema: la obra se retira del catálogo. */
+        FLAGGED
     }
 
     /** Protección patrimonial según la Ley 16/1985. */

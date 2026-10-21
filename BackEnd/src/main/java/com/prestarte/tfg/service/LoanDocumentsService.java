@@ -137,7 +137,7 @@ public class LoanDocumentsService {
                 .build();
         insuranceRepository.save(cert);
 
-        loanEventService.record(loan, (byCollector ? "El coleccionista" : "La fundación")
+        loanEventService.recordImportant(loan, (byCollector ? "El coleccionista" : "La fundación")
                 + " sube el certificado de seguro (" + coverageLabel(cert.getCoverageType()) + ", "
                 + cert.getInsurer() + ", " + euros(cert.getInsuredAmount()) + ")"
                 + (byCollector ? "." : ". Pendiente de aprobación del coleccionista."));
@@ -167,7 +167,7 @@ public class LoanDocumentsService {
         cert.setReviewNote(reason.trim());
         cert.setReviewedAt(LocalDateTime.now());
         insuranceRepository.save(cert);
-        loanEventService.record(loan, "El coleccionista rechaza el certificado de seguro: " + reason.trim());
+        loanEventService.recordImportant(loan, "El coleccionista rechaza el certificado de seguro: " + reason.trim());
         return buildStatus(loan);
     }
 
@@ -203,6 +203,31 @@ public class LoanDocumentsService {
                 + permit.getResolutionNumber() + "). La obra debe volver antes del "
                 + permit.getReturnDeadline() + ".");
         return buildStatus(loan);
+    }
+
+    /**
+     * Comprueba si el préstamo puede ampliarse hasta {@code newEnd}. Lanza
+     * una excepción si el permiso de exportación no lo permite (seguir
+     * fuera sería exportación ilícita) y devuelve avisos no bloqueantes,
+     * como un seguro que habrá que ampliar.
+     */
+    @Transactional(readOnly = true)
+    public List<String> extensionWarnings(LoanRequest loan, LocalDate newEnd) {
+        if (permitRequirement(loan).required()) {
+            ExportPermit permit = permitRepository
+                    .findFirstByLoanRequestIdOrderByCreatedAtDescIdDesc(loan.getId()).orElse(null);
+            if (permit != null && permit.getReturnDeadline().isBefore(newEnd)) {
+                throw new IllegalStateException("El permiso de exportación exige el retorno antes del "
+                        + permit.getReturnDeadline() + ". Pedid una prórroga al Ministerio de Cultura y "
+                        + "adjuntad la nueva resolución antes de ampliar.");
+            }
+        }
+        List<String> warnings = new ArrayList<>();
+        insuranceRepository.findFirstByLoanRequestIdOrderByCreatedAtDescIdDesc(loan.getId())
+                .filter(c -> c.getCoverageEnd().isBefore(newEnd))
+                .ifPresent(c -> warnings.add("El seguro cubre hasta el " + c.getCoverageEnd()
+                        + ": la institución debe ampliarlo hasta el " + newEnd + "."));
+        return warnings;
     }
 
     /** Si la obra necesita permiso para este préstamo, y por qué. */

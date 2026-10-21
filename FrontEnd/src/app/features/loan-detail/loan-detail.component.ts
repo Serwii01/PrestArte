@@ -41,6 +41,9 @@ import {
   SupervisionStage,
 } from '../../core/models/cost.models';
 import { CostEstimatePanelComponent } from '../../shared/components/cost-estimate-panel/cost-estimate-panel.component';
+import { LenderTermsComponent } from '../../shared/components/lender-terms/lender-terms.component';
+import { RatingBadgeComponent } from '../../shared/components/rating-badge/rating-badge.component';
+import { LoanReviews, Reviewable } from '../../core/models/review.models';
 import { CompatibilityPanelComponent } from '../../shared/components/compatibility-panel/compatibility-panel.component';
 import { RequirementsSummaryComponent } from '../../shared/components/requirements-summary/requirements-summary.component';
 
@@ -84,6 +87,8 @@ const TERMINAL: LoanStatus[] = ['REJECTED', 'CANCELLED', 'RETURNED'];
     CompatibilityPanelComponent,
     RequirementsSummaryComponent,
     CostEstimatePanelComponent,
+    LenderTermsComponent,
+    RatingBadgeComponent,
   ],
   templateUrl: './loan-detail.component.html',
   styleUrl: './loan-detail.component.scss',
@@ -110,6 +115,23 @@ export class LoanDetailComponent implements OnInit {
   protected readonly compatibility = signal<CompatibilityReport | null>(null);
   protected readonly documents = signal<LoanDocumentsResponse | null>(null);
   protected readonly costEstimate = signal<CostEstimate | null>(null);
+
+  /* ===== Ampliación, certificado y valoraciones ===== */
+
+  protected readonly reviews = signal<LoanReviews | null>(null);
+  protected readonly showExtensionDialog = signal(false);
+  protected readonly extensionRejectReason = signal('');
+  protected readonly reviewTarget = signal<Reviewable | null>(null);
+
+  protected readonly extensionForm = this.fb.nonNullable.group({
+    newEndDate: ['', [Validators.required]],
+    reason: ['', [Validators.maxLength(500)]],
+  });
+
+  protected readonly reviewForm = this.fb.nonNullable.group({
+    rating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],
+    comment: ['', [Validators.maxLength(1000)]],
+  });
   protected readonly supervision = signal<SupervisionCheckpoint[]>([]);
   protected readonly stageLabel = SUPERVISION_STAGE_LABEL;
   protected readonly stages = Object.keys(SUPERVISION_STAGE_LABEL) as SupervisionStage[];
@@ -421,9 +443,13 @@ export class LoanDetailComponent implements OnInit {
           supervision: this.loanService
             .getSupervision(id)
             .pipe(catchError(() => of([] as SupervisionCheckpoint[]))),
+          reviews: loan.status === 'RETURNED'
+            ? this.loanService.getReviews(id).pipe(catchError(() => of(null as LoanReviews | null)))
+            : of(null as LoanReviews | null),
         });
         tasks.subscribe({
-          next: ({ art, ship, ret, companies, history, reports, compatibility, documents, cost, supervision }) => {
+          next: ({ art, ship, ret, companies, history, reports, compatibility, documents, cost, supervision, reviews }) => {
+            this.reviews.set(reviews);
             this.compatibility.set(compatibility);
             this.documents.set(documents);
             this.costEstimate.set(cost);
@@ -620,6 +646,104 @@ export class LoanDetailComponent implements OnInit {
       'Permiso de exportación adjuntado.',
       () => this.showPermitDialog.set(false),
     );
+  }
+
+  // ----- Ampliación -----
+
+  protected readonly canRequestExtension = computed(
+    () => this.loan()?.status === 'ON_LOAN' && this.isFoundation() && !this.loan()?.requestedEndDate,
+  );
+
+  protected readonly canReviewExtension = computed(
+    () => this.isCollector() && !!this.loan()?.requestedEndDate,
+  );
+
+  openExtension(): void {
+    this.extensionForm.reset({ newEndDate: '', reason: '' });
+    this.showExtensionDialog.set(true);
+  }
+
+  confirmExtension(): void {
+    const id = this.loan()?.id;
+    if (!id || this.extensionForm.invalid) return;
+    const v = this.extensionForm.getRawValue();
+    this.run(
+      this.loanService.requestExtension(id, v.newEndDate, v.reason.trim() || undefined),
+      'Ampliación solicitada. El coleccionista la revisará.',
+      () => this.showExtensionDialog.set(false),
+    );
+  }
+
+  approveExtension(): void {
+    const id = this.loan()?.id;
+    if (!id) return;
+    this.run(this.loanService.approveExtension(id), 'Ampliación aprobada.');
+  }
+
+  rejectExtension(): void {
+    const id = this.loan()?.id;
+    if (!id) return;
+    this.run(
+      this.loanService.rejectExtension(id, this.extensionRejectReason().trim() || undefined),
+      'Ampliación rechazada.',
+      () => this.extensionRejectReason.set(''),
+    );
+  }
+
+  // ----- Certificado de exposición -----
+
+  protected readonly canDownloadCertificate = computed(() => {
+    const l = this.loan();
+    const exhibited: LoanStatus[] = ['DELIVERED', 'ON_LOAN', 'RETURNING', 'RETURNED'];
+    return !!l?.exhibitionId && exhibited.includes(l.status)
+      && (this.isCollector() || this.isFoundation() || this.isAdmin());
+  });
+
+  downloadCertificate(): void {
+    const id = this.loan()?.id;
+    if (!id) return;
+    this.loanService.downloadExhibitionCertificate(id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificado_exposicion_PA-${id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('No se pudo descargar el certificado.'),
+    });
+  }
+
+  // ----- Valoraciones -----
+
+  openReview(target: Reviewable): void {
+    this.reviewForm.reset({ rating: 5, comment: '' });
+    this.reviewTarget.set(target);
+  }
+
+  confirmReview(): void {
+    const id = this.loan()?.id;
+    const target = this.reviewTarget();
+    if (!id || !target || this.reviewForm.invalid) return;
+    const v = this.reviewForm.getRawValue();
+    this.busy.set(true);
+    this.loanService.createReview(id, target.userId, v.rating, v.comment.trim() || undefined).subscribe({
+      next: (r) => {
+        this.reviews.set(r);
+        this.reviewTarget.set(null);
+        this.busy.set(false);
+        this.actionMessage.set('¡Gracias por tu valoración!');
+      },
+      error: (err) => {
+        this.busy.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'No se pudo guardar la valoración.');
+      },
+    });
+  }
+
+  protected stars(n: number): string {
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
   }
 
   /** Supervisión que exige la obra. */

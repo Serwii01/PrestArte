@@ -15,6 +15,8 @@ import { ArtworkService } from '../../core/services/artwork.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
   ArtworkResponse,
+  BusyPeriod,
+  ExhibitionHistoryItem,
   CONDITION_LABEL,
   Condition,
   FileDto,
@@ -22,6 +24,8 @@ import {
   isArtworkImage,
 } from '../../core/models/artwork.models';
 import { SecureFilePipe } from '../../shared/pipes/secure-file.pipe';
+import { ProvenanceSectionComponent } from './provenance-section.component';
+import { LenderTermsComponent } from '../../shared/components/lender-terms/lender-terms.component';
 import { FacilityReportService } from '../../core/services/facility-report.service';
 import { CompatibilityReport } from '../../core/models/facility.models';
 import { CompatibilityPanelComponent } from '../../shared/components/compatibility-panel/compatibility-panel.component';
@@ -37,6 +41,8 @@ import { RequirementsSummaryComponent } from '../../shared/components/requiremen
     SecureFilePipe,
     CompatibilityPanelComponent,
     RequirementsSummaryComponent,
+    ProvenanceSectionComponent,
+    LenderTermsComponent,
   ],
   templateUrl: './artwork-detail.component.html',
   styleUrl: './artwork-detail.component.scss',
@@ -51,6 +57,8 @@ export class ArtworkDetailComponent implements OnInit {
   @Input() id?: string;
 
   protected readonly artwork = signal<ArtworkResponse | null>(null);
+  protected readonly busyPeriods = signal<BusyPeriod[]>([]);
+  protected readonly exhibitionHistory = signal<ExhibitionHistoryItem[]>([]);
   /** Solo para fundaciones: compatibilidad de la obra con sus instalaciones. */
   protected readonly compatibility = signal<CompatibilityReport | null>(null);
   private readonly facilityService = inject(FacilityReportService);
@@ -151,6 +159,8 @@ export class ArtworkDetailComponent implements OnInit {
       next: (a) => {
         this.artwork.set(a);
         this.loading.set(false);
+        this.artworkService.getAvailability(a.id).subscribe({ next: (b) => this.busyPeriods.set(b) });
+        this.artworkService.getExhibitionHistory(a.id).subscribe({ next: (h) => this.exhibitionHistory.set(h) });
         // Una fundación ve si sus instalaciones cumplen lo que exige la obra.
         if (this.auth.role() === 'FOUNDATION') {
           this.facilityService.artworkCompatibility(a.id).subscribe({

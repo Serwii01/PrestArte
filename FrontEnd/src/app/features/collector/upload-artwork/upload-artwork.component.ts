@@ -13,9 +13,12 @@ import {
   ArtworkVisibility,
   CourierMode,
   HeritageStatus,
+  IMAGE_RIGHTS_LABEL,
+  ImageRights,
   CreateArtworkRequest,
 } from '../../../core/models/artwork.models';
 import { TransportCompanyProfile } from '../../../core/models/transport-company.models';
+import { TITLE_DECLARATION } from '../../../core/models/provenance.models';
 
 @Component({
   selector: 'app-upload-artwork',
@@ -82,6 +85,18 @@ export class UploadArtworkComponent implements OnInit {
     showOwnerName: [false],
     visibility: ['PUBLIC' as ArtworkVisibility],
     heritageStatus: ['NONE' as HeritageStatus],
+    /** Declaración de titularidad: obligatoria al publicar. */
+    titleDeclared: [false],
+    /** Condiciones del prestador. */
+    creditLine: ['', [Validators.maxLength(200)]],
+    loanFee: [null as number | null, [Validators.min(0)]],
+    imageRights: this.fb.nonNullable.group({
+      catalog: [true],
+      press: [true],
+      socialMedia: [false],
+      merchandise: [false],
+      visitorPhotos: [false],
+    }),
     /** Requisitos estructurados (se comparan con el informe de instalaciones). */
     requirements: this.fb.group({
       tempMin: [null as number | null, [Validators.min(-10), Validators.max(40)]],
@@ -103,6 +118,13 @@ export class UploadArtworkComponent implements OnInit {
     preferredTransportCompanyId: [null as number | null],
     preferredTransportMandatory: [false],
   });
+
+  protected readonly titleDeclarationText = TITLE_DECLARATION;
+  protected readonly imageRightOptions = (Object.keys(IMAGE_RIGHTS_LABEL) as (keyof ImageRights)[]).map(
+    (key) => ({ key, label: IMAGE_RIGHTS_LABEL[key] }),
+  );
+  /** En edición: la obra ya tenía la declaración firmada. */
+  protected readonly alreadyDeclared = signal(false);
 
   /** Requisitos sí/no, para pintarlos en bucle. */
   protected readonly requirementFlags: { key: string; label: string }[] = [
@@ -140,6 +162,19 @@ export class UploadArtworkComponent implements OnInit {
             showOwnerName: a.showOwnerName ?? false,
             visibility: a.visibility ?? 'PUBLIC',
             heritageStatus: a.heritageStatus ?? 'NONE',
+            titleDeclared: !!a.titleDeclared,
+            creditLine: a.creditLine ?? '',
+            loanFee: a.loanFee ?? null,
+            imageRights: {
+              catalog: !!a.imageRights?.catalog,
+              press: !!a.imageRights?.press,
+              socialMedia: !!a.imageRights?.socialMedia,
+              merchandise: !!a.imageRights?.merchandise,
+              visitorPhotos: !!a.imageRights?.visitorPhotos,
+            },
+          });
+          this.alreadyDeclared.set(!!a.titleDeclared);
+          this.form.patchValue({
             requirements: {
               tempMin: a.requirements?.tempMin ?? null,
               tempMax: a.requirements?.tempMax ?? null,
@@ -254,6 +289,10 @@ export class UploadArtworkComponent implements OnInit {
           showOwnerName: v.showOwnerName,
           visibility: v.visibility,
           heritageStatus: v.heritageStatus,
+          titleDeclared: v.titleDeclared || undefined,
+          creditLine: v.creditLine.trim(),
+          loanFee: v.loanFee ?? 0,
+          imageRights: v.imageRights,
           requirements: v.requirements,
           preferredTransportCompanyId: v.requirePreferredTransport
             ? v.preferredTransportCompanyId
@@ -290,6 +329,10 @@ export class UploadArtworkComponent implements OnInit {
       showOwnerName: v.showOwnerName,
       visibility: v.visibility,
       heritageStatus: v.heritageStatus,
+      titleDeclared: v.titleDeclared,
+      creditLine: v.creditLine.trim() || undefined,
+      loanFee: v.loanFee ?? undefined,
+      imageRights: v.imageRights,
       requirements: v.requirements,
       preferredTransportCompanyId: v.requirePreferredTransport
         ? v.preferredTransportCompanyId

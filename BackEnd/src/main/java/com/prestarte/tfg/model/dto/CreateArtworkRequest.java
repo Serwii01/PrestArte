@@ -1,6 +1,7 @@
 package com.prestarte.tfg.model.dto;
 
 import com.prestarte.tfg.model.entity.Artwork;
+import com.prestarte.tfg.model.entity.ImageRights;
 import com.prestarte.tfg.model.entity.LoanRequirements;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -75,6 +76,20 @@ public class CreateArtworkRequest {
 
     /** Protección patrimonial (BIC, inventariada...). Si no se indica, NONE. */
     private Artwork.HeritageStatus heritageStatus;
+
+    /** Firma la declaración de titularidad (Artwork.TITLE_DECLARATION). */
+    private Boolean titleDeclared;
+
+    /** Texto de cartela y créditos. */
+    @Size(max = 200)
+    private String creditLine;
+
+    /** Usos autorizados de la imagen; si se envía, sustituye a los anteriores. */
+    private ImageRights imageRights;
+
+    /** Canon del préstamo (€); 0 o vacío = gratuito. */
+    @PositiveOrZero(message = "El canon no puede ser negativo")
+    private Double loanFee;
 
     /** Empresa de transporte preferida por el coleccionista, si la hay. */
     private Long preferredTransportCompanyId;

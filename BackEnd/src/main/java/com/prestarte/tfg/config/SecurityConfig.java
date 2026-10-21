@@ -61,10 +61,13 @@ public class SecurityConfig {
                         // Las obras del catálogo y sus fichas son públicas; sin embargo,
                         // el listado por coleccionista exige sesión para evitar fugas.
                         .requestMatchers(HttpMethod.GET, "/api/artworks/collector/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/artworks", "/api/artworks/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/artworks", "/api/artworks/*",
+                                "/api/artworks/*/exhibitions", "/api/artworks/*/availability").permitAll()
                         // Perfil público de las empresas de transporte.
                         .requestMatchers(HttpMethod.GET, "/api/transport-companies",
                                 "/api/transport-companies/*").permitAll()
+                        // Resumen público de valoraciones (media y comentarios sin autor).
+                        .requestMatchers(HttpMethod.GET, "/api/users/*/rating").permitAll()
                         // Operaciones administrativas reservadas al rol ADMIN.
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Cualquier otro endpoint requiere autenticación válida.

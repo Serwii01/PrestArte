@@ -373,6 +373,62 @@
           </section>
         }
 
+        <!-- Condiciones del prestador -->
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">workspace_premium</span>
+            Mención, imagen y canon
+          </h3>
+          <app-lender-terms [artwork]="a" />
+        </section>
+
+        <!-- Disponibilidad -->
+        <section class="stitch-card p-5">
+          <h3 class="text-sm font-bold text-text-main mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;">event_available</span>
+            Disponibilidad
+          </h3>
+          @if (busyPeriods().length === 0) {
+            <p class="text-sm text-text-secondary">Sin reservas: la obra está libre en cualquier fecha.</p>
+          } @else {
+            <p class="text-xs text-text-secondary mb-2">Ya reservada en estos periodos:</p>
+            <ul class="space-y-1">
+              @for (b of busyPeriods(); track b.startDate) {
+                <li class="text-sm text-text-main flex items-center gap-2">
+                  <span class="size-2 rounded-full bg-amber-500"></span>
+                  {{ b.startDate | date:'mediumDate' }} → {{ b.endDate | date:'mediumDate' }}
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- Historial de exposiciones -->
+        @if (exhibitionHistory().length > 0) {
+          <section class="stitch-card p-5">
+            <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" style="font-size:18px;">museum</span>
+              Exposiciones
+            </h3>
+            <ul class="space-y-3">
+              @for (e of exhibitionHistory(); track e.title + e.openingDate) {
+                <li>
+                  <p class="text-sm font-bold text-text-main">{{ e.title }}</p>
+                  <p class="text-xs text-text-secondary">
+                    {{ e.foundationName }} · {{ e.venueName }}, {{ e.venueCity }} ·
+                    {{ e.openingDate | date:'MMM y' }} – {{ e.closingDate | date:'MMM y' }}
+                  </p>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <!-- Titularidad y procedencia (requiere sesión) -->
+        @if (auth.isLoggedIn()) {
+          <app-provenance-section [artworkId]="a.id" />
+        }
+
         <!-- Empresa preferida -->
         @if (a.preferredTransportCompanyName) {
           <section class="stitch-card p-5">

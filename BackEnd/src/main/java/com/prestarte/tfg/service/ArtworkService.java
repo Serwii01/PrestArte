@@ -2,6 +2,9 @@ package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.ArtworkDto;
+import com.prestarte.tfg.model.dto.ArtworkPage;
+import com.prestarte.tfg.model.dto.ArtworkSearchCriteria;
+import com.prestarte.tfg.model.dto.BusyPeriod;
 import com.prestarte.tfg.model.dto.CreateArtworkRequest;
 import com.prestarte.tfg.model.dto.FileDto;
 import com.prestarte.tfg.model.dto.UpdateArtworkRequest;
@@ -29,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -84,6 +89,9 @@ public class ArtworkService {
         if (!currentUser.isAdmin()) {
             currentUser.requireUserId(request.getCollectorId());
         }
+        if (!Boolean.TRUE.equals(request.getTitleDeclared())) {
+            throw new IllegalArgumentException("Para publicar una obra debes firmar la declaración de titularidad.");
+        }
         Collector collector = collectorRepository.findById(request.getCollectorId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Coleccionista", request.getCollectorId()));
 
@@ -110,6 +118,11 @@ public class ArtworkService {
                 .showOwnerName(request.isShowOwnerName())
                 .heritageStatus(request.getHeritageStatus() != null
                         ? request.getHeritageStatus() : Artwork.HeritageStatus.NONE)
+                .titleDeclaredAt(Boolean.TRUE.equals(request.getTitleDeclared()) ? LocalDateTime.now() : null)
+                .creditLine(blankToNull(request.getCreditLine()))
+                .imageRights(request.getImageRights())
+                .loanFee(request.getLoanFee() != null && request.getLoanFee() > 0 ? request.getLoanFee() : null)
+                .dueDiligenceStatus(Artwork.DueDiligenceStatus.PENDING)
                 .visibility(request.getVisibility() != null
                         ? request.getVisibility() : Artwork.Visibility.PUBLIC)
                 .collector(collector)
@@ -132,9 +145,91 @@ public class ArtworkService {
     public List<ArtworkDto> getAllArtworks() {
         Viewer viewer = viewer();
         return artworkRepository.findAll().stream()
-                .filter(a -> viewer.isMember() || isPublic(a))
+                .filter(a -> visibleTo(a, viewer))
                 .map(a -> convertToDto(a, viewer))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Búsqueda del catálogo con filtros, orden y paginación.
+     *
+     * Filtra en memoria: suficiente para el volumen actual. Si el catálogo
+     * crece a miles de obras, conviene pasarlo a consultas JPA (Specification).
+     */
+    @Transactional(readOnly = true)
+    public ArtworkPage search(ArtworkSearchCriteria c) {
+        Viewer viewer = viewer();
+        String q = normalize(c.getQ());
+        String artist = normalize(c.getArtist());
+        String city = normalize(c.getCity());
+        boolean dateFilter = c.getAvailableFrom() != null && c.getAvailableTo() != null
+                && c.getAvailableTo().isAfter(c.getAvailableFrom());
+
+        List<Artwork> filtered = artworkRepository.findAll().stream()
+                .filter(a -> visibleTo(a, viewer))
+                .filter(a -> q == null || contains(a.getTitle(), q) || contains(a.getArtist(), q)
+                        || contains(a.getDescription(), q) || contains(a.getLocation(), q))
+                .filter(a -> artist == null || contains(a.getArtist(), artist))
+                .filter(a -> city == null || contains(a.getLocation(), city))
+                .filter(a -> c.getYearFrom() == null || (a.getYear() != null && a.getYear() >= c.getYearFrom()))
+                .filter(a -> c.getYearTo() == null || (a.getYear() != null && a.getYear() <= c.getYearTo()))
+                .filter(a -> c.getCondition() == null || c.getCondition().isBlank()
+                        || (a.getCondition() != null && a.getCondition().name().equals(c.getCondition())))
+                .filter(a -> !c.isVerifiedOnly() || ProvenanceService.status(a) == Artwork.DueDiligenceStatus.CLEAR)
+                .filter(a -> !c.isLendableOnly() || (a.isAvailableForLoan() && a.getTitleDeclaredAt() != null))
+                .filter(a -> !dateFilter || !loanRequestRepository.existsOverlappingLoan(
+                        a.getId(), null, c.getAvailableFrom(), c.getAvailableTo()))
+                .sorted(comparatorFor(c.getSort()))
+                .toList();
+
+        int size = Math.max(1, Math.min(c.getSize(), 60));
+        int page = Math.max(0, c.getPage());
+        int from = Math.min(page * size, filtered.size());
+        int to = Math.min(from + size, filtered.size());
+        List<ArtworkDto> items = filtered.subList(from, to).stream().map(a -> convertToDto(a, viewer)).toList();
+        int totalPages = (int) Math.ceil(filtered.size() / (double) size);
+        return new ArtworkPage(items, filtered.size(), page, size, totalPages);
+    }
+
+    /**
+     * Periodos en los que la obra ya está comprometida con un préstamo,
+     * para pintar su calendario de disponibilidad. No revela quién la pidió.
+     */
+    @Transactional(readOnly = true)
+    public List<BusyPeriod> availability(Long id) {
+        Viewer viewer = viewer();
+        artworkRepository.findById(id)
+                .filter(a -> visibleTo(a, viewer))
+                .orElseThrow(() -> ResourceNotFoundException.of("Obra", id));
+        return loanRequestRepository.findByArtworkId(id).stream()
+                .filter(l -> LoanRequestRepository.COMMITTED_STATUSES.contains(l.getStatus()))
+                .filter(l -> l.getStartDate() != null && l.getEndDate() != null)
+                .sorted(Comparator.comparing(LoanRequest::getStartDate))
+                .map(l -> new BusyPeriod(l.getStartDate(), l.getEndDate()))
+                .toList();
+    }
+
+    private static Comparator<Artwork> comparatorFor(String sort) {
+        Comparator<Artwork> recent = Comparator.comparing(Artwork::getCreatedAt,
+                Comparator.nullsLast(Comparator.reverseOrder()));
+        if (sort == null) return recent;
+        return switch (sort) {
+            case "title" -> Comparator.comparing((Artwork a) -> a.getTitle().toLowerCase());
+            case "artist" -> Comparator.comparing((Artwork a) -> a.getArtist().toLowerCase());
+            case "year" -> Comparator.comparing(Artwork::getYear, Comparator.nullsLast(Comparator.naturalOrder()));
+            default -> recent;
+        };
+    }
+
+    private static String normalize(String s) {
+        if (s == null || s.isBlank()) return null;
+        return java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase().trim();
+    }
+
+    private static boolean contains(String haystack, String needle) {
+        String h = normalize(haystack);
+        return h != null && h.contains(needle);
     }
 
     /** Devuelve la ficha de una obra, respetando su visibilidad. */
@@ -142,7 +237,7 @@ public class ArtworkService {
     public ArtworkDto getArtworkById(Long id) {
         Viewer viewer = viewer();
         Artwork artwork = artworkRepository.findById(id)
-                .filter(a -> viewer.isMember() || isPublic(a))
+                .filter(a -> visibleTo(a, viewer))
                 .orElseThrow(() -> ResourceNotFoundException.of("Obra", id));
         return convertToDto(artwork, viewer);
     }
@@ -190,6 +285,13 @@ public class ArtworkService {
         if (req.getShowOwnerName() != null) a.setShowOwnerName(req.getShowOwnerName());
         if (req.getVisibility() != null) a.setVisibility(req.getVisibility());
         if (req.getHeritageStatus() != null) a.setHeritageStatus(req.getHeritageStatus());
+        if (req.getCreditLine() != null) a.setCreditLine(blankToNull(req.getCreditLine()));
+        if (req.getImageRights() != null) a.setImageRights(req.getImageRights());
+        if (req.getLoanFee() != null) a.setLoanFee(req.getLoanFee() > 0 ? req.getLoanFee() : null);
+        if (Boolean.TRUE.equals(req.getTitleDeclared()) && a.getTitleDeclaredAt() == null
+                && currentUser.isAnyOf(a.getCollector().getId())) {
+            a.setTitleDeclaredAt(LocalDateTime.now());
+        }
 
         if (req.getPreferredTransportCompanyId() != null) {
             TransportCompany tc = transportCompanyRepository.findById(req.getPreferredTransportCompanyId())
@@ -346,6 +448,17 @@ public class ArtworkService {
         return new Viewer(id, role == Role.ADMIN, pickupIds);
     }
 
+    /**
+     * Una obra se ve si es pública (o quien mira tiene sesión) y no está
+     * retirada por la diligencia debida; las retiradas solo las ven el
+     * dueño y la administración.
+     */
+    private static boolean visibleTo(Artwork a, Viewer viewer) {
+        if (viewer.admin() || viewer.owns(a)) return true;
+        if (ProvenanceService.status(a) == Artwork.DueDiligenceStatus.FLAGGED) return false;
+        return viewer.isMember() || isPublic(a);
+    }
+
     private static boolean isPublic(Artwork a) {
         return a.getVisibility() == null || a.getVisibility() == Artwork.Visibility.PUBLIC;
     }
@@ -474,6 +587,11 @@ public class ArtworkService {
                 .preferredTransportMandatory(artwork.isPreferredTransportMandatory())
                 .heritageStatus(artwork.getHeritageStatus() != null
                         ? artwork.getHeritageStatus().name() : Artwork.HeritageStatus.NONE.name())
+                .titleDeclared(artwork.getTitleDeclaredAt() != null)
+                .dueDiligenceStatus(ProvenanceService.status(artwork).name())
+                .creditLine(artwork.getCreditLine())
+                .imageRights(artwork.getImageRights())
+                .loanFee(artwork.getLoanFee())
                 .availableForLoan(artwork.isAvailableForLoan())
                 .files(fileDtos)
                 .createdAt(artwork.getCreatedAt())

@@ -10,13 +10,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ExhibitionService } from '../../../core/services/exhibition.service';
 import { FacilityReportService } from '../../../core/services/facility-report.service';
 import { LoanService } from '../../../core/services/loan.service';
-import { ArtworkResponse, isArtworkImage } from '../../../core/models/artwork.models';
+import { ArtworkResponse, BusyPeriod, isArtworkImage } from '../../../core/models/artwork.models';
 import { ExhibitionResponse } from '../../../core/models/exhibition.models';
 import { CompatibilityReport } from '../../../core/models/facility.models';
 import { CreateLoanRequest } from '../../../core/models/loan.models';
 import { CompatibilityPanelComponent } from '../../../shared/components/compatibility-panel/compatibility-panel.component';
 import { CostEstimatePanelComponent } from '../../../shared/components/cost-estimate-panel/cost-estimate-panel.component';
 import { CostEstimate } from '../../../core/models/cost.models';
+import { LenderTermsComponent } from '../../../shared/components/lender-terms/lender-terms.component';
 import { RequirementsSummaryComponent } from '../../../shared/components/requirements-summary/requirements-summary.component';
 
 /** Margen propuesto antes y después de la exposición para transporte y montaje. */
@@ -31,6 +32,7 @@ const INSTALL_MARGIN_DAYS = 14;
     RouterLink,
     CompatibilityPanelComponent,
     CostEstimatePanelComponent,
+    LenderTermsComponent,
     RequirementsSummaryComponent,
   ],
   templateUrl: './request-loan.component.html',
@@ -48,6 +50,22 @@ export class RequestLoanComponent implements OnInit {
   protected readonly exhibitions = signal<ExhibitionResponse[]>([]);
   protected readonly compatibility = signal<CompatibilityReport | null>(null);
   protected readonly costEstimate = signal<CostEstimate | null>(null);
+  /** Periodos en los que la obra ya está reservada. */
+  protected readonly busyPeriods = signal<BusyPeriod[]>([]);
+
+  /** El rango elegido se solapa con una reserva existente. */
+  protected readonly rangeClashes = computed(() => {
+    this.formTick();
+    const start = this.form.controls.startDate.value;
+    const end = this.form.controls.endDate.value;
+    if (!start || !end) return false;
+    return this.busyPeriods().some((b) => start < b.endDate && end > b.startDate);
+  });
+
+  /** Día dentro de alguna reserva (fechas ISO, comparables como texto). */
+  protected isBusy(iso: string): boolean {
+    return this.busyPeriods().some((b) => iso >= b.startDate && iso <= b.endDate);
+  }
 
   /** Vinculado a `:artworkId` por withComponentInputBinding(). */
   @Input() artworkId?: string;
@@ -126,6 +144,7 @@ export class RequestLoanComponent implements OnInit {
       isStart: boolean;
       isEnd: boolean;
       inRange: boolean;
+      isBusy: boolean;
     }> = [];
 
     for (let i = 0; i < 42; i++) {
@@ -143,6 +162,7 @@ export class RequestLoanComponent implements OnInit {
         day: d.getDate(),
         inMonth: d.getMonth() === m,
         isPast: time < today.getTime(),
+        isBusy: this.isBusy(iso),
         isToday: time === today.getTime(),
         isStart,
         isEnd,
@@ -256,6 +276,7 @@ export class RequestLoanComponent implements OnInit {
     this.artworkService.getById(id).subscribe({
       next: (a) => {
         this.artwork.set(a);
+        this.artworkService.getAvailability(a.id).subscribe({ next: (b) => this.busyPeriods.set(b) });
         this.loading.set(false);
       },
       error: () => {

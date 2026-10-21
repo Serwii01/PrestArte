@@ -53,7 +53,37 @@
 - **Presupuesto de ida y vuelta**: el transportista cotiza también la devolución.
 - **Correo virtual**: fases documentadas con fotos (embalaje, carga, montaje…) que el coleccionista aprueba; si la obra lo exige, no se recoge sin el embalaje aprobado.
 
-### 7. Otros
+### 7. Titularidad y procedencia
+
+- **Declaración de titularidad** obligatoria al publicar una obra (o firmable después desde su ficha). Sin ella la obra no recibe solicitudes.
+- **Historial de procedencia**: propietarios anteriores con años, forma de adquisición, detalles y justificante opcional (visible para el dueño, la administración y las fundaciones que han pedido la obra).
+- **Detección de huecos** en el historial, con aviso especial si caen entre **1933 y 1945** (expolio nazi; Principios de Washington).
+- **Diligencia debida**: cola en el panel de administración para comprobar cada obra en bases de obras robadas y registrar el resultado (se guarda cada revisión). Las verificadas muestran el distintivo «Procedencia verificada» en el catálogo; las marcadas como sospechosas salen del catálogo y no admiten solicitudes. Se avisa al coleccionista por email.
+- Nuevos endpoints: `GET/POST /api/artworks/{id}/provenance`, `DELETE /api/artworks/{id}/provenance/{entryId}`, `POST /api/artworks/{id}/title-declaration`, `GET /api/admin/due-diligence/pending`, `POST /api/admin/artworks/{id}/due-diligence`.
+- **Rompe compatibilidad**: `POST /api/artworks` exige `titleDeclared: true`. Las obras ya existentes no tienen la declaración firmada y no recibirán solicitudes hasta que su dueño la firme (la obra de demo ya viene firmada).
+
+### 8. Avisos y plazos
+
+- **Avisos guardados** (`notifications`): cada hito de un préstamo avisa a las demás partes en la campana de la aplicación, con estado leído/no leído. Los cambios de estado y lo que exige actuar (seguro pendiente o rechazado, cambios pedidos en la supervisión, incidencias, ampliaciones) también se envían por **email** con enlace al préstamo.
+- **Recordatorios diarios** (`ReminderService`, 8:00 hora de Madrid, configurable con `app.reminders.cron`): solicitud sin responder tras 7 días, fin de préstamo en 14 días, préstamo vencido sin iniciar la devolución, fecha límite de retorno del permiso de exportación (30 días antes y al vencer), seguro que termina con la obra fuera, seguro pendiente de revisión más de 3 días e informe de instalaciones a punto de caducar. Cada recordatorio se envía una sola vez (`reminder_log`).
+- Endpoints: `GET /api/notifications`, `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all`.
+
+### 9. Incentivos al coleccionista
+
+- **Mención en cartela**, **usos de imagen autorizados** (catálogo, prensa, redes, tienda, fotos del público) y **canon de préstamo** opcional en cada obra; se muestran a la fundación antes de pedirla, entran en la estimación de costes y en el contrato PDF.
+- **Certificado de exposición** en PDF descargable por coleccionista y fundación cuando la obra llega a la exposición.
+- **Historial público de exposiciones** en la ficha de la obra.
+- El contrato PDF usa ahora el valor asegurado acordado e incluye exposición, periodo y condiciones del prestador.
+- Endpoints: `GET /api/loan-requests/{id}/exhibition-certificate`, `GET /api/artworks/{id}/exhibitions` (público).
+
+### 10. Catálogo, ampliaciones y valoraciones
+
+- **Búsqueda con filtros y paginación** (`GET /api/artworks/search`): texto, ciudad, años, estado, procedencia verificada, disponibles para préstamo, **libres entre dos fechas** y orden. Filtra en memoria; si el catálogo crece mucho conviene pasarlo a consultas JPA.
+- **Calendario de disponibilidad** (`GET /api/artworks/{id}/availability`, público y sin datos de las partes): en la ficha de la obra y como días tachados en el calendario de la solicitud, con aviso si el rango elegido choca.
+- **Ampliación del préstamo**: la fundación la pide con la obra expuesta y el coleccionista la aprueba o rechaza. Al aprobar se comprueba que la obra no esté reservada después y que el permiso de exportación lo permita; si el seguro no cubre el nuevo periodo, se avisa. Endpoints: `POST /api/loan-requests/{id}/extension`, `/extension/approve`, `/extension/reject`.
+- **Valoraciones** entre las partes de un préstamo devuelto (1–5 estrellas y comentario). Resumen público por usuario (media y últimos comentarios sin autor) en el perfil de los transportistas y, para el coleccionista, la valoración de la institución que le pide una obra. Endpoints: `GET/POST /api/loan-requests/{id}/reviews`, `GET /api/users/{id}/rating` (público).
+
+### 11. Otros
 
 - `README.md` con la descripción del proyecto.
 

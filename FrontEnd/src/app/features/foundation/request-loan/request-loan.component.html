@@ -125,6 +125,15 @@
         </div>
       </section>
 
+      <!-- Condiciones del prestador -->
+      <section class="stitch-card p-6">
+        <h2 class="text-lg font-bold text-text-main mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">workspace_premium</span>
+          Mención, imagen y canon
+        </h2>
+        <app-lender-terms [artwork]="a" />
+      </section>
+
       <!-- Coste y huella estimados -->
       @if (costEstimate()) {
         <section class="stitch-card p-6">
@@ -256,6 +265,9 @@
                         [class.text-text-main]="!c.isPast && !c.isStart && !c.isEnd && c.inMonth && !c.isToday"
                         [class.text-text-secondary\/40]="!c.inMonth && !c.isPast && !c.isStart && !c.isEnd"
                         [class.text-gray-300]="c.isPast"
+                        [class.bg-amber-100]="c.isBusy && !c.isStart && !c.isEnd"
+                        [class.line-through]="c.isBusy"
+                        [attr.title]="c.isBusy ? 'Ya reservada' : null"
                         [class.group-hover\:bg-primary\/10]="!c.isPast && !c.isStart && !c.isEnd">
                     {{ c.day }}
                   </span>
@@ -263,6 +275,18 @@
               }
             </div>
           </div>
+
+          @if (busyPeriods().length > 0) {
+            <p class="mt-2 text-xs text-text-secondary flex items-center gap-1.5">
+              <span class="inline-block size-3 rounded-full bg-amber-100 border border-amber-300"></span>
+              Días tachados: la obra ya está reservada.
+            </p>
+          }
+          @if (rangeClashes()) {
+            <p class="mt-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2">
+              Las fechas elegidas coinciden con otra reserva de esta obra: la solicitud será rechazada.
+            </p>
+          }
 
           <!-- Atajos del calendario -->
           <div class="flex items-center justify-between px-3 py-2 border-t border-border bg-gray-soft/40">

@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.dto;
 
+import com.prestarte.tfg.model.entity.ImageRights;
 import com.prestarte.tfg.model.entity.LoanRequirements;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -49,6 +50,14 @@ public class ArtworkDto {
     private String visibility;
     /** NONE, INVENTORIED o BIC. */
     private String heritageStatus;
+    /** Si el coleccionista ha firmado la declaración de titularidad. */
+    private boolean titleDeclared;
+    /** Diligencia debida: PENDING, CLEAR (procedencia verificada) o FLAGGED. */
+    private String dueDiligenceStatus;
+    /** Condiciones del prestador: cartela, derechos de imagen y canon. */
+    private String creditLine;
+    private ImageRights imageRights;
+    private Double loanFee;
     private Long preferredTransportCompanyId;
     private String preferredTransportCompanyName;
     private boolean preferredTransportMandatory;

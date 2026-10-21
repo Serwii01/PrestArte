@@ -9,6 +9,7 @@ import com.prestarte.tfg.model.entity.ExportPermit;
 import com.prestarte.tfg.model.entity.FacilityReport;
 import com.prestarte.tfg.model.entity.InsuranceCertificate;
 import com.prestarte.tfg.model.entity.Message;
+import com.prestarte.tfg.model.entity.ProvenanceEntry;
 import com.prestarte.tfg.model.entity.SupervisionCheckpoint;
 import com.prestarte.tfg.model.entity.User;
 import com.prestarte.tfg.repository.ArtworkFileRepository;
@@ -19,6 +20,7 @@ import com.prestarte.tfg.repository.FacilityReportRepository;
 import com.prestarte.tfg.repository.InsuranceCertificateRepository;
 import com.prestarte.tfg.repository.DBFileRepository;
 import com.prestarte.tfg.repository.MessageRepository;
+import com.prestarte.tfg.repository.ProvenanceEntryRepository;
 import com.prestarte.tfg.repository.SupervisionCheckpointRepository;
 import com.prestarte.tfg.repository.UserRepository;
 import com.prestarte.tfg.security.CurrentUser;
@@ -59,6 +61,8 @@ public class FileStorageService {
     private final InsuranceCertificateRepository insuranceCertificateRepository;
     private final ExportPermitRepository exportPermitRepository;
     private final SupervisionCheckpointRepository supervisionCheckpointRepository;
+    private final ProvenanceEntryRepository provenanceEntryRepository;
+    private final ProvenanceService provenanceService;
     private final UserRepository userRepository;
     private final ChatSessionService chatSessionService;
     private final CurrentUser currentUser;
@@ -145,6 +149,14 @@ public class FileStorageService {
         Optional<ExportPermit> permit = exportPermitRepository.findByDocumentId(fileId);
         if (permit.isPresent()) {
             chatSessionService.requireParticipant(permit.get().getLoanRequest());
+            return;
+        }
+
+        Optional<ProvenanceEntry> provenance = provenanceEntryRepository.findByDocumentId(fileId);
+        if (provenance.isPresent()) {
+            if (!provenanceService.canViewDocuments(provenance.get().getArtwork())) {
+                throw new AccessDeniedException("No tienes permiso para ver este justificante");
+            }
             return;
         }
 

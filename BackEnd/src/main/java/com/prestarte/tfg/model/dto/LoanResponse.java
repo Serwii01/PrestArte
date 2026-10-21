@@ -56,4 +56,7 @@ public class LoanResponse {
     private String rejectionReason;
     /** Valor asegurado acordado al aceptar (€). */
     private Double agreedValue;
+    /** Ampliación pendiente de aprobar por el coleccionista. */
+    private java.time.LocalDate requestedEndDate;
+    private String extensionReason;
 }

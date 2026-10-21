@@ -147,6 +147,11 @@ public class CostEstimateService {
                     months + " meses sobre " + eur(value) + ". La prima real depende de la aseguradora."));
         }
 
+        // --- Canon del prestador ---
+        if (artwork.getLoanFee() != null && artwork.getLoanFee() > 0) {
+            costs.add(new Line("Canon de préstamo", round(artwork.getLoanFee()), "Lo fija el coleccionista."));
+        }
+
         // --- Correo ---
         double courierCo2 = courierKm(km) * (km > COURIER_FLIES_ABOVE_KM || air ? CO2_FLIGHT_PER_PKM : CO2_TRAIN_PER_PKM);
         if (courier == CourierMode.IN_PERSON) {

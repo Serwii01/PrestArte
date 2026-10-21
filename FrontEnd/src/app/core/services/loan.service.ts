@@ -16,6 +16,7 @@ import {
 import { ConditionReportResponse } from '../models/shipment.models';
 import { CompatibilityReport } from '../models/facility.models';
 import { CostEstimate, SupervisionCheckpoint, SupervisionStage } from '../models/cost.models';
+import { LoanReviews, RatingSummary } from '../models/review.models';
 
 @Injectable({ providedIn: 'root' })
 export class LoanService {
@@ -48,6 +49,37 @@ export class LoanService {
   /** Compatibilidad entre los requisitos de la obra y las instalaciones de la fundación. */
   getCompatibility(id: number): Observable<CompatibilityReport> {
     return this.http.get<CompatibilityReport>(`${this.base}/${id}/compatibility`);
+  }
+
+  /* ===== Ampliación, certificado y valoraciones ===== */
+
+  requestExtension(id: number, newEndDate: string, reason?: string): Observable<LoanResponse> {
+    return this.http.post<LoanResponse>(`${this.base}/${id}/extension`, { newEndDate, reason });
+  }
+
+  approveExtension(id: number): Observable<LoanResponse> {
+    return this.http.post<LoanResponse>(`${this.base}/${id}/extension/approve`, {});
+  }
+
+  rejectExtension(id: number, reason?: string): Observable<LoanResponse> {
+    return this.http.post<LoanResponse>(`${this.base}/${id}/extension/reject`, { reason });
+  }
+
+  downloadExhibitionCertificate(id: number): Observable<Blob> {
+    return this.http.get(`${this.base}/${id}/exhibition-certificate`, { responseType: 'blob' });
+  }
+
+  getReviews(id: number): Observable<LoanReviews> {
+    return this.http.get<LoanReviews>(`${this.base}/${id}/reviews`);
+  }
+
+  createReview(id: number, revieweeId: number, rating: number, comment?: string): Observable<LoanReviews> {
+    return this.http.post<LoanReviews>(`${this.base}/${id}/reviews`, { revieweeId, rating, comment });
+  }
+
+  /** Resumen público de valoraciones de un usuario. */
+  getRating(userId: number): Observable<RatingSummary> {
+    return this.http.get<RatingSummary>(`${environment.apiBaseUrl}/users/${userId}/rating`);
   }
 
   /* ===== Coste estimado y supervisión remota ===== */

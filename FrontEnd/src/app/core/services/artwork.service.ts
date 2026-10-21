@@ -1,10 +1,14 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  ArtworkPage,
   ArtworkResponse,
+  ArtworkSearchParams,
+  BusyPeriod,
+  ExhibitionHistoryItem,
   CreateArtworkRequest,
   UpdateArtworkRequest,
 } from '../models/artwork.models';
@@ -21,6 +25,25 @@ export class ArtworkService {
 
   getById(id: number): Observable<ArtworkResponse> {
     return this.http.get<ArtworkResponse>(`${this.base}/${id}`);
+  }
+
+  /** Búsqueda del catálogo con filtros y paginación. */
+  search(params: ArtworkSearchParams): Observable<ArtworkPage> {
+    let p = new HttpParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null && v !== '' && v !== false) p = p.set(k, String(v));
+    }
+    return this.http.get<ArtworkPage>(`${this.base}/search`, { params: p });
+  }
+
+  /** Periodos en los que la obra ya está reservada. */
+  getAvailability(id: number): Observable<BusyPeriod[]> {
+    return this.http.get<BusyPeriod[]>(`${this.base}/${id}/availability`);
+  }
+
+  /** Historial público de exposiciones de la obra. */
+  getExhibitionHistory(id: number): Observable<ExhibitionHistoryItem[]> {
+    return this.http.get<ExhibitionHistoryItem[]>(`${this.base}/${id}/exhibitions`);
   }
 
   /** Obras del coleccionista actual. Endpoint real del backend. */

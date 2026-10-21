@@ -125,6 +125,10 @@ public class TestDataInitializer implements CommandLineRunner {
                 .description("Óleo sobre lienzo. Restaurado en 2010.")
                 .estimatedValue(45000.0)
                 .loanConditions("Climatización 20±2 ºC, humedad 50±5%, sin luz directa.")
+                .location("Madrid")
+                // La obra de demo ya tiene la titularidad declarada para poder pedirla.
+                .titleDeclaredAt(java.time.LocalDateTime.now())
+                .dueDiligenceStatus(Artwork.DueDiligenceStatus.PENDING)
                 .collector(owner)
                 .build();
         return artworkRepository.save(a);

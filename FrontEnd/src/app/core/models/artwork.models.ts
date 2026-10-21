@@ -77,6 +77,14 @@ export interface ArtworkResponse {
   showOwnerName?: boolean | null;
   visibility?: ArtworkVisibility | null;
   heritageStatus?: HeritageStatus | null;
+  /** Si el coleccionista ha firmado la declaración de titularidad. */
+  titleDeclared?: boolean;
+  /** PENDING, CLEAR (procedencia verificada) o FLAGGED. */
+  dueDiligenceStatus?: 'PENDING' | 'CLEAR' | 'FLAGGED';
+  /** Condiciones del prestador. */
+  creditLine?: string | null;
+  imageRights?: ImageRights | null;
+  loanFee?: number | null;
   preferredTransportCompanyId?: number | null;
   preferredTransportCompanyName?: string | null;
   preferredTransportMandatory?: boolean;
@@ -102,6 +110,11 @@ export interface UpdateArtworkRequest {
   showOwnerName?: boolean;
   visibility?: ArtworkVisibility;
   heritageStatus?: HeritageStatus;
+  /** Firma la declaración de titularidad. */
+  titleDeclared?: boolean;
+  creditLine?: string;
+  imageRights?: ImageRights;
+  loanFee?: number;
   preferredTransportCompanyId?: number | null;
   preferredTransportMandatory?: boolean;
 }
@@ -123,6 +136,11 @@ export interface CreateArtworkRequest {
   showOwnerName?: boolean;
   visibility?: ArtworkVisibility;
   heritageStatus?: HeritageStatus;
+  /** Firma la declaración de titularidad. */
+  titleDeclared?: boolean;
+  creditLine?: string;
+  imageRights?: ImageRights;
+  loanFee?: number;
   preferredTransportCompanyId?: number | null;
   preferredTransportMandatory?: boolean;
   collectorId: number;
@@ -153,4 +171,61 @@ export function isArtworkImage(f: FileDto): boolean {
 /** ¿Es un documento adjunto (seguro, certificado, etc.)? */
 export function isArtworkDocument(f: FileDto): boolean {
   return f.type === 'DOCUMENT';
+}
+
+/** Usos autorizados de la imagen de la obra durante el préstamo. */
+export interface ImageRights {
+  catalog?: boolean | null;
+  press?: boolean | null;
+  socialMedia?: boolean | null;
+  merchandise?: boolean | null;
+  visitorPhotos?: boolean | null;
+}
+
+export const IMAGE_RIGHTS_LABEL: Record<keyof ImageRights, string> = {
+  catalog: 'Catálogo de la exposición',
+  press: 'Prensa',
+  socialMedia: 'Web y redes sociales',
+  merchandise: 'Productos de tienda',
+  visitorPhotos: 'Fotos del público (sin flash)',
+};
+
+/** Exposición en la que ha participado una obra. */
+export interface ExhibitionHistoryItem {
+  title: string;
+  venueName: string;
+  venueCity: string;
+  foundationName: string;
+  openingDate: string;
+  closingDate: string;
+}
+
+/** Periodo en que la obra ya está reservada. */
+export interface BusyPeriod {
+  startDate: string;
+  endDate: string;
+}
+
+export interface ArtworkSearchParams {
+  q?: string;
+  artist?: string;
+  yearFrom?: number | null;
+  yearTo?: number | null;
+  city?: string;
+  condition?: string;
+  verifiedOnly?: boolean;
+  lendableOnly?: boolean;
+  availableFrom?: string;
+  availableTo?: string;
+  sort?: 'recent' | 'title' | 'artist' | 'year';
+  page?: number;
+  size?: number;
+}
+
+export interface ArtworkPage {
+  items: ArtworkResponse[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
 }
