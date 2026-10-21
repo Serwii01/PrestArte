@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * DTO público que representa un préstamo.
@@ -35,6 +36,10 @@ public class LoanResponse {
     private String exhibitionVenue;
     private LocalDate exhibitionOpeningDate;
     private LocalDate exhibitionClosingDate;
+    /** Sedes siguientes si la exposición es itinerante. */
+    private List<ExhibitionResponse.Stop> exhibitionStops;
+    /** Sede en la que está la obra: 0 es la principal, 1.. las de la gira. */
+    private Integer currentStop;
 
     private LocalDate startDate;
     private LocalDate endDate;

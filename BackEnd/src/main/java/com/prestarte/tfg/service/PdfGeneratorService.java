@@ -50,7 +50,13 @@ public class PdfGeneratorService {
             header.setWidths(new float[]{1.2f, 3.8f});
 
             try {
-                Image logo = Image.getInstance("src/main/resources/static/images/logo.png");
+                // Desde el classpath: la ruta "src/main/resources/..." solo existe
+                // al ejecutar desde el IDE, no dentro del jar ni del contenedor.
+                byte[] logoBytes;
+                try (var in = new org.springframework.core.io.ClassPathResource("static/images/logo.png").getInputStream()) {
+                    logoBytes = in.readAllBytes();
+                }
+                Image logo = Image.getInstance(logoBytes);
                 logo.scaleToFit(65, 65);
                 PdfPCell logoCell = new PdfPCell(logo);
                 logoCell.setBorder(Rectangle.NO_BORDER);
@@ -82,6 +88,12 @@ public class PdfGeneratorService {
             if (loan.getExhibition() != null) {
                 addInfoRow(artTable, "EXPOSICIÓN:", loan.getExhibition().getTitle() + " — "
                         + loan.getExhibition().getVenueName() + ", " + loan.getExhibition().getVenueCity(), labelFont, valueFont);
+                // Exposición itinerante: el préstamo cubre todas las sedes de la gira.
+                for (var stop : loan.getExhibition().getStops()) {
+                    addInfoRow(artTable, "SEDE " + (stop.getPosition() + 1) + ":", stop.getHostInstitution() + " — "
+                            + stop.getVenueName() + ", " + stop.getVenueCity() + " (" + stop.getOpeningDate().format(formatter)
+                            + " – " + stop.getClosingDate().format(formatter) + ")", labelFont, valueFont);
+                }
             }
             addInfoRow(artTable, "PERIODO DEL PRÉSTAMO:", loan.getStartDate().format(formatter) + " – "
                     + loan.getEndDate().format(formatter), labelFont, valueFont);
@@ -196,7 +208,23 @@ public class PdfGeneratorService {
             p.add(new Chunk(", organizada por ", body));
             p.add(new Chunk(loan.getFoundation().getName(), bodyBold));
             p.add(new Chunk(" en " + ex.getVenueName() + " (" + ex.getVenueCity() + "), del "
-                    + ex.getOpeningDate().format(formatter) + " al " + ex.getClosingDate().format(formatter) + ".", body));
+                    + ex.getOpeningDate().format(formatter) + " al " + ex.getClosingDate().format(formatter)
+                    + (ex.isItinerant() ? "," : "."), body));
+            if (ex.isItinerant()) {
+                // Solo las sedes a las que la obra llegó de verdad.
+                int reached = loan.getCurrentStop() != null ? loan.getCurrentStop() : 0;
+                var visited = ex.getStops().stream().filter(s -> s.getPosition() <= reached).toList();
+                if (visited.isEmpty()) {
+                    p.add(new Chunk(" primera sede de una exposición itinerante.", body));
+                } else {
+                    p.add(new Chunk(" y viajó con la exposición a ", body));
+                    for (int i = 0; i < visited.size(); i++) {
+                        var s = visited.get(i);
+                        p.add(new Chunk(s.getHostInstitution() + " (" + s.getVenueCity() + ")", bodyBold));
+                        p.add(new Chunk(i == visited.size() - 1 ? "." : i == visited.size() - 2 ? " y " : ", ", body));
+                    }
+                }
+            }
             document.add(p);
 
             String credit = loan.getArtwork().getCreditLine() != null ? loan.getArtwork().getCreditLine() : "Colección particular";

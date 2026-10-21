@@ -456,6 +456,8 @@ public class ArtworkService {
     private static boolean visibleTo(Artwork a, Viewer viewer) {
         if (viewer.admin() || viewer.owns(a)) return true;
         if (ProvenanceService.status(a) == Artwork.DueDiligenceStatus.FLAGGED) return false;
+        // Obras de coleccionistas que se han dado de baja.
+        if (a.getCollector() != null && a.getCollector().getDeletedAt() != null) return false;
         return viewer.isMember() || isPublic(a);
     }
 

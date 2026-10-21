@@ -63,7 +63,7 @@ import { ExhibitionFormFieldsComponent } from './exhibition-form-fields.componen
           <a [routerLink]="['/app/foundation/exhibitions', e.id]"
              class="stitch-card p-5 hover:border-primary transition-colors block">
             <p class="text-lg font-bold text-text-main">{{ e.title }}</p>
-            <p class="text-sm text-text-secondary">{{ e.venueName }} · {{ e.venueCity }}</p>
+            <p class="text-sm text-text-secondary">{{ e.venueName }} · {{ e.venueCity }}@if (e.stops.length) { · itinerante ({{ e.stops.length + 1 }} sedes)}</p>
             <p class="text-sm text-text-secondary mt-1">
               {{ e.openingDate | date:'mediumDate' }} → {{ e.closingDate | date:'mediumDate' }}
             </p>

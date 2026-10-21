@@ -89,6 +89,12 @@ public class LoanRequest {
      */
     private LocalDate requestedEndDate;
 
+    /**
+     * En exposiciones itinerantes, sede en la que está la obra: 0 (o nulo)
+     * es la sede principal; 1.. las siguientes de la gira.
+     */
+    private Integer currentStop;
+
     @Column(length = 500)
     private String extensionReason;
 
@@ -117,7 +123,11 @@ public class LoanRequest {
         QUOTE_PENDING,
         /** Presupuesto enviado, pendiente de aprobación por parte del museo. */
         QUOTE_PROPOSED,
-        /** El museo aprueba y se considera pagado (paso simulado en esta versión). */
+        /**
+         * La fundación ha aprobado el presupuesto y el contrato queda formalizado.
+         * Se llama PAID por compatibilidad con la base de datos, pero hoy no se
+         * cobra nada a través de la plataforma (ver CHANGELOG: pagos).
+         */
         PAID,
         /** El coleccionista confirma que la obra está lista para ser recogida. */
         READY_FOR_PICKUP,

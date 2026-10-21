@@ -6,6 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Exposición para la que una fundación solicita obras.
@@ -65,4 +69,41 @@ public class Exhibition {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    /** Sedes siguientes si la exposición es itinerante (vacío si no lo es). */
+    @Builder.Default
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @OrderBy("position ASC")
+    @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExhibitionStop> stops = new ArrayList<>();
+
+    public boolean isItinerant() {
+        return stops != null && !stops.isEmpty();
+    }
+
+    /** Cierre de la última sede: hasta cuándo debe durar el préstamo. */
+    public LocalDate tourClosingDate() {
+        return isItinerant() ? stops.get(stops.size() - 1).getClosingDate() : closingDate;
+    }
+
+    /** Países de todas las sedes ("ES" si no se indica). */
+    public Set<String> tourCountries() {
+        Set<String> countries = new LinkedHashSet<>();
+        countries.add(venueCountry != null ? venueCountry : "ES");
+        if (stops != null) {
+            stops.forEach(s -> countries.add(s.getVenueCountry() != null ? s.getVenueCountry() : "ES"));
+        }
+        return countries;
+    }
+
+    /**
+     * Sede número {@code index} de la gira como texto ("Sala, Ciudad"):
+     * 0 es la principal; 1.. las siguientes.
+     */
+    public String venueLabel(int index) {
+        if (index <= 0 || stops == null || stops.isEmpty()) return venueName + ", " + venueCity;
+        ExhibitionStop s = stops.get(Math.min(index, stops.size()) - 1);
+        return s.getVenueName() + ", " + s.getVenueCity();
+    }
 }

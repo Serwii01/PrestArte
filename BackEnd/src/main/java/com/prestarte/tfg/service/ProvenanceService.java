@@ -56,6 +56,7 @@ public class ProvenanceService {
     private final LoanRequestRepository loanRequestRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final StolenArtRegistries stolenArtRegistries;
     private final CurrentUser currentUser;
 
     // ===== Consulta =====
@@ -178,6 +179,11 @@ public class ProvenanceService {
             throw new IllegalArgumentException("El resultado debe ser CLEAR o FLAGGED.");
         }
         Artwork a = findOrThrow(artworkId);
+        boolean noNotes = req.getNotes() == null || req.getNotes().isBlank();
+        if (req.getResult() == Artwork.DueDiligenceStatus.CLEAR && noNotes && stolenArtRegistries.hasPossibleMatch(a)) {
+            throw new IllegalArgumentException("Una base de obras robadas muestra una posible coincidencia: "
+                    + "explica en las notas por qué la descartas antes de verificar la obra.");
+        }
         checkRepository.save(DueDiligenceCheck.builder()
                 .artwork(a)
                 .result(req.getResult())

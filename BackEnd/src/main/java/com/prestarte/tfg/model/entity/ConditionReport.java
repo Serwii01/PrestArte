@@ -38,8 +38,9 @@ public class ConditionReport {
     @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
+    // varchar y no ENUM de MySQL: así se pueden añadir fases sin migrar la columna.
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20)")
     private Stage stage;
 
     /** Estado de conservación observado. */
@@ -72,11 +73,38 @@ public class ConditionReport {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Momento del envío en el que se levanta el informe. */
+    /** Daños señalados sobre las fotos. */
+    @Builder.Default
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @OrderBy("id ASC")
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DamageMark> marks = new ArrayList<>();
+
+    // ===== Firma de conformidad de la otra parte =====
+
+    /** Quien firma la conformidad (la otra parte del momento: ver ConditionReportService). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "acknowledged_by_id")
+    private User acknowledgedBy;
+
+    private LocalDateTime acknowledgedAt;
+
+    /** True si la otra parte firma que NO está conforme con el informe. */
+    private Boolean disputed;
+
+    @Column(length = 500)
+    private String acknowledgementComment;
+
+    /** Momento en el que se levanta el informe. */
     public enum Stage {
         /** Recogida en origen, por la empresa de transporte. */
         PICKUP,
         /** Entrega en destino, por quien recibe la obra. */
-        DELIVERY
+        DELIVERY,
+        /** En sala, antes de desmontar la exposición, por la institución. */
+        PRE_RETURN,
+        /** En sala, antes del traslado a la siguiente sede de una gira, por la institución. */
+        TRANSFER
     }
 }

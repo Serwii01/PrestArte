@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subscription, interval, switchMap, of, catchError } from 'rxjs';
+import { Subscription, switchMap, of, catchError } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { ChatService } from '../../core/services/chat.service';
@@ -61,7 +61,7 @@ export class ChatComponent implements OnInit, OnChanges, OnDestroy, AfterViewChe
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly sending = signal(false);
 
-  private pollSub?: Subscription;
+  private liveSub?: Subscription;
   private shouldScroll = true;
 
   protected readonly form = this.fb.nonNullable.group({
@@ -95,14 +95,14 @@ export class ChatComponent implements OnInit, OnChanges, OnDestroy, AfterViewChe
   }
 
   ngOnDestroy(): void {
-    this.pollSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
   }
 
-  /** Carga el chat asociado al `id` actual y arranca/reinicia el polling. */
+  /** Carga el chat asociado al `id` actual y arranca/reinicia las actualizaciones en tiempo real. */
   private openChatForCurrentId(): void {
     // Reset de estado para evitar mezclar datos del chat anterior.
-    this.pollSub?.unsubscribe();
-    this.pollSub = undefined;
+    this.liveSub?.unsubscribe();
+    this.liveSub = undefined;
     this.chat.set(null);
     this.loan.set(null);
     this.messages.set([]);
@@ -122,7 +122,7 @@ export class ChatComponent implements OnInit, OnChanges, OnDestroy, AfterViewChe
       next: (session) => {
         this.chat.set(session);
         this.loadMessages();
-        this.startPolling();
+        this.startLiveUpdates();
       },
       error: (err) => {
         this.loading.set(false);
@@ -160,15 +160,16 @@ export class ChatComponent implements OnInit, OnChanges, OnDestroy, AfterViewChe
     });
   }
 
-  /** Polling cada 4 segundos para recibir mensajes nuevos. */
-  private startPolling(): void {
-    this.pollSub = interval(4000)
+  /**
+   * Mensajes en tiempo real: el servidor avisa por SSE de cada mensaje
+   * nuevo y entonces se recarga la conversación.
+   */
+  private startLiveUpdates(): void {
+    const c = this.chat();
+    if (!c) return;
+    this.liveSub = this.chatService.messageStream(c.id)
       .pipe(
-        switchMap(() => {
-          const c = this.chat();
-          if (!c) return of([] as MessageResponse[]);
-          return this.chatService.getMessages(c.id).pipe(catchError(() => of([] as MessageResponse[])));
-        }),
+        switchMap(() => this.chatService.getMessages(c.id).pipe(catchError(() => of([] as MessageResponse[])))),
       )
       .subscribe((msgs) => {
         if (msgs.length === 0) return;

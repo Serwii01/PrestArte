@@ -3,7 +3,9 @@ package com.prestarte.tfg.controller;
 import com.prestarte.tfg.model.dto.AcceptLoanRequest;
 import com.prestarte.tfg.model.dto.CancelLoanRequest;
 import com.prestarte.tfg.model.dto.CompatibilityReport;
+import com.prestarte.tfg.model.dto.ConditionReportRequest;
 import com.prestarte.tfg.model.dto.ConditionReportResponse;
+import com.prestarte.tfg.model.dto.SignConditionReportRequest;
 import com.prestarte.tfg.model.dto.CostEstimate;
 import com.prestarte.tfg.model.dto.SupervisionCheckpointRequest;
 import com.prestarte.tfg.model.dto.SupervisionCheckpointResponse;
@@ -104,6 +106,39 @@ public class LoanRequestController {
     @GetMapping("/{id}/condition-reports")
     public ResponseEntity<List<ConditionReportResponse>> getConditionReports(@PathVariable Long id) {
         return ResponseEntity.ok(loanRequestService.getConditionReports(id));
+    }
+
+    /**
+     * Informe de estado en sala antes de desmontar (fundación, préstamo
+     * ON_LOAN): parte {@code data} (JSON) y una o varias partes {@code photos}.
+     */
+    @PostMapping(value = "/{id}/condition-reports", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<ConditionReportResponse>> createPreReturnReport(
+            @PathVariable Long id,
+            @Valid @RequestPart("data") ConditionReportRequest data,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) throws IOException {
+        return ResponseEntity.ok(loanRequestService.createPreReturnReport(id, data, photos));
+    }
+
+    /**
+     * Exposición itinerante: traslado a la siguiente sede, con el informe
+     * de estado previo (parte {@code data} y partes {@code photos}).
+     */
+    @PostMapping(value = "/{id}/transfer", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<LoanResponse> transferToNextStop(
+            @PathVariable Long id,
+            @Valid @RequestPart("data") ConditionReportRequest data,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) throws IOException {
+        return ResponseEntity.ok(loanRequestService.transferToNextStop(id, data, photos));
+    }
+
+    /** La otra parte firma su conformidad (o su desacuerdo) con un informe de estado. */
+    @PostMapping("/{id}/condition-reports/{reportId}/sign")
+    public ResponseEntity<ConditionReportResponse> signConditionReport(
+            @PathVariable Long id, @PathVariable Long reportId,
+            @Valid @RequestBody SignConditionReportRequest body) {
+        return ResponseEntity.ok(loanRequestService.signConditionReport(
+                id, reportId, Boolean.TRUE.equals(body.getAgree()), body.getComment()));
     }
 
     // ===== Acciones del flujo =====

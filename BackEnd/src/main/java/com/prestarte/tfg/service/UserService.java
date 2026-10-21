@@ -79,6 +79,8 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setTaxId(request.getTaxId());
         user.setVerificationFile(verificationDoc);
+        user.setTermsAcceptedAt(java.time.LocalDateTime.now());
+        user.setTermsVersion(LegalTerms.VERSION);
         user.setStatus(UserStatus.PENDING);
         user.setEnabled(false);
 

@@ -6,6 +6,7 @@ import com.prestarte.tfg.model.dto.ExhibitionRequest;
 import com.prestarte.tfg.model.dto.ExhibitionResponse;
 import com.prestarte.tfg.model.entity.Artwork;
 import com.prestarte.tfg.model.entity.Exhibition;
+import com.prestarte.tfg.model.entity.ExhibitionStop;
 import com.prestarte.tfg.model.entity.LoanRequest;
 import com.prestarte.tfg.model.entity.Role;
 import com.prestarte.tfg.model.entity.Shipment;
@@ -20,6 +21,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -103,7 +105,9 @@ public class ExhibitionService {
                 .filter(l -> l.getExhibition() != null && EXHIBITED.contains(l.getStatus()))
                 .filter(l -> ProvenanceService.status(l.getArtwork()) != Artwork.DueDiligenceStatus.FLAGGED)
                 .map(LoanRequest::getExhibition)
-                .distinct()
+                // Sin repetidos, comparando por id (no por el equals de Lombok).
+                .collect(java.util.stream.Collectors.toMap(Exhibition::getId, e -> e, (a, b) -> a))
+                .values().stream()
                 .sorted(Comparator.comparing(Exhibition::getOpeningDate).reversed())
                 .map(e -> ExhibitionHistoryItem.builder()
                         .title(e.getTitle())
@@ -135,6 +139,59 @@ public class ExhibitionService {
         e.setVenueCountry(req.getVenueCountry() != null ? req.getVenueCountry() : "ES");
         e.setOpeningDate(req.getOpeningDate());
         e.setClosingDate(req.getClosingDate());
+        applyStops(e, req.getStops());
+    }
+
+    /** Estados en los que el préstamo sigue vivo y sus fechas ya están comprometidas. */
+    private static final java.util.Set<LoanRequest.Status> CLOSED = java.util.EnumSet.of(
+            LoanRequest.Status.REJECTED, LoanRequest.Status.CANCELLED, LoanRequest.Status.RETURNED);
+
+    /**
+     * Sustituye las sedes de la gira. Cada sede abre después de que cierre
+     * la anterior. No se puede alargar la gira más allá del final de los
+     * préstamos ya en curso: habría que ampliarlos antes.
+     */
+    private void applyStops(Exhibition e, List<ExhibitionRequest.Stop> stops) {
+        List<ExhibitionRequest.Stop> list = stops == null ? List.of() : stops;
+        LocalDate previousClose = e.getClosingDate();
+        for (ExhibitionRequest.Stop s : list) {
+            if (!s.getClosingDate().isAfter(s.getOpeningDate())) {
+                throw new IllegalArgumentException("En la sede de " + s.getVenueCity()
+                        + ", el cierre debe ser posterior a la apertura.");
+            }
+            if (!s.getOpeningDate().isAfter(previousClose)) {
+                throw new IllegalArgumentException("La sede de " + s.getVenueCity()
+                        + " debe abrir después del cierre de la sede anterior (" + previousClose + ").");
+            }
+            previousClose = s.getClosingDate();
+        }
+
+        if (e.getId() != null) {
+            LocalDate tourEnd = previousClose;
+            loanRequestRepository.findByExhibitionId(e.getId()).stream()
+                    .filter(l -> !CLOSED.contains(l.getStatus()) && l.getEndDate().isBefore(tourEnd))
+                    .findFirst()
+                    .ifPresent(l -> {
+                        throw new IllegalStateException("El préstamo de «" + l.getArtwork().getTitle()
+                                + "» termina el " + l.getEndDate() + ": amplíalo antes de alargar la gira hasta el "
+                                + tourEnd + ".");
+                    });
+        }
+
+        e.getStops().clear();
+        int position = 1;
+        for (ExhibitionRequest.Stop s : list) {
+            e.getStops().add(ExhibitionStop.builder()
+                    .exhibition(e)
+                    .position(position++)
+                    .hostInstitution(s.getHostInstitution().trim())
+                    .venueName(s.getVenueName().trim())
+                    .venueCity(s.getVenueCity().trim())
+                    .venueCountry(s.getVenueCountry() != null ? s.getVenueCountry() : "ES")
+                    .openingDate(s.getOpeningDate())
+                    .closingDate(s.getClosingDate())
+                    .build());
+        }
     }
 
     private Exhibition findOrThrow(Long id) {
@@ -150,6 +207,16 @@ public class ExhibitionService {
         return me.getId();
     }
 
+    /** La exposición, si la sesión es la institución organizadora o la administración. */
+    @Transactional(readOnly = true)
+    public Exhibition getAsOrganizer(Long id) {
+        Exhibition e = findOrThrow(id);
+        if (!isOrganizerOrAdmin(e)) {
+            throw new AccessDeniedException("Solo la institución organizadora puede consultar esto");
+        }
+        return e;
+    }
+
     private boolean isOrganizerOrAdmin(Exhibition e) {
         return currentUser.isAdmin() || currentUser.isAnyOf(e.getFoundation().getId());
     }
@@ -160,6 +227,15 @@ public class ExhibitionService {
         }
     }
 
+
+    /** Sedes de la gira como DTO; público para la ficha del préstamo. */
+    public static List<ExhibitionResponse.Stop> stopsOf(Exhibition e) {
+        return e.getStops().stream()
+                .map(s -> new ExhibitionResponse.Stop(s.getPosition(), s.getHostInstitution(), s.getVenueName(),
+                        s.getVenueCity(), s.getVenueCountry() != null ? s.getVenueCountry() : "ES",
+                        s.getOpeningDate(), s.getClosingDate()))
+                .toList();
+    }
     private ExhibitionResponse toResponse(Exhibition e, boolean withLoans) {
         List<ExhibitionResponse.LoanSummary> loans = null;
         if (withLoans && e.getId() != null) {
@@ -188,6 +264,8 @@ public class ExhibitionService {
                 .venueCountry(e.getVenueCountry() != null ? e.getVenueCountry() : "ES")
                 .openingDate(e.getOpeningDate())
                 .closingDate(e.getClosingDate())
+                .stops(stopsOf(e))
+                .tourClosingDate(e.tourClosingDate())
                 .loans(loans)
                 .build();
     }

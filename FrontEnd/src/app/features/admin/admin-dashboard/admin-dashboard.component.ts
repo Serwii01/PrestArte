@@ -9,6 +9,7 @@ import { Role, UserResponse } from '../../../core/models/user.models';
 import { ChatsShortcutComponent } from '../../../shared/components/chats-shortcut/chats-shortcut.component';
 import { SecureFilePipe } from '../../../shared/pipes/secure-file.pipe';
 import { DueDiligencePanelComponent } from '../due-diligence-panel.component';
+import { AdminMetricsComponent } from '../admin-metrics.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 
 @Component({
@@ -21,6 +22,7 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
     ChatsShortcutComponent,
     SecureFilePipe,
     DueDiligencePanelComponent,
+    AdminMetricsComponent,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',

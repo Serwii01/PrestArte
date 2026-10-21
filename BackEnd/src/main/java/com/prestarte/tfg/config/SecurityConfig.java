@@ -2,6 +2,7 @@ package com.prestarte.tfg.config;
 
 import com.prestarte.tfg.security.JwtAuthenticationFilter;
 import com.prestarte.tfg.security.RateLimitFilter;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +54,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Los envíos asíncronos (cierre de un stream SSE) y las páginas de error
+                        // ya se autorizaron en la petición original.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         // Endpoints públicos del flujo de autenticación.
                         .requestMatchers("/api/auth/**").permitAll()
                         // Descarga de archivos por UUID: las fotos y documentos públicos se

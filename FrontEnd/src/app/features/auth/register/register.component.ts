@@ -53,6 +53,8 @@ export class RegisterComponent implements OnInit {
     phone: ['', [Validators.required, spanishPhoneValidator()]],
     taxId: ['', [Validators.required, spanishTaxIdValidator()]],
     role: ['COLLECTOR' as RegisterRole, [Validators.required]],
+    /** Aceptación de la política de privacidad y los términos (RGPD). */
+    acceptedTerms: [false, [Validators.requiredTrue]],
   });
 
   ngOnInit(): void {

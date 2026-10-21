@@ -18,6 +18,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByRecipientIdAndReadFalse(Long recipientId);
 
+    /** Todos los avisos de un usuario (para la exportación de sus datos). */
+    List<Notification> findByRecipientIdOrderByCreatedAtDesc(Long recipientId);
+
     @Modifying
     @Query("UPDATE Notification n SET n.read = true WHERE n.recipient.id = :userId AND n.read = false")
     int markAllRead(@Param("userId") Long userId);

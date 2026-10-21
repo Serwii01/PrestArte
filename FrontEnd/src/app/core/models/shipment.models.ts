@@ -28,6 +28,8 @@ export interface ShipmentResponse {
   insurancePolicy?: string;
   priceAccepted: boolean;
   receivedBy?: string;
+  /** Daños señalados sobre las fotos; photoIndex = posición en la lista de fotos. */
+  damageMarks?: DamageMarkInput[];
   notes?: string;
   deliveryDate?: string;
   createdAt?: string;
@@ -52,9 +54,26 @@ export interface ConditionReportRequest {
   notes?: string;
   /** Solo en la entrega. */
   receivedBy?: string;
+  /** Daños señalados sobre las fotos; photoIndex = posición en la lista de fotos. */
+  damageMarks?: DamageMarkInput[];
 }
 
-export type ConditionReportStage = 'PICKUP' | 'DELIVERY';
+export interface DamageMarkInput {
+  photoIndex: number;
+  /** Posición en % (0-100) sobre la foto. */
+  x: number;
+  y: number;
+  note?: string;
+}
+
+export interface DamageMark {
+  photoId: string;
+  x: number;
+  y: number;
+  note?: string | null;
+}
+
+export type ConditionReportStage = 'PICKUP' | 'DELIVERY' | 'PRE_RETURN' | 'TRANSFER';
 
 export interface ConditionReportResponse {
   id: number;
@@ -68,6 +87,15 @@ export interface ConditionReportResponse {
   authorRole: string;
   /** UUIDs de las fotos (requieren sesión: usar el pipe secureFile). */
   photoIds: string[];
+  marks: DamageMark[];
+  /** Rol que debe firmar la conformidad. */
+  counterpartRole: string;
+  /** True si el usuario actual debe firmar y aún no lo ha hecho. */
+  canSign: boolean;
+  acknowledgedByName?: string | null;
+  acknowledgedAt?: string | null;
+  disputed?: boolean | null;
+  acknowledgementComment?: string | null;
   createdAt: string;
 }
 

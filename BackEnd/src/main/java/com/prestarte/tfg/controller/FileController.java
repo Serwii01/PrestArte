@@ -69,6 +69,6 @@ public class FileController {
         if (!MediaType.APPLICATION_PDF.equalsTypeAndSubtype(type)) {
             response.header("Content-Security-Policy", "sandbox");
         }
-        return response.body(dbFile.getData());
+        return response.body(fileStorageService.contentOf(dbFile));
     }
 }

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "db_files")
+@EntityListeners(DBFileStorageListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,7 +39,8 @@ public class DBFile {
     private String fileType;
 
     /**
-     * Bytes del archivo. No se serializa en las respuestas JSON;
+     * Bytes de los archivos antiguos. Los nuevos se guardan en disco (ver
+     * {@link #storageKey}) y aquí queda nulo. No se serializa en JSON;
      * el contenido se entrega exclusivamente a través del endpoint
      * de descarga.
      */
@@ -46,6 +48,15 @@ public class DBFile {
     @Column(columnDefinition = "LONGBLOB")
     @JsonIgnore
     private byte[] data;
+
+    /**
+     * Clave del contenido en disco ({@link com.prestarte.tfg.service.FileBlobStore}).
+     * Los archivos antiguos, anteriores a este cambio, la tienen nula y
+     * guardan sus bytes en {@code data}.
+     */
+    @Column(length = 32)
+    @JsonIgnore
+    private String storageKey;
 
     /** Tamaño en bytes, útil para mostrarlo en la interfaz. */
     private Long fileSize;

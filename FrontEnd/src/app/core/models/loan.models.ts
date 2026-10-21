@@ -1,3 +1,5 @@
+import type { ExhibitionStop } from './exhibition.models';
+
 export type LoanStatus =
   | 'REQUESTED'
   | 'ACCEPTED'
@@ -28,6 +30,10 @@ export interface LoanResponse {
   exhibitionVenue?: string | null;
   exhibitionOpeningDate?: string | null;
   exhibitionClosingDate?: string | null;
+  /** Sedes siguientes si la exposición es itinerante. */
+  exhibitionStops?: ExhibitionStop[];
+  /** Sede donde está la obra: 0 = principal, 1.. = siguientes. */
+  currentStop?: number;
   startDate: string;
   endDate: string;
   agreedConditions?: string;
@@ -85,7 +91,7 @@ export const LOAN_STATUS_LABEL: Record<LoanStatus, string> = {
   ACCEPTED: 'Aceptado',
   QUOTE_PENDING: 'Esperando presupuesto',
   QUOTE_PROPOSED: 'Presupuesto propuesto',
-  PAID: 'Pagado',
+  PAID: 'Presupuesto aprobado',
   READY_FOR_PICKUP: 'Listo para recoger',
   IN_TRANSIT: 'En tránsito',
   DELIVERED: 'Entregado',

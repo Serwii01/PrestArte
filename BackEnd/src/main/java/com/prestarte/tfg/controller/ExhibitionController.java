@@ -1,7 +1,9 @@
 package com.prestarte.tfg.controller;
 
+import com.prestarte.tfg.model.dto.ExhibitionCompatibility;
 import com.prestarte.tfg.model.dto.ExhibitionRequest;
 import com.prestarte.tfg.model.dto.ExhibitionResponse;
+import com.prestarte.tfg.service.ExhibitionCompatibilityService;
 import com.prestarte.tfg.service.ExhibitionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
+    private final ExhibitionCompatibilityService exhibitionCompatibilityService;
 
     @PostMapping
     public ResponseEntity<ExhibitionResponse> create(@Valid @RequestBody ExhibitionRequest body) {
@@ -39,5 +42,11 @@ public class ExhibitionController {
     public ResponseEntity<ExhibitionResponse> update(@PathVariable Long id,
                                                      @Valid @RequestBody ExhibitionRequest body) {
         return ResponseEntity.ok(exhibitionService.update(id, body));
+    }
+
+    /** Compatibilidad de todas las obras de la exposición con las instalaciones (solo organizadora). */
+    @GetMapping("/{id}/compatibility")
+    public ResponseEntity<ExhibitionCompatibility> compatibility(@PathVariable Long id) {
+        return ResponseEntity.ok(exhibitionCompatibilityService.check(id));
     }
 }

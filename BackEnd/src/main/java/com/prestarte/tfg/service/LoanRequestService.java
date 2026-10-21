@@ -2,6 +2,7 @@ package com.prestarte.tfg.service;
 
 import com.prestarte.tfg.exception.ResourceNotFoundException;
 import com.prestarte.tfg.model.dto.CompatibilityReport;
+import com.prestarte.tfg.model.dto.ConditionReportRequest;
 import com.prestarte.tfg.model.dto.ConditionReportResponse;
 import com.prestarte.tfg.model.dto.CreateLoanRequest;
 import com.prestarte.tfg.model.dto.LoanEventResponse;
@@ -16,6 +17,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -101,11 +105,14 @@ public class LoanRequestService {
         }
 
         Exhibition exhibition = exhibitionService.getForLoanRequest(dto.getExhibitionId(), dto.getFoundationId());
+        // En una exposición itinerante, el préstamo cubre la gira entera.
+        LocalDate tourEnd = exhibition.tourClosingDate();
         if (dto.getStartDate().isAfter(exhibition.getOpeningDate())
-                || dto.getEndDate().isBefore(exhibition.getClosingDate())) {
+                || dto.getEndDate().isBefore(tourEnd)) {
             throw new IllegalArgumentException(
-                    "El préstamo debe cubrir toda la exposición (del " + exhibition.getOpeningDate()
-                            + " al " + exhibition.getClosingDate() + "), con margen para transporte y montaje.");
+                    "El préstamo debe cubrir toda la exposición" + (exhibition.isItinerant() ? ", con todas sus sedes" : "")
+                            + " (del " + exhibition.getOpeningDate() + " al " + tourEnd
+                            + "), con margen para transporte y montaje.");
         }
 
         LoanRequirements req = artwork.getRequirements();
@@ -135,7 +142,9 @@ public class LoanRequestService {
         loanEventService.recordTransition(request, null, LoanRequest.Status.REQUESTED,
                 foundation.getName() + " solicita el préstamo para la exposición «"
                         + exhibition.getTitle() + "» (" + exhibition.getVenueName() + ", "
-                        + exhibition.getVenueCity() + "), del " + dto.getStartDate()
+                        + exhibition.getVenueCity()
+                        + (exhibition.isItinerant() ? " y " + exhibition.getStops().size() + " sede(s) más" : "")
+                        + "), del " + dto.getStartDate()
                         + " al " + dto.getEndDate() + ".");
         return convertToResponse(request);
     }
@@ -299,6 +308,10 @@ public class LoanRequestService {
     public LoanResponse startReturn(Long loanId) {
         LoanRequest loan = findOrThrow(loanId);
         currentUser.requireUserId(loan.getFoundation().getId());
+        if (!conditionReportService.hasPreReturnReport(loanId)) {
+            throw new IllegalStateException(
+                    "Antes de iniciar la devolución, levanta el informe de estado previo al desmontaje.");
+        }
         transition(loan, LoanRequest.Status.RETURNING,
                 "La fundación inicia la devolución de la obra.");
 
@@ -517,6 +530,84 @@ public class LoanRequestService {
     public List<ConditionReportResponse> getConditionReports(Long loanId) {
         requireLoanAccess(findOrThrow(loanId));
         return conditionReportService.getByLoan(loanId);
+    }
+
+    /**
+     * La fundación documenta el estado de la obra en sala, antes de
+     * desmontarla. Es obligatorio para iniciar la devolución: separa los
+     * daños sufridos durante la exposición de los del viaje de vuelta.
+     */
+    @Transactional
+    public List<ConditionReportResponse> createPreReturnReport(Long loanId, ConditionReportRequest data,
+                                                               List<MultipartFile> photos) throws IOException {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getFoundation().getId());
+        if (loan.getStatus() != LoanRequest.Status.ON_LOAN) {
+            throw new IllegalStateException("El informe previo al desmontaje se hace con la obra expuesta.");
+        }
+        if (conditionReportService.hasPreReturnReport(loanId)) {
+            throw new IllegalStateException("Ya existe un informe previo al desmontaje.");
+        }
+        if (remainingStops(loan) > 0) {
+            throw new IllegalStateException("La obra aún tiene sedes pendientes en la gira: regístrala como "
+                    + "traslado a la siguiente sede, no como desmontaje final.");
+        }
+        Shipment outbound = shipmentRepository.findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loanId, Shipment.ShipmentDirection.OUTBOUND)
+                .orElseThrow(() -> new IllegalStateException("El préstamo no tiene envío de ida."));
+        conditionReportService.create(outbound, ConditionReport.Stage.PRE_RETURN, data, photos);
+        loanEventService.record(loan, "La fundación levanta el informe de estado previo al desmontaje"
+                + (data.isDamageReported() || (data.getDamageMarks() != null && !data.getDamageMarks().isEmpty())
+                ? ", con daños señalados." : "."));
+        return conditionReportService.getByLoan(loanId);
+    }
+
+    /**
+     * Exposición itinerante: la fundación documenta el estado de la obra
+     * antes de desmontarla y la traslada a la siguiente sede de la gira.
+     * El préstamo sigue ON_LOAN; el traslado queda en el historial y el
+     * coleccionista firma la conformidad del informe.
+     */
+    @Transactional
+    public LoanResponse transferToNextStop(Long loanId, ConditionReportRequest data,
+                                           List<MultipartFile> photos) throws IOException {
+        LoanRequest loan = findOrThrow(loanId);
+        currentUser.requireUserId(loan.getFoundation().getId());
+        if (loan.getStatus() != LoanRequest.Status.ON_LOAN) {
+            throw new IllegalStateException("Solo se traslada una obra que está expuesta.");
+        }
+        if (remainingStops(loan) == 0) {
+            throw new IllegalStateException("No quedan sedes en la gira: la siguiente etapa es la devolución.");
+        }
+        Shipment outbound = shipmentRepository.findFirstByLoanRequestIdAndDirectionOrderByCreatedAtDesc(
+                        loanId, Shipment.ShipmentDirection.OUTBOUND)
+                .orElseThrow(() -> new IllegalStateException("El préstamo no tiene envío de ida."));
+        conditionReportService.create(outbound, ConditionReport.Stage.TRANSFER, data, photos);
+
+        Exhibition ex = loan.getExhibition();
+        int from = loan.getCurrentStop() != null ? loan.getCurrentStop() : 0;
+        loan.setCurrentStop(from + 1);
+        loanRequestRepository.save(loan);
+        loanEventService.recordImportant(loan, "La obra se traslada de " + ex.venueLabel(from)
+                + " a " + ex.venueLabel(from + 1) + " (" + ex.getStops().get(from).getHostInstitution() + ")."
+                + (data.isDamageReported() ? " El informe de estado previo señala daños." : ""));
+        return convertToResponse(loan);
+    }
+
+    /** Sedes de la gira que la obra aún no ha visitado. */
+    private static int remainingStops(LoanRequest loan) {
+        Exhibition ex = loan.getExhibition();
+        if (ex == null || !ex.isItinerant()) return 0;
+        int current = loan.getCurrentStop() != null ? loan.getCurrentStop() : 0;
+        return Math.max(0, ex.getStops().size() - current);
+    }
+
+    /** La otra parte firma su conformidad (o no) con un informe de estado. */
+    @Transactional
+    public ConditionReportResponse signConditionReport(Long loanId, Long reportId, boolean agree, String comment) {
+        LoanRequest loan = findOrThrow(loanId);
+        requireLoanAccess(loan);
+        return conditionReportService.sign(loan, reportId, agree, comment);
     }
 
     // ===== Lecturas =====
@@ -742,6 +833,8 @@ public class LoanRequestService {
                         ? l.getExhibition().getVenueName() + ", " + l.getExhibition().getVenueCity() : null)
                 .exhibitionOpeningDate(l.getExhibition() != null ? l.getExhibition().getOpeningDate() : null)
                 .exhibitionClosingDate(l.getExhibition() != null ? l.getExhibition().getClosingDate() : null)
+                .exhibitionStops(l.getExhibition() != null ? ExhibitionService.stopsOf(l.getExhibition()) : List.of())
+                .currentStop(l.getCurrentStop() != null ? l.getCurrentStop() : 0)
                 .collectorId(revealOwner ? collectorId : null)
                 .collectorName(revealOwner ? l.getArtwork().getCollector().getName()
                         : ArtworkService.ANONYMOUS_OWNER)

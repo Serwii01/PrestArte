@@ -1,0 +1,61 @@
+# PrestArte: base de datos, backend y frontend.
+#   cp .env.example .env   (y rellena los valores)
+#   docker compose up -d --build
+# La aplicación queda en http://localhost (o en el puerto APP_PORT).
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: prestarte
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./BackEnd
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://db:3306/prestarte?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${PUBLIC_URL}
+      FRONTEND_BASE_URL: ${PUBLIC_URL}
+      APP_STORAGE_DIR: /app/data/files
+      APP_STORAGE_MIGRATE_LEGACY: ${APP_STORAGE_MIGRATE_LEGACY:-false}
+      APP_GEOCODING_ENABLED: ${APP_GEOCODING_ENABLED:-true}
+    volumes:
+      # Fotos y documentos subidos: hay que incluirlos en las copias de seguridad.
+      - files-data:/app/data/files
+    # No se publica: solo Nginx (frontend) habla con el backend.
+    expose:
+      - "8080"
+
+  frontend:
+    build: ./FrontEnd
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${APP_PORT:-80}:80"
+
+volumes:
+  db-data:
+  files-data:

@@ -16,5 +16,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByRevieweeIdOrderByCreatedAtDesc(Long revieweeId);
 
+    /** Valoraciones escritas por un usuario (para la exportación de sus datos). */
+    List<Review> findByReviewerIdOrderByCreatedAtDesc(Long reviewerId);
+
     boolean existsByLoanRequestIdAndReviewerIdAndRevieweeId(Long loanRequestId, Long reviewerId, Long revieweeId);
 }

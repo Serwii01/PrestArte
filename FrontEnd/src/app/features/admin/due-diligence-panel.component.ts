@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ProvenanceService } from '../../core/services/provenance.service';
-import { DueDiligencePendingItem } from '../../core/models/provenance.models';
+import { DueDiligencePendingItem, StolenArtCheck } from '../../core/models/provenance.models';
 
 /**
  * Cola de obras pendientes de diligencia debida. La administración las
@@ -70,6 +70,45 @@ import { DueDiligencePendingItem } from '../../core/models/provenance.models';
 
               @if (openId() === i.artworkId) {
                 <form [formGroup]="form" (ngSubmit)="save(i)" class="mt-3 p-4 rounded-lg border border-border space-y-3">
+                  @if (check(); as c) {
+                    <div>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-xs font-medium text-text-secondary">Buscar como:</p>
+                        <code class="text-xs bg-gray-soft rounded px-2 py-1">{{ c.searchTerms }}</code>
+                        <button type="button" (click)="copy(c.searchTerms)" title="Copiar"
+                                class="text-text-secondary hover:text-primary">
+                          <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
+                        </button>
+                      </div>
+                      <p class="text-xs font-medium text-text-secondary mt-3 pb-1">Marca las bases que has consultado</p>
+                      <ul class="space-y-2">
+                        @for (r of c.registries; track r.code) {
+                          <li class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-1 h-4 w-4 rounded border-border"
+                                   [checked]="checked().has(r.code)" (change)="toggle(r.code, c)" />
+                            <div class="text-sm">
+                              @if (r.url) {
+                                <a [href]="r.url" target="_blank" rel="noopener noreferrer"
+                                   class="font-bold text-text-main hover:text-primary">{{ r.name }}
+                                  <span class="material-symbols-outlined align-middle" style="font-size:14px;">open_in_new</span></a>
+                              } @else {
+                                <span class="font-bold text-text-main">{{ r.name }}</span>
+                              }
+                              <p class="text-xs text-text-secondary">{{ r.scope }} {{ r.access }}</p>
+                              @if (r.automated) {
+                                <p class="text-xs font-bold"
+                                   [class.text-emerald-700]="r.outcome === 'NO_MATCH'"
+                                   [class.text-red-700]="r.outcome === 'POSSIBLE_MATCH'"
+                                   [class.text-amber-700]="r.outcome === 'ERROR'">
+                                  Consulta automática: {{ r.outcome === 'NO_MATCH' ? 'sin coincidencias' : r.outcome === 'POSSIBLE_MATCH' ? 'posible coincidencia' : 'error' }}{{ r.detail ? ' — ' + r.detail : '' }}{{ r.reference ? ' (ref. ' + r.reference + ')' : '' }}
+                                </p>
+                              }
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
                   <label class="block">
                     <p class="text-xs font-medium text-text-secondary pb-1">Bases consultadas</p>
                     <input formControlName="sources" class="w-full rounded-lg border border-border h-10 px-3 text-sm" />
@@ -118,10 +157,13 @@ export class DueDiligencePanelComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly openId = signal<number | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly check = signal<StolenArtCheck | null>(null);
+  /** Bases marcadas como consultadas; componen el campo «Bases consultadas». */
+  protected readonly checked = signal<Set<string>>(new Set());
 
   protected readonly form = this.fb.nonNullable.group({
     result: ['CLEAR' as 'CLEAR' | 'FLAGGED', [Validators.required]],
-    sources: ['Interpol ID-Art, Art Loss Register', [Validators.required, Validators.maxLength(300)]],
+    sources: ['', [Validators.required, Validators.maxLength(300)]],
     reference: ['', [Validators.maxLength(100)]],
     notes: ['', [Validators.maxLength(5000)]],
   });
@@ -131,7 +173,18 @@ export class DueDiligencePanelComponent implements OnInit {
   }
 
   open(i: DueDiligencePendingItem): void {
-    this.form.reset({ result: 'CLEAR', sources: 'Interpol ID-Art, Art Loss Register', reference: '', notes: '' });
+    this.form.reset({ result: 'CLEAR', sources: '', reference: '', notes: '' });
+    this.checked.set(new Set());
+    this.check.set(null);
+    this.service.stolenArtRegistries(i.artworkId).subscribe({
+      next: (c) => {
+        this.check.set(c);
+        // Las bases consultadas automáticamente ya cuentan como revisadas.
+        c.registries.filter((r) => r.automated && r.outcome !== 'ERROR').forEach((r) => this.toggle(r.code, c));
+        const ref = c.registries.find((r) => r.reference)?.reference;
+        if (ref) this.form.controls.reference.setValue(ref);
+      },
+    });
     this.error.set(null);
     this.openId.set(i.artworkId);
   }
@@ -170,5 +223,19 @@ export class DueDiligencePanelComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  toggle(code: string, c: StolenArtCheck): void {
+    const next = new Set(this.checked());
+    if (next.has(code)) next.delete(code);
+    else next.add(code);
+    this.checked.set(next);
+    this.form.controls.sources.setValue(
+      c.registries.filter((r) => next.has(r.code)).map((r) => r.name).join(', ').slice(0, 300),
+    );
+  }
+
+  copy(text: string): void {
+    navigator.clipboard?.writeText(text).catch(() => undefined);
   }
 }

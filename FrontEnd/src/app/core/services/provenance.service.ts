@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   DueDiligencePendingItem,
   DueDiligenceRequest,
+  StolenArtCheck,
   ProvenanceEntryRequest,
   ProvenanceResponse,
 } from '../models/provenance.models';
@@ -42,5 +43,10 @@ export class ProvenanceService {
 
   recordDueDiligence(artworkId: number, body: DueDiligenceRequest): Observable<ProvenanceResponse> {
     return this.http.post<ProvenanceResponse>(`${this.base}/admin/artworks/${artworkId}/due-diligence`, body);
+  }
+
+  /** Bases de obras robadas que consultar para una obra (administración). */
+  stolenArtRegistries(artworkId: number): Observable<StolenArtCheck> {
+    return this.http.get<StolenArtCheck>(`${this.base}/admin/artworks/${artworkId}/stolen-art-registries`);
   }
 }

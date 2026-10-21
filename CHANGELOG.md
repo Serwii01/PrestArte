@@ -83,9 +83,69 @@
 - **Ampliación del préstamo**: la fundación la pide con la obra expuesta y el coleccionista la aprueba o rechaza. Al aprobar se comprueba que la obra no esté reservada después y que el permiso de exportación lo permita; si el seguro no cubre el nuevo periodo, se avisa. Endpoints: `POST /api/loan-requests/{id}/extension`, `/extension/approve`, `/extension/reject`.
 - **Valoraciones** entre las partes de un préstamo devuelto (1–5 estrellas y comentario). Resumen público por usuario (media y últimos comentarios sin autor) en el perfil de los transportistas y, para el coleccionista, la valoración de la institución que le pide una obra. Endpoints: `GET/POST /api/loan-requests/{id}/reviews`, `GET /api/users/{id}/rating` (público).
 
-### 11. Otros
+### 11. RGPD y textos legales
+
+- Páginas **/legal/privacidad**, **/legal/aviso-legal**, **/legal/cookies** y **/legal/terminos**, enlazadas desde todos los pies de página. Los datos del titular están en `FrontEnd/src/app/core/config/legal.ts` como `[marcadores]` que hay que rellenar; los textos deben revisarse con un profesional.
+- **Aceptación** obligatoria de privacidad y términos en el registro; se guarda la fecha y la versión (`termsAcceptedAt`, `termsVersion`).
+- **Mi cuenta** (`/app/account`): descarga de todos los datos en JSON (`GET /api/me/export`) y **baja** con contraseña (`POST /api/me/delete`). La baja anonimiza los datos personales, elimina el documento de verificación, retira sus obras del catálogo y conserva los préstamos cerrados por obligación legal. No se permite con préstamos en curso. Se marca con `deletedAt` (no con un estado nuevo, para no tocar la columna enum existente).
+
+### 12. Despliegue
+
+- `Dockerfile` del backend (compila con Maven y ejecuta con JRE 21, usuario sin privilegios) y del frontend (compila Angular y lo sirve con Nginx, que reenvía `/api` al backend).
+- `docker-compose.yml` con MySQL, backend y frontend; `.env.example` con todas las variables. Ver `DESPLIEGUE.md`.
+- **Corregido**: el build de producción de Angular fallaba por el presupuesto de tamaño de estilos de la landing (se ha ampliado).
+- **Corregido**: el logo del contrato PDF se leía de una ruta del código fuente que no existe dentro del jar; ahora se lee del classpath.
+
+### 13. Panel de métricas
+
+- `GET /api/admin/metrics` y panel en la administración: préstamos activos y completados, tasa de aceptación, tiempo medio de respuesta del coleccionista, valor asegurado fuera de casa, obras y su verificación, exposiciones, incidencias, usuarios por rol, préstamos por estado y obras más solicitadas.
+
+### 14. Otros
 
 - `README.md` con la descripción del proyecto.
+
+### 15. Pagos: estado «Presupuesto aprobado»
+
+- PrestArte no cobra ni mueve dinero: el transporte y el seguro se pagan fuera de la plataforma. El estado interno `PAID` se muestra ahora como **«Presupuesto aprobado»** para no dar a entender que hay un pago dentro de la app.
+
+### 16. Tipografías e iconos propios
+
+- Manrope y Material Symbols se sirven desde la propia aplicación (`@fontsource-variable/manrope`, `material-symbols`), no desde Google Fonts: ningún tercero recibe la IP de los visitantes. Textos de privacidad y cookies actualizados.
+
+### 17. Informes de estado completos
+
+- **Informe antes de desmontar** (`PRE_RETURN`): la institución documenta la obra en sala con la obra aún expuesta (`POST /api/loan-requests/{id}/condition-reports`, multipart). Es **obligatorio para iniciar la devolución**; separa los daños de la exposición de los del viaje de vuelta.
+- **Marcas de daño sobre la foto**: al levantar cualquier informe se pulsa sobre la foto para señalar dónde está cada daño (posición en %, con nota). Se ven numeradas sobre las fotos del informe.
+- **Firma de conformidad de la otra parte**: cada informe lo firma quien lo levanta y después la otra parte del momento (recogida de ida → coleccionista; entrega → transportista; antes de desmontar / traslado → coleccionista; recogida de vuelta → institución). Puede firmar conforme o **no conforme** con un motivo, que avisa a todos por email y queda en el historial (`POST /api/loan-requests/{id}/condition-reports/{reportId}/sign`).
+
+### 18. Exposiciones itinerantes
+
+- Una exposición puede tener **sedes siguientes** (institución, sala, ciudad, país y fechas). Cada sede abre después de cerrar la anterior; no se puede alargar la gira más allá del final de los préstamos en curso.
+- El préstamo debe cubrir **la gira completa**; el **permiso de exportación** se exige si cualquier sede está fuera de España; el **contrato** y el **certificado de exposición** incluyen las sedes.
+- **Traslado entre sedes** (`POST /api/loan-requests/{id}/transfer`): la institución levanta un informe de estado en sala (`TRANSFER`) y la obra pasa a la siguiente sede sin volver al prestador. La ficha del préstamo muestra el itinerario y la sede actual. El informe final antes de desmontar solo se permite en la última sede.
+
+### 19. Compatibilidad de la exposición entera
+
+- `GET /api/exhibitions/{id}/compatibility` y panel en la ficha de la exposición: cada obra frente a las instalaciones y, además, **si las obras pueden compartir sala** (rangos de temperatura y humedad comunes, luz máxima de la obra más delicada, número de correos presenciales). Avisa de que las sedes de una gira necesitan su propio informe de instalaciones.
+
+### 20. Chat en tiempo real
+
+- El chat deja de consultar el servidor cada 4 segundos: usa **Server-Sent Events** (`GET /api/messages/chat/{id}/stream`). El stream solo avisa del id del mensaje nuevo y el cliente lo pide por REST, así cada participante lo ve con sus reglas de anonimato. Se reconecta solo y recupera lo que llegara mientras estaba desconectado.
+- Los suscriptores se guardan en memoria (una sola instancia del backend).
+
+### 21. Archivos fuera de MySQL
+
+- El contenido de los archivos nuevos se guarda en disco (`app.storage.dir`, volumen `files-data` en Docker); la base de datos solo guarda metadatos y una clave. Es transparente para el resto del código (listener de JPA). Si una transacción falla, el fichero se borra; al borrar un archivo, también su contenido.
+- Los archivos antiguos siguen sirviéndose desde la base de datos; con `APP_STORAGE_MIGRATE_LEGACY=true` se mueven a disco al arrancar.
+
+### 22. Geolocalización real
+
+- Las ciudades que no están en la tabla local se buscan en **OpenStreetMap (Nominatim)**, con caché y como mucho una petición por segundo, según su política de uso. Solo se envía el nombre de la ciudad. Se puede desactivar (`APP_GEOCODING_ENABLED=false`) o apuntar a una instancia propia (`APP_GEOCODING_URL`). Mencionado en la política de privacidad.
+
+### 23. Bases de obras robadas
+
+- En la diligencia debida, la administración ve las bases que consultar (INTERPOL ID-Art, Art Loss Register, Lost Art, FBI National Stolen Art File, Carabinieri TPC y las unidades de patrimonio de Policía Nacional y Guardia Civil) con enlace, cómo se accede, qué cubren y los datos de la obra listos para copiar. Las marcadas componen el campo «bases consultadas» (`GET /api/admin/artworks/{id}/stolen-art-registries`).
+- **Integración automática preparada**: ninguna de estas bases ofrece una API abierta, así que de serie la consulta es manual. Basta implementar `StolenArtRegistryClient` (por ejemplo, con un acceso contratado a Art Loss Register) para que se consulte sola; si encuentra una posible coincidencia, no se puede verificar la obra sin explicar en las notas por qué se descarta.
 
 ### Cambios de API que rompen compatibilidad
 
@@ -93,13 +153,17 @@
 - `POST /api/shipments/{id}/picked-up` y `/delivered` son multipart (`data` + `photos`) y exigen fotos.
 - `POST /api/shipments/{id}/quote` exige `returnPrice`.
 - Eliminados `/api/collectors` (salvo el panel), `/api/foundations` (salvo el panel) y `POST /api/transport-companies`.
+- `POST /api/loan-requests/{id}/start-return` exige antes el informe de estado previo al desmontaje (y, en una gira, estar en la última sede).
+- El chat ya no hace polling: el frontend necesita el endpoint de stream (y que Nginx no lo almacene en búfer; el backend ya envía `X-Accel-Buffering: no`).
 
 ### Base de datos
 
-Con `ddl-auto=update` se crean solas las tablas nuevas (`loan_events`, `condition_reports`, `exhibitions`, `facility_reports`, `insurance_certificates`, `export_permits`, `supervision_checkpoints` y sus tablas de fotos) y las columnas nuevas. Las obras existentes pasan a ser anónimas. Los préstamos de demo en "pagado" o "listo para recoger" quedarán bloqueados hasta subir un seguro.
+Con `ddl-auto=update` se crean solas las tablas nuevas (`loan_events`, `condition_reports`, `exhibitions`, `exhibition_stops`, `facility_reports`, `insurance_certificates`, `export_permits`, `supervision_checkpoints`, `damage_marks` y sus tablas de fotos) y las columnas nuevas. La columna `condition_reports.stage`, que Hibernate creó como ENUM, la convierte a VARCHAR `SchemaFixes` al arrancar (si no, no se podrían guardar las fases nuevas). Las obras existentes pasan a ser anónimas. Los préstamos de demo en "pagado" o "listo para recoger" quedarán bloqueados hasta subir un seguro.
 
 ### Pendiente
 
 - Compilar y probar el backend.
 - Revocar las contraseñas de aplicación de Gmail que aparecen en el historial de git.
-- Flyway, Docker y despliegue; tests; textos legales (privacidad, cookies, aviso legal).
+- Rellenar los datos del titular en `legal.ts` y revisar los textos legales con un profesional.
+- Migraciones versionadas (Flyway) y tests automáticos.
+- Copias de seguridad de los volúmenes `db-data` y `files-data`.

@@ -18,6 +18,8 @@ public interface ConditionReportRepository extends JpaRepository<ConditionReport
     @EntityGraph(attributePaths = {"photos", "author", "shipment"})
     List<ConditionReport> findByShipmentLoanRequestIdOrderByCreatedAtAscIdAsc(Long loanRequestId);
 
+    boolean existsByShipmentLoanRequestIdAndStage(Long loanRequestId, ConditionReport.Stage stage);
+
     /** Busca el informe al que pertenece una fotografía, para comprobar quién puede verla. */
     @Query("SELECT r FROM ConditionReport r JOIN r.photos p WHERE p.id = :fileId")
     Optional<ConditionReport> findByPhotoId(@Param("fileId") String fileId);

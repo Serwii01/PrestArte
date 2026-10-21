@@ -13,7 +13,7 @@ import {
   LoanEventResponse,
   LoanResponse,
 } from '../models/loan.models';
-import { ConditionReportResponse } from '../models/shipment.models';
+import { ConditionReportRequest, ConditionReportResponse } from '../models/shipment.models';
 import { CompatibilityReport } from '../models/facility.models';
 import { CostEstimate, SupervisionCheckpoint, SupervisionStage } from '../models/cost.models';
 import { LoanReviews, RatingSummary } from '../models/review.models';
@@ -150,6 +150,28 @@ export class LoanService {
   /** Informes de estado de la obra en recogidas y entregas. */
   getConditionReports(id: number): Observable<ConditionReportResponse[]> {
     return this.http.get<ConditionReportResponse[]>(`${this.base}/${id}/condition-reports`);
+  }
+
+  /** Informe en sala antes de desmontar (fundación). Devuelve todos los informes del préstamo. */
+  createPreReturnReport(id: number, report: ConditionReportRequest, photos: File[]): Observable<ConditionReportResponse[]> {
+    const form = new FormData();
+    form.append('data', new Blob([JSON.stringify(report)], { type: 'application/json' }));
+    photos.forEach((p) => form.append('photos', p));
+    return this.http.post<ConditionReportResponse[]>(`${this.base}/${id}/condition-reports`, form);
+  }
+
+  /** Exposición itinerante: traslado a la siguiente sede con su informe de estado. */
+  transferToNextStop(id: number, report: ConditionReportRequest, photos: File[]): Observable<LoanResponse> {
+    const form = new FormData();
+    form.append('data', new Blob([JSON.stringify(report)], { type: 'application/json' }));
+    photos.forEach((p) => form.append('photos', p));
+    return this.http.post<LoanResponse>(`${this.base}/${id}/transfer`, form);
+  }
+
+  /** La otra parte firma su conformidad (o desacuerdo) con un informe de estado. */
+  signConditionReport(id: number, reportId: number, agree: boolean, comment?: string): Observable<ConditionReportResponse> {
+    return this.http.post<ConditionReportResponse>(
+      `${this.base}/${id}/condition-reports/${reportId}/sign`, { agree, comment: comment || null });
   }
 
   /* ===== Acciones del flujo ===== */

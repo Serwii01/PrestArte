@@ -24,4 +24,20 @@ public class ConditionReportResponse {
     /** UUIDs de las fotos; se descargan por GET /api/files/{id} con sesión. */
     private List<String> photoIds;
     private LocalDateTime createdAt;
+
+    /** Daños señalados sobre las fotos. */
+    private List<Mark> marks;
+
+    /** Rol de la parte que debe firmar la conformidad (COLLECTOR, FOUNDATION o TRANSPORT). */
+    private String counterpartRole;
+    /** True si quien consulta es esa parte y aún no ha firmado. */
+    private boolean canSign;
+    private String acknowledgedByName;
+    private LocalDateTime acknowledgedAt;
+    /** True si la otra parte firmó que no está conforme. */
+    private Boolean disputed;
+    private String acknowledgementComment;
+
+    public record Mark(String photoId, double x, double y, String note) {
+    }
 }

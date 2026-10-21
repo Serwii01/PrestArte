@@ -65,6 +65,7 @@ public class FileStorageService {
     private final ProvenanceService provenanceService;
     private final UserRepository userRepository;
     private final ChatSessionService chatSessionService;
+    private final FileBlobStore fileBlobStore;
     private final CurrentUser currentUser;
 
     /**
@@ -111,6 +112,11 @@ public class FileStorageService {
                 .orElseThrow(() -> ResourceNotFoundException.of("Archivo", id));
         requireReadAccess(id);
         return file;
+    }
+
+    /** Contenido de un archivo: en disco o, si es anterior al cambio, en la base de datos. */
+    public byte[] contentOf(DBFile file) {
+        return file.getStorageKey() != null ? fileBlobStore.read(file.getStorageKey()) : file.getData();
     }
 
     private void requireReadAccess(String fileId) {

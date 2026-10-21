@@ -4,7 +4,9 @@ import com.prestarte.tfg.model.dto.DueDiligencePendingItem;
 import com.prestarte.tfg.model.dto.DueDiligenceRequest;
 import com.prestarte.tfg.model.dto.ProvenanceEntryRequest;
 import com.prestarte.tfg.model.dto.ProvenanceResponse;
+import com.prestarte.tfg.model.dto.StolenArtCheckResponse;
 import com.prestarte.tfg.service.ProvenanceService;
+import com.prestarte.tfg.service.StolenArtRegistries;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -27,6 +29,7 @@ import java.util.List;
 public class ProvenanceController {
 
     private final ProvenanceService provenanceService;
+    private final StolenArtRegistries stolenArtRegistries;
 
     @GetMapping("/artworks/{id}/provenance")
     public ResponseEntity<ProvenanceResponse> get(@PathVariable Long id) {
@@ -64,5 +67,11 @@ public class ProvenanceController {
     public ResponseEntity<ProvenanceResponse> recordDueDiligence(@PathVariable Long id,
                                                                  @Valid @RequestBody DueDiligenceRequest body) {
         return ResponseEntity.ok(provenanceService.recordDueDiligence(id, body));
+    }
+
+    /** Bases de obras robadas que consultar para la obra, con los datos para buscarla. */
+    @GetMapping("/admin/artworks/{id}/stolen-art-registries")
+    public ResponseEntity<StolenArtCheckResponse> stolenArtRegistries(@PathVariable Long id) {
+        return ResponseEntity.ok(stolenArtRegistries.checkFor(id));
     }
 }

@@ -239,8 +239,8 @@ public class LoanDocumentsService {
         if (ex == null) {
             return new PermitRequirement(false, "Préstamo sin exposición asociada: no se puede determinar el destino.");
         }
-        String country = ex.getVenueCountry() != null ? ex.getVenueCountry() : "ES";
-        if ("ES".equals(country)) {
+        // En una exposición itinerante basta con que una sede esté fuera de España.
+        if (ex.tourCountries().stream().allMatch("ES"::equals)) {
             return new PermitRequirement(false, "La obra no sale de España.");
         }
         Artwork a = loan.getArtwork();

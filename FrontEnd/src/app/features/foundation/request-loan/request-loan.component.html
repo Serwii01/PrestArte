@@ -90,7 +90,7 @@
                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
               <option [ngValue]="null" disabled>Selecciona una exposición…</option>
               @for (e of exhibitions(); track e.id) {
-                <option [ngValue]="e.id">{{ e.title }} · {{ e.venueCity }} ({{ e.openingDate | date:'shortDate' }} → {{ e.closingDate | date:'shortDate' }})</option>
+                <option [ngValue]="e.id">{{ e.title }} · {{ e.venueCity }}{{ e.stops.length ? ' + ' + e.stops.length + ' sede(s)' : '' }} ({{ e.openingDate | date:'shortDate' }} → {{ e.tourClosingDate | date:'shortDate' }})</option>
               }
             </select>
           </label>

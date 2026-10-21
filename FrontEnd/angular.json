@@ -36,6 +36,8 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/manrope/index.css",
+              "node_modules/material-symbols/outlined.css",
               "src/styles.scss"
             ]
           },
@@ -49,8 +51,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
                 }
               ],
               "outputHashing": "all"

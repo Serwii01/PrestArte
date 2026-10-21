@@ -128,10 +128,10 @@
                       text-primary font-bold text-sm border border-border">
             {{ initial() }}
           </div>
-          <div class="hidden md:block">
+          <a routerLink="/app/account" class="hidden md:block hover:opacity-80" title="Mi cuenta">
             <p class="text-sm font-bold text-text-main leading-tight">{{ auth.displayName() }}</p>
             <p class="text-xs text-text-secondary">{{ roleLabel() }}</p>
-          </div>
+          </a>
           <button type="button" (click)="logout()" title="Cerrar sesión"
                   class="size-9 flex items-center justify-center rounded-lg
                          hover:bg-red-50 hover:text-red-600 text-text-secondary transition-colors">
@@ -149,5 +149,11 @@
 
   <footer class="text-center text-xs text-text-secondary py-6 border-t border-border bg-surface">
     Prestarte · Sergio Fernández Morales · {{ year }}
+    <span class="mx-2">·</span>
+    <a routerLink="/legal/privacidad" class="hover:text-primary">Privacidad</a>
+    <span class="mx-1">·</span>
+    <a routerLink="/legal/terminos" class="hover:text-primary">Términos</a>
+    <span class="mx-1">·</span>
+    <a routerLink="/app/account" class="hover:text-primary">Mi cuenta</a>
   </footer>
 </div>

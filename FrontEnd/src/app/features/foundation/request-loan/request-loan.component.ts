@@ -291,7 +291,7 @@ export class RequestLoanComponent implements OnInit {
     this.exhibitionService.getMine().subscribe({
       next: (list) => {
         // Solo exposiciones que aún no han cerrado.
-        const open = list.filter((e) => e.closingDate >= this.todayIso);
+        const open = list.filter((e) => e.tourClosingDate >= this.todayIso);
         this.exhibitions.set(open);
         if (open.length === 1) this.form.controls.exhibitionId.setValue(open[0].id);
       },
@@ -314,7 +314,8 @@ export class RequestLoanComponent implements OnInit {
       const start = this.addDays(e.openingDate, -INSTALL_MARGIN_DAYS);
       this.form.patchValue({
         startDate: start < this.todayIso ? this.todayIso : start,
-        endDate: this.addDays(e.closingDate, INSTALL_MARGIN_DAYS),
+        // En una exposición itinerante, hasta el cierre de la última sede.
+        endDate: this.addDays(e.tourClosingDate, INSTALL_MARGIN_DAYS),
       });
       const d = new Date(this.form.controls.startDate.value);
       this.viewMonth.set(d.getMonth());

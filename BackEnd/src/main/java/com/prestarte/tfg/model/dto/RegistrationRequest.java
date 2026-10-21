@@ -1,5 +1,6 @@
 package com.prestarte.tfg.model.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -52,4 +53,8 @@ public class RegistrationRequest {
     @Pattern(regexp = "COLLECTOR|FOUNDATION|MUSEUM|TRANSPORT",
             message = "El rol debe ser COLLECTOR, FOUNDATION o TRANSPORT")
     private String role;
+
+    /** Aceptación de la política de privacidad y los términos de uso. */
+    @AssertTrue(message = "Debes aceptar la política de privacidad y los términos de uso")
+    private boolean acceptedTerms;
 }

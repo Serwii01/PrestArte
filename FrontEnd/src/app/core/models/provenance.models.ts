@@ -90,3 +90,23 @@ export interface DueDiligencePendingItem {
   criticalGap: boolean;
   createdAt?: string | null;
 }
+
+/** Base de obras robadas que consultar en la diligencia debida. */
+export interface StolenArtRegistry {
+  code: string;
+  name: string;
+  url?: string | null;
+  access: string;
+  scope: string;
+  /** Consultada automáticamente (integración con API). */
+  automated: boolean;
+  outcome?: 'NO_MATCH' | 'POSSIBLE_MATCH' | 'ERROR' | null;
+  detail?: string | null;
+  reference?: string | null;
+}
+
+export interface StolenArtCheck {
+  /** Datos de la obra listos para pegar en los buscadores. */
+  searchTerms: string;
+  registries: StolenArtRegistry[];
+}

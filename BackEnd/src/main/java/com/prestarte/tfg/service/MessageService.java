@@ -34,6 +34,7 @@ public class MessageService {
     private final ShipmentRepository shipmentRepository;
     private final CurrentUser currentUser;
     private final ChatSessionService chatSessionService;
+    private final ChatStreamService chatStreamService;
 
     /** Devuelve el histórico de una sesión, accesible solo a sus participantes. */
     @Transactional(readOnly = true)
@@ -77,7 +78,9 @@ public class MessageService {
                 .tipo(request.getTipo() != null ? request.getTipo() : Message.TipoMensaje.TEXTO)
                 .build();
 
-        return mapToResponse(messageRepository.save(message));
+        Message saved = messageRepository.save(message);
+        chatStreamService.publish(chatSession.getId(), saved.getId());
+        return mapToResponse(saved);
     }
 
     /** Devuelve todos los mensajes del sistema. Reservado a auditoría. */
@@ -139,7 +142,9 @@ public class MessageService {
                 .attachment(dbFile)
                 .build();
 
-        return mapToResponse(messageRepository.save(msg));
+        Message saved = messageRepository.save(msg);
+        chatStreamService.publish(chatSession.getId(), saved.getId());
+        return mapToResponse(saved);
     }
 
     /** Compone el DTO de respuesta a partir de la entidad de mensaje. */

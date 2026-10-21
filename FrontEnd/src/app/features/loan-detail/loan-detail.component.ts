@@ -27,6 +27,7 @@ import {
 } from '../../core/models/loan.models';
 import {
   ConditionReportResponse,
+  DamageMarkInput,
   ShipmentResponse,
   SHIPMENT_STATUS_LABEL,
 } from '../../core/models/shipment.models';
@@ -46,6 +47,8 @@ import { RatingBadgeComponent } from '../../shared/components/rating-badge/ratin
 import { LoanReviews, Reviewable } from '../../core/models/review.models';
 import { CompatibilityPanelComponent } from '../../shared/components/compatibility-panel/compatibility-panel.component';
 import { RequirementsSummaryComponent } from '../../shared/components/requirements-summary/requirements-summary.component';
+import { DamagePhotoPickerComponent } from '../../shared/components/damage-photos/damage-photo-picker.component';
+import { MarkedPhotoComponent } from '../../shared/components/damage-photos/marked-photo.component';
 
 /** Máximo de fotos por informe de estado (igual que en el backend). */
 const MAX_REPORT_PHOTOS = 10;
@@ -63,7 +66,7 @@ const TIMELINE: { status: LoanStatus; label: string; icon: string }[] = [
   { status: 'ACCEPTED', label: 'Coleccionista acepta', icon: 'handshake' },
   { status: 'QUOTE_PENDING', label: 'Esperando presupuesto', icon: 'request_quote' },
   { status: 'QUOTE_PROPOSED', label: 'Presupuesto propuesto', icon: 'receipt_long' },
-  { status: 'PAID', label: 'Pagado', icon: 'paid' },
+  { status: 'PAID', label: 'Presupuesto aprobado', icon: 'task' },
   { status: 'READY_FOR_PICKUP', label: 'Listo para recoger', icon: 'inventory_2' },
   { status: 'IN_TRANSIT', label: 'En tránsito', icon: 'local_shipping' },
   { status: 'DELIVERED', label: 'Entregado', icon: 'check_circle' },
@@ -89,6 +92,8 @@ const TERMINAL: LoanStatus[] = ['REJECTED', 'CANCELLED', 'RETURNED'];
     CostEstimatePanelComponent,
     LenderTermsComponent,
     RatingBadgeComponent,
+    DamagePhotoPickerComponent,
+    MarkedPhotoComponent,
   ],
   templateUrl: './loan-detail.component.html',
   styleUrl: './loan-detail.component.scss',
@@ -180,6 +185,8 @@ export class LoanDetailComponent implements OnInit {
 
   /** Fotos elegidas para el informe de estado del diálogo abierto. */
   protected readonly reportPhotos = signal<File[]>([]);
+  /** Daños señalados sobre esas fotos. */
+  protected readonly reportMarks = signal<DamageMarkInput[]>([]);
   protected readonly conditionOptions = CONDITION_OPTIONS;
   protected readonly maxReportPhotos = MAX_REPORT_PHOTOS;
 
@@ -209,6 +216,12 @@ export class LoanDetailComponent implements OnInit {
   protected readonly showReassignDialog = signal(false);
   protected readonly showRejectDialog = signal(false);
   protected readonly showPickupDialog = signal(false);
+  protected readonly showPreReturnDialog = signal(false);
+  /** El diálogo de informe en sala es para un traslado de gira, no para el desmontaje final. */
+  protected readonly transferMode = signal(false);
+  /** Informe que se está firmando y si es conformidad o desacuerdo. */
+  protected readonly signing = signal<{ report: ConditionReportResponse; agree: boolean } | null>(null);
+  protected readonly signComment = signal('');
 
   /* ===== Forms para los diálogos ===== */
 
@@ -248,6 +261,13 @@ export class LoanDetailComponent implements OnInit {
   /** Entrega + informe de estado de llegada (lo rellena quien recibe). */
   protected readonly deliveryForm = this.fb.nonNullable.group({
     receivedBy: ['', [Validators.required, Validators.maxLength(200)]],
+    condition: [null as Condition | null, [Validators.required]],
+    damageReported: [false],
+    notes: ['', [Validators.maxLength(5000)]],
+  });
+
+  /** Informe en sala antes de desmontar (lo rellena la institución). */
+  protected readonly preReturnForm = this.fb.nonNullable.group({
     condition: [null as Condition | null, [Validators.required]],
     damageReported: [false],
     notes: ['', [Validators.maxLength(5000)]],
@@ -298,6 +318,28 @@ export class LoanDetailComponent implements OnInit {
   );
   protected readonly canStartReturn = computed(
     () => this.loan()?.status === 'ON_LOAN' && this.isFoundation(),
+  );
+  /** El informe en sala antes de desmontar es obligatorio para iniciar el retorno. */
+  protected readonly hasPreReturnReport = computed(
+    () => this.conditionReports().some((r) => r.stage === 'PRE_RETURN'),
+  );
+  protected readonly canPreReturnReport = computed(
+    () => this.canStartReturn() && !this.hasPreReturnReport() && !this.nextStop(),
+  );
+
+  /* Exposición itinerante */
+  protected readonly onDisplay = computed(() => {
+    const s = this.loan()?.status;
+    return s === 'DELIVERED' || s === 'ON_LOAN';
+  });
+  /** Siguiente sede de la gira, si queda alguna. */
+  protected readonly nextStop = computed(() => {
+    const l = this.loan();
+    const current = l?.currentStop ?? 0;
+    return (l?.exhibitionStops ?? []).find((s) => s.position === current + 1) ?? null;
+  });
+  protected readonly canTransfer = computed(
+    () => this.canStartReturn() && !!this.nextStop(),
   );
   protected readonly canQuote = computed(
     () => this.shipment()?.status === 'REQUESTED' && this.isTransport(),
@@ -775,6 +817,7 @@ export class LoanDetailComponent implements OnInit {
           : 'PACKING';
     this.checkpointForm.reset({ stage: suggested, note: '' });
     this.reportPhotos.set([]);
+    this.reportMarks.set([]);
     this.showCheckpointDialog.set(true);
   }
 
@@ -928,6 +971,7 @@ export class LoanDetailComponent implements OnInit {
       notes: '',
     });
     this.reportPhotos.set([]);
+    this.reportMarks.set([]);
     this.showPickupDialog.set(true);
   }
 
@@ -941,6 +985,7 @@ export class LoanDetailComponent implements OnInit {
         condition: v.condition!,
         damageReported: v.damageReported,
         notes: v.notes.trim() || undefined,
+        damageMarks: this.cleanMarks(),
       }, photos),
       'Recogida confirmada con su informe de estado.',
       () => this.showPickupDialog.set(false),
@@ -961,6 +1006,7 @@ export class LoanDetailComponent implements OnInit {
       notes: '',
     });
     this.reportPhotos.set([]);
+    this.reportMarks.set([]);
     this.showDeliveryDialog.set(true);
   }
 
@@ -975,6 +1021,7 @@ export class LoanDetailComponent implements OnInit {
       condition: v.condition!,
       damageReported: v.damageReported,
       notes: v.notes.trim() || undefined,
+      damageMarks: this.cleanMarks(),
     }, photos),
     isReturn ? 'Retorno completado. Préstamo cerrado.' : 'Entrega confirmada.',
     () => this.showDeliveryDialog.set(false));
@@ -991,6 +1038,79 @@ export class LoanDetailComponent implements OnInit {
 
   removeReportPhoto(index: number): void {
     this.reportPhotos.update((current) => current.filter((_, i) => i !== index));
+  }
+
+  private cleanMarks(): DamageMarkInput[] {
+    return this.reportMarks().map((m) => ({ ...m, note: m.note?.trim() || undefined }));
+  }
+
+  /** Marcas de una foto de un informe, numeradas según su orden en el informe. */
+  marksFor(r: ConditionReportResponse, photoId: string) {
+    return (r.marks ?? [])
+      .map((m, i) => ({ ...m, n: i + 1 }))
+      .filter((m) => m.photoId === photoId);
+  }
+
+  /* ===== Informe antes de desmontar ===== */
+
+  openPreReturn(): void {
+    this.openRoomReport(false);
+  }
+
+  /** Traslado a la siguiente sede: el mismo informe en sala, antes de desmontar. */
+  openTransfer(): void {
+    this.openRoomReport(true);
+  }
+
+  private openRoomReport(transfer: boolean): void {
+    this.preReturnForm.reset({ condition: this.lastKnownCondition(), damageReported: false, notes: '' });
+    this.reportPhotos.set([]);
+    this.reportMarks.set([]);
+    this.transferMode.set(transfer);
+    this.showPreReturnDialog.set(true);
+  }
+
+  confirmPreReturn(): void {
+    const id = this.loan()?.id;
+    const photos = this.reportPhotos();
+    if (!id || this.preReturnForm.invalid || photos.length === 0) return;
+    const v = this.preReturnForm.getRawValue();
+    const report = {
+      condition: v.condition!,
+      damageReported: v.damageReported,
+      notes: v.notes.trim() || undefined,
+      damageMarks: this.cleanMarks(),
+    };
+    const transfer = this.transferMode();
+    this.run(
+      transfer
+        ? this.loanService.transferToNextStop(id, report, photos)
+        : this.loanService.createPreReturnReport(id, report, photos),
+      transfer
+        ? 'Traslado registrado. El prestador firmará la conformidad del informe.'
+        : 'Informe previo al desmontaje registrado. Ya puedes iniciar el retorno.',
+      () => this.showPreReturnDialog.set(false),
+    );
+  }
+
+  /* ===== Firma de conformidad ===== */
+
+  openSign(report: ConditionReportResponse, agree: boolean): void {
+    this.signComment.set('');
+    this.signing.set({ report, agree });
+  }
+
+  confirmSign(): void {
+    const id = this.loan()?.id;
+    const s = this.signing();
+    if (!id || !s) return;
+    const comment = this.signComment().trim();
+    if (!s.agree && !comment) return;
+    this.run(
+      this.loanService.signConditionReport(id, s.report.id, s.agree, comment || undefined),
+      s.agree ? 'Conformidad firmada.' : 'Desacuerdo registrado. Las partes han sido avisadas.',
+      () => this.signing.set(null),
+    );
   }
 
   /**
@@ -1010,6 +1130,8 @@ export class LoanDetailComponent implements OnInit {
   }
 
   reportTitle(r: ConditionReportResponse): string {
+    if (r.stage === 'PRE_RETURN') return 'En sala, antes de desmontar';
+    if (r.stage === 'TRANSFER') return 'En sala, antes del traslado a otra sede';
     const leg = r.direction === 'RETURN' ? 'vuelta' : 'ida';
     return r.stage === 'PICKUP' ? `Recogida (${leg})` : `Entrega (${leg})`;
   }

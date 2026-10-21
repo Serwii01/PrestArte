@@ -21,8 +21,17 @@ public class ExhibitionResponse {
     private LocalDate openingDate;
     private LocalDate closingDate;
 
+    /** Sedes siguientes de la gira (vacío si no es itinerante). */
+    private List<Stop> stops;
+    /** Cierre de la última sede. */
+    private LocalDate tourClosingDate;
+
     /** Solicitudes de la exposición: solo se rellenan para la fundación y la administración. */
     private List<LoanSummary> loans;
+
+    public record Stop(int position, String hostInstitution, String venueName, String venueCity,
+                       String venueCountry, LocalDate openingDate, LocalDate closingDate) {
+    }
 
     @Data
     @Builder

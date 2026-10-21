@@ -2,11 +2,15 @@ package com.prestarte.tfg.controller;
 
 import com.prestarte.tfg.model.dto.CreateMessageRequest;
 import com.prestarte.tfg.model.dto.MessageResponse;
+import com.prestarte.tfg.service.ChatStreamService;
 import com.prestarte.tfg.service.MessageService;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,6 +28,7 @@ import java.util.List;
 public class MessageController {
 
     private final MessageService messageService;
+    private final ChatStreamService chatStreamService;
 
     /** Crea un mensaje de texto en una sesión de chat. */
     @PostMapping
@@ -60,5 +65,16 @@ public class MessageController {
     @GetMapping("/chat/{chatSessionId}")
     public List<MessageResponse> getMessagesByChatSessionId(@PathVariable Long chatSessionId) {
         return messageService.getMessagesByChatSessionId(chatSessionId);
+    }
+
+    /**
+     * Stream de avisos en tiempo real (Server-Sent Events) de una sesión
+     * de chat: un evento {@code message} con el id de cada mensaje nuevo.
+     */
+    @GetMapping(value = "/chat/{chatSessionId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@PathVariable Long chatSessionId, HttpServletResponse response) {
+        // Que Nginx no acumule los eventos en su búfer.
+        response.setHeader("X-Accel-Buffering", "no");
+        return chatStreamService.subscribe(chatSessionId);
     }
 }

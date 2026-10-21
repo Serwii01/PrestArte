@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Coordenadas aproximadas de las ciudades más habituales en préstamos de
- * arte desde España, para estimar distancias sin depender de un servicio
- * externo de geocodificación.
+ * Localiza ciudades para estimar distancias. Primero busca en una tabla
+ * con las ciudades más habituales en préstamos de arte desde España (sin
+ * llamadas externas) y, si no está, recurre a {@link RemoteGeocoder}
+ * (OpenStreetMap).
  *
- * Si una ciudad no está en la lista, la estimación de costes lo indica y
- * no calcula nada. Para producción convendría sustituirlo por un servicio
- * de geocodificación real.
+ * Si tampoco allí aparece (o el servicio no responde), la estimación de
+ * costes lo indica y no calcula nada.
  */
 @Component
 public class CityLocator {
@@ -28,8 +28,10 @@ public class CityLocator {
     }
 
     private final Map<String, Point> cities = new HashMap<>();
+    private final RemoteGeocoder remote;
 
-    public CityLocator() {
+    public CityLocator(RemoteGeocoder remote) {
+        this.remote = remote;
         // España: capitales de provincia y ciudades con museos relevantes.
         add(40.4168, -3.7038, "madrid");
         add(41.3874, 2.1686, "barcelona");
@@ -149,7 +151,9 @@ public class CityLocator {
     public Optional<Point> find(String place) {
         if (place == null || place.isBlank()) return Optional.empty();
         String name = place.split("[,(]")[0];
-        return Optional.ofNullable(cities.get(normalize(name)));
+        Point known = cities.get(normalize(name));
+        // Primero la tabla local (instantánea); si no está, OpenStreetMap.
+        return known != null ? Optional.of(known) : remote.find(name);
     }
 
     /** Distancia por carretera estimada: línea recta × 1,25. */

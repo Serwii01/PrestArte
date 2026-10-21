@@ -65,6 +65,13 @@ export const routes: Routes = [
       ),
   },
 
+  // ===== Textos legales (públicos) =====
+  {
+    path: 'legal/:doc',
+    loadComponent: () =>
+      import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
+  },
+
   // ===== Rutas autenticadas (bajo /app) =====
   {
     path: 'app',
@@ -81,6 +88,11 @@ export const routes: Routes = [
           import('./features/home-redirect/home-redirect.component').then(
             (m) => m.HomeRedirectComponent,
           ),
+      },
+      {
+        path: 'account',
+        loadComponent: () =>
+          import('./features/account/account.component').then((m) => m.AccountComponent),
       },
       {
         path: 'admin',

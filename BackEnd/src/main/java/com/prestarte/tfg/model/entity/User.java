@@ -84,4 +84,20 @@ public abstract class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // ===== RGPD =====
+
+    /** Cuándo aceptó la política de privacidad y los términos de uso. */
+    private LocalDateTime termsAcceptedAt;
+
+    /** Versión de los textos legales que aceptó (p. ej. "2026-10"). */
+    @Column(length = 20)
+    private String termsVersion;
+
+    /**
+     * Fecha de baja. Si no es nula, la cuenta está dada de baja: sus datos
+     * personales se han anonimizado y no puede iniciar sesión. Se conservan
+     * los préstamos y contratos por obligación legal.
+     */
+    private LocalDateTime deletedAt;
 }

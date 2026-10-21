@@ -205,6 +205,20 @@
           </div>
         }
 
+        <label class="flex items-start gap-3 mb-4 cursor-pointer">
+          <input type="checkbox" formControlName="acceptedTerms"
+                 class="h-5 w-5 mt-0.5 rounded border-border text-primary focus:ring-primary shrink-0" />
+          <span class="text-sm text-text-secondary">
+            He leído y acepto la
+            <a routerLink="/legal/privacidad" target="_blank" class="text-primary font-medium hover:underline">política de privacidad</a>
+            y los
+            <a routerLink="/legal/terminos" target="_blank" class="text-primary font-medium hover:underline">términos de uso</a>.
+          </span>
+        </label>
+        @if (submitted() && form.controls.acceptedTerms.invalid) {
+          <p class="-mt-3 mb-4 text-xs text-red-600">Debes aceptarlos para registrarte.</p>
+        }
+
         <button type="submit" [disabled]="loading()"
           class="flex w-full items-center justify-center rounded-lg h-12 px-4
                  bg-primary hover:bg-primary-hover transition-colors
