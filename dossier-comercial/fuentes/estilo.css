@@ -1,0 +1,100 @@
+/* Estilo común de los documentos comerciales de PrestArte (A4, impresión). */
+@page { size: A4; margin: 0; }
+:root {
+  --azul: #1152d4;
+  --azul-osc: #003ca7;
+  --azul-claro: #dbe1ff;
+  --azul-fondo: #f3f3fe;
+  --tinta: #191b23;
+  --gris: #434654;
+  --gris-claro: #737686;
+  --linea: #e2e1ed;
+  --terracota: #a63800;
+  --terracota-claro: #ffdbcf;
+  --verde: #0f7b4b;
+  --fondo: #ffffff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--fondo); }
+body {
+  font-family: "Inter", "DejaVu Sans", sans-serif;
+  color: var(--tinta);
+  font-size: 10.2pt;
+  line-height: 1.5;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.pagina {
+  width: 210mm;
+  height: 297mm;
+  padding: 20mm 18mm 18mm;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  break-after: page;
+}
+.pagina:last-child { page-break-after: auto; break-after: auto; }
+.pie {
+  position: absolute; left: 18mm; right: 18mm; bottom: 9mm;
+  display: flex; justify-content: space-between;
+  font-size: 7.5pt; color: var(--gris-claro);
+  border-top: 1px solid var(--linea); padding-top: 3mm;
+}
+h1, h2, h3, h4 { font-family: "Inter Display", "Inter", sans-serif; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 30pt; line-height: 1.1; font-weight: 800; }
+h2 { font-size: 19pt; font-weight: 800; margin-bottom: 4mm; }
+h3 { font-size: 12pt; font-weight: 700; margin: 5mm 0 2mm; }
+h4 { font-size: 10.5pt; font-weight: 700; margin: 0 0 1mm; }
+p { margin: 0 0 3mm; }
+.eyebrow {
+  font-size: 8pt; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--azul); margin-bottom: 2mm;
+}
+.lead { font-size: 12pt; color: var(--gris); line-height: 1.55; }
+.muted { color: var(--gris-claro); }
+.small { font-size: 8.5pt; }
+.azul { color: var(--azul); }
+ul { margin: 0 0 3mm; padding-left: 5mm; }
+li { margin-bottom: 1.2mm; }
+ul.check { list-style: none; padding-left: 0; }
+ul.check li { padding-left: 6mm; position: relative; }
+ul.check li::before { content: "✓"; position: absolute; left: 0; color: var(--azul); font-weight: 800; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3.5mm; }
+.tarjeta {
+  border: 1px solid var(--linea); border-radius: 3mm; padding: 4mm 4.5mm; background: #fff;
+}
+.tarjeta.suave { background: var(--azul-fondo); border-color: transparent; }
+.tarjeta.alerta { background: #fff6f2; border-color: var(--terracota-claro); }
+.tarjeta p:last-child, .tarjeta ul:last-child { margin-bottom: 0; }
+.cifra { font-family: "Inter Display", sans-serif; font-size: 22pt; font-weight: 800; color: var(--azul); line-height: 1.1; }
+.cifra-et { font-size: 8.5pt; color: var(--gris); }
+
+table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 4mm; }
+th { text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gris-claro); font-weight: 700; padding: 2mm 2.5mm; border-bottom: 1.5px solid var(--linea); }
+td { padding: 2.2mm 2.5mm; border-bottom: 1px solid var(--linea); vertical-align: top; }
+td:first-child { font-weight: 600; }
+
+.captura { border: 1px solid var(--linea); border-radius: 2.5mm; overflow: hidden; box-shadow: 0 1.5mm 4mm rgba(25,27,35,0.08); }
+.captura img { display: block; width: 100%; }
+.pie-foto { font-size: 8pt; color: var(--gris-claro); margin-top: 1.5mm; }
+
+.flujo { display: flex; gap: 1.5mm; align-items: stretch; margin: 3mm 0 4mm; }
+.flujo .paso { flex: 1; background: var(--azul-fondo); border-radius: 2mm; padding: 2.5mm 2mm; font-size: 8pt; text-align: center; }
+.flujo .paso b { display: block; color: var(--azul); font-size: 11pt; }
+.etiqueta { display: inline-block; font-size: 7.5pt; font-weight: 700; padding: 0.6mm 2.2mm; border-radius: 10mm; background: var(--azul-claro); color: var(--azul-osc); }
+.etiqueta.terra { background: var(--terracota-claro); color: var(--terracota); }
+.etiqueta.verde { background: #d7f2e4; color: var(--verde); }
+.relleno { background: #fff3c4; padding: 0 1mm; border-radius: 1mm; }
+
+/* Portada */
+.portada { background: linear-gradient(160deg, #0b2f86 0%, #1152d4 60%, #3a73e6 100%); color: #fff; padding: 0; }
+.portada .dentro { padding: 26mm 20mm; height: 100%; display: flex; flex-direction: column; }
+.portada .logo { background: #fff; border-radius: 3mm; padding: 4mm 6mm; align-self: flex-start; }
+.portada .logo img { height: 15mm; display: block; }
+.portada h1 { color: #fff; font-size: 38pt; margin-top: auto; }
+.portada .lead { color: #dbe1ff; font-size: 14pt; margin-top: 5mm; max-width: 150mm; }
+.portada .meta { margin-top: 14mm; display: flex; gap: 10mm; font-size: 9pt; color: #cad5ff; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 5mm; }
+.portada .meta b { display: block; color: #fff; font-size: 10pt; }

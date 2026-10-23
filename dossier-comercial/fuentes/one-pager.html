@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PrestArte · Resumen</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  body { font-size: 9.4pt; }
+  .pagina { padding: 0; }
+  .cabecera { background: linear-gradient(160deg, #0b2f86 0%, #1152d4 70%); color: #fff; padding: 12mm 16mm 10mm; display: grid; grid-template-columns: 1fr 72mm; gap: 8mm; align-items: center; }
+  .cabecera h1 { color: #fff; font-size: 21pt; margin: 3mm 0; }
+  .cabecera p { color: #dbe1ff; margin: 0; font-size: 10pt; }
+  .cabecera .logo { background: #fff; border-radius: 2mm; padding: 2.5mm 4mm; display: inline-block; }
+  .cabecera .logo img { height: 9mm; display: block; }
+  .cabecera .captura { box-shadow: 0 2mm 6mm rgba(0,0,0,0.3); border: 0; }
+  .cuerpo { padding: 8mm 16mm 0; }
+  h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+<section class="pagina">
+  <div class="cabecera">
+    <div>
+      <div class="logo"><img src="logo.png" alt="PrestArte"></div>
+      <h1>La plataforma para prestar arte privado a museos y fundaciones</h1>
+      <p>Producto funcional disponible para adquisición · Octubre de 2026</p>
+    </div>
+    <div class="captura"><img src="../capturas/06_prestamo_transito.jpg" alt="Expediente de un préstamo"></div>
+  </div>
+  <div class="cuerpo">
+    <div class="grid2">
+      <div>
+        <h3>El problema</h3>
+        <p>Muchas obras de colecciones privadas pasan años guardadas mientras museos y fundaciones buscan piezas para sus exposiciones. Hoy un préstamo se organiza con correos, llamadas y hojas de cálculo: quién tiene la obra, en qué condiciones se presta, quién la transporta, cuánto cuesta, si el seguro la cubre y dónde está en cada momento.</p>
+        <h3>La solución</h3>
+        <p>Una red cerrada y verificada donde el coleccionista publica, la institución solicita, el transportista especializado presupuesta y transporta, y cada paso queda registrado, desde la solicitud hasta que la obra vuelve a casa.</p>
+      </div>
+      <div>
+        <h3>Lo que la diferencia</h3>
+        <ul class="check small">
+          <li>Seguro «clavo a clavo» y permiso de exportación (Ley 16/1985) integrados: sin ellos, la obra no sale.</li>
+          <li>Procedencia con aviso de huecos en 1933–1945 y diligencia debida.</li>
+          <li>Anonimato del coleccionista y valor visible solo en horquilla.</li>
+          <li>Coste y huella de carbono estimados antes de pedir la obra.</li>
+          <li>Compatibilidad automática entre requisitos de la obra e instalaciones del museo.</li>
+          <li>Informes de estado con fotos, contrato y certificado de exposición en PDF.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid4" style="margin:5mm 0">
+      <div class="tarjeta suave"><div class="cifra" style="font-size:18pt">4</div><div class="cifra-et">perfiles: coleccionista, institución, transportista y administración</div></div>
+      <div class="tarjeta suave"><div class="cifra" style="font-size:18pt">14</div><div class="cifra-et">estados del préstamo con máquina de estados</div></div>
+      <div class="tarjeta suave"><div class="cifra" style="font-size:18pt">102</div><div class="cifra-et">endpoints de API REST</div></div>
+      <div class="tarjeta suave"><div class="cifra" style="font-size:18pt">~27.500</div><div class="cifra-et">líneas de código propio</div></div>
+    </div>
+
+    <div class="grid3">
+      <div>
+        <h3>Tecnología</h3>
+        <p class="small">Angular 21 y Tailwind 4 · Java 21 y Spring Boot 4 · MySQL 8 · JWT y BCrypt · OpenPDF. Todo software libre, sin licencias.</p>
+      </div>
+      <div>
+        <h3>Estado</h3>
+        <p class="small">Funcional y verificado de extremo a extremo en octubre de 2026. Previo al lanzamiento: sin usuarios ni ingresos. Falta la puesta en producción (tests, despliegue, textos legales).</p>
+      </div>
+      <div>
+        <h3>Se ofrece</h3>
+        <p class="small">Código fuente completo, marca, diseños y documentación, con un periodo de transición. Abierto a venta total o licencia.</p>
+      </div>
+    </div>
+
+    <div class="tarjeta" style="margin-top:5mm;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h4>Encaja con</h4>
+        <p class="small" style="margin:0">Transportistas de arte · aseguradoras y corredurías · redes de museos y fundaciones · empresas de tecnología cultural</p>
+      </div>
+      <div style="text-align:right">
+        <h4>Contacto</h4>
+        <p class="small" style="margin:0">Sergio Fernández Morales<br><span class="relleno">[email]</span> · <span class="relleno">[teléfono]</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

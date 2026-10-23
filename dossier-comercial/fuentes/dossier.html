@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PrestArte · Dosier de producto</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<!-- 1. Portada -->
+<section class="pagina portada">
+  <div class="dentro">
+    <div class="logo"><img src="logo.png" alt="PrestArte"></div>
+    <div class="eyebrow" style="color:#cad5ff;margin-top:auto">Dosier de producto · Oportunidad de adquisición</div>
+    <h1 style="margin-top:0">La plataforma para prestar arte privado a museos y fundaciones</h1>
+    <p class="lead">Coleccionistas, instituciones y transportistas especializados gestionan cada préstamo en un solo lugar: solicitud, seguro, permisos, transporte, exposición y devolución.</p>
+    <div class="meta">
+      <div><b>Fecha</b>Octubre de 2026</div>
+      <div><b>Estado</b>Producto funcional, previo al lanzamiento</div>
+      <div><b>Autor</b>Sergio Fernández Morales</div>
+      <div><b>Carácter</b>Confidencial</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Resumen ejecutivo -->
+<section class="pagina">
+  <div class="eyebrow">Resumen ejecutivo</div>
+  <h2>PrestArte en una página</h2>
+  <p class="lead">Muchas obras de colecciones privadas pasan años guardadas mientras museos y fundaciones buscan piezas para sus exposiciones. Hoy un préstamo así se organiza con correos, llamadas y hojas de cálculo. PrestArte convierte ese proceso en un flujo digital, verificado y trazable.</p>
+
+  <div class="grid4" style="margin:6mm 0">
+    <div class="tarjeta suave"><div class="cifra">4</div><div class="cifra-et">perfiles conectados: coleccionista, institución, transportista y administración</div></div>
+    <div class="tarjeta suave"><div class="cifra">14</div><div class="cifra-et">estados del préstamo, controlados por una máquina de estados</div></div>
+    <div class="tarjeta suave"><div class="cifra">102</div><div class="cifra-et">endpoints de API REST con permisos por operación</div></div>
+    <div class="tarjeta suave"><div class="cifra">~27.500</div><div class="cifra-et">líneas de código propio (Java, TypeScript, HTML y SCSS)</div></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>Qué es</h3>
+      <p>Una aplicación web (Angular + Spring Boot + MySQL) que cubre el ciclo completo de un préstamo de obra de arte: catálogo, solicitud vinculada a una exposición, aceptación, presupuesto de transporte, seguro «clavo a clavo», permiso de exportación, recogida con informe de estado, exposición, ampliaciones, devolución y valoraciones.</p>
+      <h3>Para quién</h3>
+      <p>Coleccionistas privados que quieren dar visibilidad y valor a sus obras sin perder el control; museos y fundaciones que buscan piezas fuera de los circuitos habituales; y transportistas de arte que quieren recibir encargos ya cualificados.</p>
+    </div>
+    <div>
+      <h3>Por qué es interesante</h3>
+      <ul class="check">
+        <li>Producto completo y funcional, no un prototipo: el ciclo entero de un préstamo se ha recorrido de punta a punta contra la API real.</li>
+        <li>Incorpora el conocimiento del sector que más cuesta copiar: seguro clavo a clavo, Ley 16/1985 de exportación, procedencia 1933–1945 y diligencia debida.</li>
+        <li>Diseñado para la confianza: red cerrada con verificación documental, anonimato del coleccionista y trazabilidad de cada paso.</li>
+        <li>Arquitectura estándar y mantenible, con documentación técnica completa.</li>
+      </ul>
+      <h3>Qué se ofrece</h3>
+      <p>El código fuente completo, la marca PrestArte, los diseños y la documentación, con un periodo de transición acordado. Ver la página «La operación».</p>
+    </div>
+  </div>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 2</span></div>
+</section>
+
+<!-- 3. Problema y oportunidad -->
+<section class="pagina">
+  <div class="eyebrow">El problema</div>
+  <h2>Prestar una obra privada hoy es lento, opaco y arriesgado</h2>
+  <div class="grid2" style="margin-bottom:5mm">
+    <div class="tarjeta">
+      <h4>Para el coleccionista</h4>
+      <ul>
+        <li>No sabe qué instituciones podrían interesarse por su obra.</li>
+        <li>Teme exponer su identidad, el valor y la ubicación de la pieza.</li>
+        <li>No controla quién transporta la obra ni en qué condiciones.</li>
+        <li>Recibe poco a cambio: ni mención, ni certificado, ni historial.</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Para el museo o la fundación</h4>
+      <ul>
+        <li>El inventario privado disponible es invisible.</li>
+        <li>Los costes (transporte, caja, seguro, correo) se conocen tarde.</li>
+        <li>Seguros, permisos de exportación y procedencia se gestionan a mano.</li>
+        <li>No hay un expediente único y auditable de cada préstamo.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tarjeta suave" style="margin-bottom:8mm">
+    <h4>Para el transportista especializado</h4>
+    <p>Los encargos llegan por correo y sin datos completos. Presupuestar, coordinar la recogida y documentar el estado de la obra en cada hito exige mucho trabajo manual.</p>
+  </div>
+
+  <div class="eyebrow">La oportunidad</div>
+  <h2>Un mercado grande con un proceso que sigue siendo artesanal</h2>
+  <div class="grid3" style="margin-bottom:4mm">
+    <div class="tarjeta"><div class="cifra">59.600 M$</div><div class="cifra-et">ventas del mercado mundial del arte en 2025, un 4 % más que en 2024 (Art Basel y UBS)</div></div>
+    <div class="tarjeta"><div class="cifra">~1.500</div><div class="cifra-et">museos y colecciones museográficas en España (Ministerio de Cultura)</div></div>
+    <div class="tarjeta"><div class="cifra">+65 M</div><div class="cifra-et">visitas anuales a esas instituciones (estadística oficial de 2018)</div></div>
+  </div>
+  <p>Las exposiciones temporales dependen de los préstamos, y una parte importante del patrimonio está en manos privadas. Las herramientas habituales de gestión de colecciones trabajan dentro de cada institución. PrestArte se plantea como el punto de encuentro entre las tres partes del préstamo, con el cumplimiento normativo incluido en el propio flujo.</p>
+  <p class="small muted">Fuentes: Art Basel y UBS, <i>The Art Market</i> (ediciones 2025 y 2026); Ministerio de Cultura, Estadística de Museos y Colecciones Museográficas. Las cifras de España proceden de la última edición nacional publicada con totales; conviene actualizarlas con la edición más reciente antes de una presentación formal.</p>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 3</span></div>
+</section>
+
+<!-- 4. Solución -->
+<section class="pagina">
+  <div class="eyebrow">La solución</div>
+  <h2>Una red cerrada y verificada, con un flujo para cada actor</h2>
+  <p class="lead">Nadie opera en PrestArte sin que la administración haya revisado antes su documentación (DNI, NIE o CIF y un documento acreditativo). Cada perfil tiene su panel y sus acciones, y la plataforma orquesta el resto.</p>
+  <table style="margin-top:4mm">
+    <tr><th style="width:24%">Perfil</th><th>Qué hace en PrestArte</th></tr>
+    <tr><td>Coleccionista</td><td>Publica sus obras con fotos, medidas, estado, valor, requisitos de conservación y condiciones (mención en cartela, usos de imagen, canon). Decide a quién presta, elige transportista y aprueba seguro y embalaje.</td></tr>
+    <tr><td>Museo / fundación</td><td>Crea sus exposiciones, consulta el catálogo con filtros y calendario de disponibilidad, ve el coste y la huella de carbono estimados antes de pedir, aprueba presupuestos y sigue el envío.</td></tr>
+    <tr><td>Transportista</td><td>Tiene un perfil público con zonas de cobertura y tarifas, recibe encargos, cotiza ida y vuelta y registra recogida, tránsito y entrega con informe de estado y fotos.</td></tr>
+    <tr><td>Administración</td><td>Verifica cuentas (KYB), revisa la procedencia de las obras contra bases de obras robadas y supervisa préstamos y conversaciones.</td></tr>
+  </table>
+
+  <h3>Cómo funciona un préstamo</h3>
+  <div class="flujo">
+    <div class="paso"><b>1</b>La institución solicita la obra para una exposición</div>
+    <div class="paso"><b>2</b>El coleccionista acepta y elige transportista</div>
+    <div class="paso"><b>3</b>El transportista presupuesta ida y vuelta</div>
+    <div class="paso"><b>4</b>Se aprueban presupuesto, seguro y permisos</div>
+    <div class="paso"><b>5</b>Recogida, tránsito y entrega con informe de estado</div>
+    <div class="paso"><b>6</b>Exposición, ampliación opcional y devolución</div>
+  </div>
+  <p>Cada préstamo sigue una máquina de estados estricta: no se puede saltar un paso, y cada acción solo la puede hacer la parte a la que le toca. Todo queda en un historial con autor y fecha, y la obra no puede salir sin el seguro aprobado y, si procede, el permiso de exportación.</p>
+
+  <h3>Lo que se genera automáticamente</h3>
+  <div class="grid3">
+    <div class="tarjeta suave"><h4>Contrato en PDF</h4><p class="small">Certificado de préstamo y cobertura con partes, obra, valor asegurado, exposición, periodo y condiciones del prestador.</p></div>
+    <div class="tarjeta suave"><h4>Certificado de exposición</h4><p class="small">Para el coleccionista, cuando la obra llega a la sala. Suma al historial público de exposiciones de la obra.</p></div>
+    <div class="tarjeta suave"><h4>Avisos y recordatorios</h4><p class="small">En la aplicación y por email: solicitudes sin responder, fin del préstamo, vencimiento del seguro o del permiso.</p></div>
+  </div>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 4</span></div>
+</section>
+
+<!-- 5. Producto I -->
+<section class="pagina">
+  <div class="eyebrow">El producto · capturas reales de la aplicación</div>
+  <h2>Descubrir y solicitar una obra</h2>
+  <div class="captura"><img src="../capturas/02_catalogo.jpg" alt="Catálogo"></div>
+  <p class="pie-foto">Catálogo público con búsqueda, filtros (procedencia verificada, disponibilidad entre fechas, estado) y orden.</p>
+  <div class="grid2" style="margin-top:4mm">
+    <div>
+      <div class="captura"><img src="../capturas/03_ficha_obra.jpg" alt="Ficha de obra"></div>
+      <p class="pie-foto">Ficha de la obra: el coleccionista aparece como «Colección particular» y el valor solo lo ven las instituciones verificadas.</p>
+    </div>
+    <div>
+      <div class="captura"><img src="../capturas/10_solicitud.jpg" alt="Solicitud de préstamo"></div>
+      <p class="pie-foto">Solicitud: la plataforma cruza los requisitos de la obra con las instalaciones del museo y avisa de cada incumplimiento.</p>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:3mm">Capturas tomadas de la aplicación en funcionamiento, con datos de demostración. Las imágenes de las obras son reproducciones de dominio público.</p>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 5</span></div>
+</section>
+
+<!-- 6. Producto II -->
+<section class="pagina">
+  <div class="eyebrow">El producto · capturas reales de la aplicación</div>
+  <h2>Gestionar el préstamo de principio a fin</h2>
+  <div class="captura"><img src="../capturas/05_panel_coleccionista.jpg" alt="Panel del coleccionista"></div>
+  <p class="pie-foto">Panel del coleccionista: obras, préstamos activos, solicitudes pendientes, valor asegurado y conversaciones.</p>
+  <div class="grid2" style="margin-top:4mm">
+    <div>
+      <div class="captura"><img src="../capturas/06_prestamo_transito.jpg" alt="Préstamo en tránsito"></div>
+      <p class="pie-foto">Expediente del préstamo con su línea de estados, la dirección de recogida protegida y el contrato descargable.</p>
+    </div>
+    <div>
+      <div class="captura"><img src="../capturas/13_panel_transporte.jpg" alt="Panel del transportista"></div>
+      <p class="pie-foto">Panel del transportista: envíos con número de seguimiento, estado y precio de cada trayecto.</p>
+    </div>
+  </div>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 6</span></div>
+</section>
+
+<!-- 7. Diferenciales -->
+<section class="pagina">
+  <div class="eyebrow">Ventajas competitivas</div>
+  <h2>Lo que hace a PrestArte difícil de replicar</h2>
+  <p class="lead">Un marketplace genérico se construye en semanas. Lo valioso de PrestArte es el conocimiento del préstamo de arte que ya está convertido en reglas de negocio.</p>
+  <div class="grid2" style="margin-top:4mm">
+    <div class="tarjeta">
+      <h4>Cumplimiento normativo integrado</h4>
+      <ul class="small">
+        <li>Seguro «clavo a clavo»: el certificado debe cubrir el valor acordado y todo el periodo. Admite póliza del prestatario, del prestador o Garantía del Estado.</li>
+        <li>Permiso de exportación temporal (Ley 16/1985) cuando la obra sale de España y es BIC, está inventariada o tiene 100 años o más.</li>
+        <li>Sin esa documentación, la obra no puede salir.</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Procedencia y diligencia debida</h4>
+      <ul class="small">
+        <li>Declaración de titularidad obligatoria e historial de propietarios.</li>
+        <li>Detección de huecos, con aviso especial en 1933–1945 (Principios de Washington).</li>
+        <li>Cola de revisión contra bases de obras robadas y distintivo «Procedencia verificada».</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Privacidad del coleccionista</h4>
+      <ul class="small">
+        <li>Obras anónimas por defecto; la identidad se revela al aceptar.</li>
+        <li>Valor exacto solo para el dueño; horquilla para verificados; nada para visitantes.</li>
+        <li>Dirección de recogida visible solo para el transportista con envío en curso.</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Transparencia de costes</h4>
+      <ul class="small">
+        <li>Coste estimado antes de pedir: transporte de ida y vuelta, caja, seguro y correo.</li>
+        <li>Huella de carbono estimada según medio de transporte.</li>
+        <li>Compatibilidad automática entre requisitos de la obra e instalaciones del museo.</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Incentivos para prestar</h4>
+      <ul class="small">
+        <li>Mención en cartela, usos de imagen autorizados y canon de préstamo opcional.</li>
+        <li>Certificado de exposición e historial público de exposiciones de la obra.</li>
+        <li>Valoraciones entre las partes tras cada préstamo.</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h4>Trazabilidad completa</h4>
+      <ul class="small">
+        <li>Informes de estado con fotos obligatorias en cada recogida y entrega.</li>
+        <li>Correo virtual: fases documentadas con fotos que aprueba el coleccionista.</li>
+        <li>Historial de eventos con autor y fecha, y chat por préstamo con adjuntos.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 7</span></div>
+</section>
+
+<!-- 8. Modelo de negocio -->
+<section class="pagina">
+  <div class="eyebrow">Modelo de negocio</div>
+  <h2>Varias vías de ingresos sobre la misma plataforma</h2>
+  <p class="lead">PrestArte aún no factura y no tiene pasarela de pago. Las siguientes vías son propuestas que la arquitectura actual admite sin rediseño; el comprador elegirá la combinación según su posición en el sector.</p>
+  <table style="margin-top:4mm">
+    <tr><th style="width:26%">Vía</th><th>Cómo funcionaría</th><th style="width:22%">Quién paga</th></tr>
+    <tr><td>Comisión por préstamo</td><td>Porcentaje o tarifa fija sobre cada préstamo cerrado (por ejemplo, sobre el presupuesto de transporte aprobado). El paso «Pagado» ya existe en el flujo.</td><td>Institución</td></tr>
+    <tr><td>Suscripción institucional</td><td>Cuota anual para museos y fundaciones: catálogo completo, exposiciones ilimitadas, informes de instalaciones y estimaciones de coste.</td><td>Institución</td></tr>
+    <tr><td>Plan profesional para transportistas</td><td>Posicionamiento en el directorio, tarifas publicadas y recepción de encargos cualificados.</td><td>Transportista</td></tr>
+    <tr><td>Servicios de verificación</td><td>Revisión de procedencia y diligencia debida con distintivo «Procedencia verificada».</td><td>Coleccionista</td></tr>
+    <tr><td>Seguro intermediado</td><td>Acuerdo con aseguradoras de arte para ofrecer la póliza clavo a clavo dentro del flujo. Requiere un socio con licencia de mediación.</td><td>Institución / aseguradora</td></tr>
+    <tr><td>Marca blanca</td><td>Instancia propia para una red de museos, un grupo de fundaciones o un transportista que quiera digitalizar su servicio.</td><td>Organización cliente</td></tr>
+  </table>
+
+  <h3>Perfiles de comprador para los que encaja</h3>
+  <div class="grid2">
+    <div class="tarjeta suave"><h4>Transportistas y logística de arte</h4><p class="small">Digitaliza su servicio, capta encargos y se diferencia con trazabilidad y cumplimiento normativo.</p></div>
+    <div class="tarjeta suave"><h4>Aseguradoras y corredurías de arte</h4><p class="small">Canal directo para colocar pólizas clavo a clavo en el momento exacto en que se necesitan.</p></div>
+    <div class="tarjeta suave"><h4>Fundaciones, redes de museos y entidades culturales</h4><p class="small">Herramienta propia para gestionar sus préstamos y acceder a colecciones privadas.</p></div>
+    <div class="tarjeta suave"><h4>Empresas de tecnología cultural (<i>art-tech</i>)</h4><p class="small">Un módulo de préstamos maduro para añadir a su catálogo de productos o para lanzar como vertical.</p></div>
+  </div>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 8</span></div>
+</section>
+
+<!-- 9. Tecnología y estado -->
+<section class="pagina">
+  <div class="eyebrow">Tecnología y estado</div>
+  <h2>Una base técnica estándar, verificada y documentada</h2>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>Capa</th><th>Tecnología</th></tr>
+        <tr><td>Frontend</td><td>Angular 21 (standalone, signals, rutas diferidas) y Tailwind CSS 4</td></tr>
+        <tr><td>Backend</td><td>Java 21, Spring Boot 4, Spring Security, Spring Data JPA</td></tr>
+        <tr><td>Base de datos</td><td>MySQL 8</td></tr>
+        <tr><td>Seguridad</td><td>JWT sin sesión, BCrypt, límite de intentos, permisos por recurso</td></tr>
+        <tr><td>Documentos</td><td>OpenPDF (contratos y certificados), Spring Mail (SMTP)</td></tr>
+        <tr><td>Licencias</td><td>Todo el stack es software libre, sin coste de licencias</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="tarjeta suave">
+        <h4>Verificado en octubre de 2026</h4>
+        <ul class="check small">
+          <li>El backend compila con Java 21 (167 ficheros fuente).</li>
+          <li>La aplicación arranca contra MySQL/MariaDB y siembra datos de demostración.</li>
+          <li>Prueba de extremo a extremo por API: un préstamo completo de solicitud a devolución, con seguro, informes de estado con fotos, contrato PDF, certificado de exposición y valoraciones. Todos los pasos respondieron correctamente.</li>
+          <li>El frontend se sirve y se recorre con los cuatro perfiles (capturas de este dosier).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <h3>Cifras del código</h3>
+  <div class="grid4">
+    <div class="tarjeta"><div class="cifra">12.800</div><div class="cifra-et">líneas Java</div></div>
+    <div class="tarjeta"><div class="cifra">14.700</div><div class="cifra-et">líneas TypeScript, HTML y SCSS</div></div>
+    <div class="tarjeta"><div class="cifra">31</div><div class="cifra-et">entidades de dominio</div></div>
+    <div class="tarjeta"><div class="cifra">34</div><div class="cifra-et">pantallas y componentes Angular</div></div>
+  </div>
+  <p style="margin-top:4mm">El detalle (arquitectura, modelo de datos, API, seguridad y deuda técnica) está en la <b>Ficha técnica</b> que acompaña a este dosier.</p>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 9</span></div>
+</section>
+
+<!-- 10. Hoja de ruta -->
+<section class="pagina">
+  <div class="eyebrow">Hoja de ruta</div>
+  <h2>Qué falta para lanzar y cómo crecer</h2>
+  <p class="lead">El producto es funcional. Para abrirlo al público hacen falta trabajos de puesta en producción, no de desarrollo de funcionalidades nuevas.</p>
+  <div class="grid3" style="margin-top:4mm">
+    <div class="tarjeta">
+      <span class="etiqueta verde">Hecho</span>
+      <h4 style="margin-top:2mm">Producto</h4>
+      <ul class="small">
+        <li>Ciclo completo del préstamo y del envío</li>
+        <li>Verificación de cuentas (KYB)</li>
+        <li>Seguro, permisos y procedencia</li>
+        <li>Costes, CO₂ y compatibilidad</li>
+        <li>Chat, avisos y recordatorios</li>
+        <li>Contratos y certificados PDF</li>
+        <li>Perfil de producción con configuración por variables de entorno</li>
+      </ul>
+    </div>
+    <div class="tarjeta alerta">
+      <span class="etiqueta terra">Antes de lanzar</span>
+      <h4 style="margin-top:2mm">Puesta en producción</h4>
+      <ul class="small">
+        <li>Batería de tests automáticos</li>
+        <li>Migraciones de base de datos (Flyway) y contenedores (Docker)</li>
+        <li>Despliegue, copias de seguridad y monitorización</li>
+        <li>Archivos en almacenamiento de objetos en lugar de la base de datos</li>
+        <li>Textos legales: privacidad (RGPD), cookies y aviso legal</li>
+        <li>Calibrar las tarifas de referencia del estimador de costes</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Crecimiento</span>
+      <h4 style="margin-top:2mm">Ampliaciones</h4>
+      <ul class="small">
+        <li>Pasarela de pago (Stripe o Redsys) y comisión</li>
+        <li>Firma electrónica del contrato (eIDAS)</li>
+        <li>Inglés y otros idiomas</li>
+        <li>Notificaciones en tiempo real</li>
+        <li>Integración con aseguradoras</li>
+        <li>App móvil para los informes de estado del transportista</li>
+      </ul>
+    </div>
+  </div>
+  <h3>Riesgos conocidos y cómo se mitigan</h3>
+  <table>
+    <tr><th style="width:32%">Riesgo</th><th>Mitigación</th></tr>
+    <tr><td>Sin usuarios ni ingresos todavía</td><td>El valor está en el producto y en el conocimiento del sector incorporado. Encaja mejor con un comprador que ya tenga acceso a coleccionistas, museos o transportistas.</td></tr>
+    <tr><td>Efecto red de un marketplace</td><td>Arrancar desde un actor ancla (un transportista, una aseguradora o una red de museos) que aporte el primer lado del mercado.</td></tr>
+    <tr><td>Cobertura de tests limitada</td><td>Lógica crítica aislada en máquinas de estados y servicios, fácil de cubrir; prueba de extremo a extremo ya superada.</td></tr>
+    <tr><td>Origen académico del proyecto</td><td>Nació como Trabajo de Fin de Grado y ha evolucionado después. La titularidad del código se acreditará en la documentación de la operación.</td></tr>
+  </table>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 10</span></div>
+</section>
+
+<!-- 11. La operación -->
+<section class="pagina">
+  <div class="eyebrow">La operación</div>
+  <h2>Qué incluye la adquisición</h2>
+  <div class="grid2">
+    <div>
+      <ul class="check">
+        <li><b>Código fuente completo</b> del frontend y del backend, con su historial de desarrollo.</li>
+        <li><b>Marca PrestArte</b>, logotipo y textos de la aplicación.</li>
+        <li><b>Diseños</b> de las pantallas y sistema visual.</li>
+        <li><b>Documentación</b>: memoria técnica del proyecto, README, registro de cambios, este dosier y la ficha técnica.</li>
+        <li><b>Datos de demostración</b> para presentar el producto desde el primer día.</li>
+        <li><b>Transición</b>: sesiones de traspaso de conocimiento y soporte durante <span class="relleno">[X semanas]</span>.</li>
+        <li><b>Dominio</b> <span class="relleno">[nombre de dominio, si aplica]</span>.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="tarjeta suave">
+        <h4>Opciones abiertas</h4>
+        <p class="small">Además de la compra total, se pueden valorar otras fórmulas:</p>
+        <ul class="small">
+          <li>Venta total de los activos (código, marca y documentación).</li>
+          <li>Licencia de uso exclusiva o no exclusiva.</li>
+          <li>Venta con contrato de desarrollo posterior para llevar el producto a producción.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Proceso propuesto</h3>
+  <div class="flujo">
+    <div class="paso"><b>1</b>Acuerdo de confidencialidad</div>
+    <div class="paso"><b>2</b>Demostración en directo</div>
+    <div class="paso"><b>3</b>Acceso al código y a la ficha técnica</div>
+    <div class="paso"><b>4</b>Revisión técnica y legal</div>
+    <div class="paso"><b>5</b>Oferta y contrato</div>
+    <div class="paso"><b>6</b>Traspaso y transición</div>
+  </div>
+
+  <div class="tarjeta" style="margin-top:10mm;display:flex;gap:8mm;align-items:center">
+    <img src="logo.png" alt="PrestArte" style="height:14mm">
+    <div>
+      <h4>Contacto</h4>
+      <p style="margin:0">Sergio Fernández Morales · <span class="relleno">[email]</span> · <span class="relleno">[teléfono]</span></p>
+      <p class="small muted" style="margin:0">Disponible para una demostración en directo del producto.</p>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:8mm">Este documento es informativo y no constituye una oferta vinculante. Las vías de ingresos y las cifras de mercado son orientativas. Las condiciones de la operación se fijarán en el contrato.</p>
+  <div class="pie"><span>PrestArte · Dosier de producto</span><span>Confidencial · 11</span></div>
+</section>
+
+</body>
+</html>
