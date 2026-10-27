@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PrestArte · Ficha técnica</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  body { font-size: 9pt; line-height: 1.42; }
+  td { padding: 1.5mm 2.2mm; } th { padding: 1.5mm 2.2mm; }
+  h3 { margin: 3.5mm 0 1.5mm; } h2 { margin-bottom: 3mm; } .pagina { padding-top: 16mm; }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: 8pt; background: var(--azul-fondo); padding: 0 1mm; border-radius: 1mm; }
+  .estados { display: flex; flex-wrap: wrap; gap: 1.2mm; align-items: center; margin: 2mm 0 3mm; font-size: 7.8pt; }
+  .estados span { background: var(--azul-fondo); border-radius: 1.5mm; padding: 1mm 2mm; font-family: "DejaVu Sans Mono", monospace; }
+  .estados i { color: var(--gris-claro); font-style: normal; }
+  .arq { display: grid; grid-template-columns: 1fr 14mm 1fr 14mm 1fr; align-items: center; margin: 3mm 0 5mm; }
+  .arq .caja { border: 1.5px solid var(--azul); border-radius: 2.5mm; padding: 3mm; text-align: center; font-size: 8.5pt; }
+  .arq .caja b { display: block; font-size: 10pt; color: var(--azul-osc); }
+  .arq .flecha { text-align: center; color: var(--azul); font-size: 7.5pt; }
+  td:first-child { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="pagina">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm">
+    <img src="logo.png" alt="PrestArte" style="height:11mm">
+    <span class="etiqueta">Ficha técnica · Octubre de 2026</span>
+  </div>
+  <div class="eyebrow">Documento para la revisión técnica</div>
+  <h1 style="font-size:24pt;margin-bottom:4mm">Ficha técnica de PrestArte</h1>
+  <p class="lead">Arquitectura, modelo de datos, API, seguridad, estado de validación y deuda técnica conocida. Complementa al dosier de producto.</p>
+
+  <h3>Arquitectura</h3>
+  <div class="arq">
+    <div class="caja"><b>Frontend</b>Angular 21 · Tailwind 4<br><span class="muted small">SPA con rutas por perfil</span></div>
+    <div class="flecha">REST + JWT<br>→</div>
+    <div class="caja"><b>Backend</b>Spring Boot 4 · Java 21<br><span class="muted small">API REST sin estado</span></div>
+    <div class="flecha">JPA<br>→</div>
+    <div class="caja"><b>MySQL 8</b>Datos y archivos<br><span class="muted small">Esquema gestionado por Hibernate</span></div>
+  </div>
+  <p>Arquitectura cliente-servidor desacoplada. Toda la lógica de negocio y la validación definitiva viven en el backend; el frontend valida además en el cliente para mejorar la experiencia. El backend envía correos por SMTP y genera PDF en el servidor. Una tarea programada diaria envía los recordatorios.</p>
+
+  <h3>Stack y versiones</h3>
+  <table>
+    <tr><th>Componente</th><th>Tecnología</th><th>Versión</th></tr>
+    <tr><td>Lenguaje backend</td><td>Java (LTS)</td><td>21</td></tr>
+    <tr><td>Framework backend</td><td>Spring Boot: Web MVC, Security, Data JPA, Validation, Mail</td><td>4.0.2</td></tr>
+    <tr><td>Tokens</td><td>JJWT</td><td>0.12.6</td></tr>
+    <tr><td>PDF</td><td>OpenPDF (LibrePDF)</td><td>1.3.30</td></tr>
+    <tr><td>Base de datos</td><td>MySQL (probado también con MariaDB 10.11)</td><td>8.x</td></tr>
+    <tr><td>Framework frontend</td><td>Angular: componentes standalone, signals, carga diferida</td><td>21.2</td></tr>
+    <tr><td>Estilos</td><td>Tailwind CSS</td><td>4.x</td></tr>
+    <tr><td>Lenguaje frontend</td><td>TypeScript</td><td>5.9</td></tr>
+    <tr><td>Construcción</td><td>Maven (wrapper incluido) y Angular CLI / npm</td><td>—</td></tr>
+  </table>
+  <p class="small muted">Todas las dependencias son de código abierto con licencias permisivas (Apache 2.0, MIT, LGPL/MPL en OpenPDF). No hay costes de licencia.</p>
+
+  <h3>Tamaño del código</h3>
+  <div class="grid4">
+    <div class="tarjeta"><div class="cifra">167</div><div class="cifra-et">ficheros Java · 12.844 líneas</div></div>
+    <div class="tarjeta"><div class="cifra">14.679</div><div class="cifra-et">líneas TS, HTML y SCSS</div></div>
+    <div class="tarjeta"><div class="cifra">102</div><div class="cifra-et">endpoints REST en 17 controladores</div></div>
+    <div class="tarjeta"><div class="cifra">31</div><div class="cifra-et">entidades JPA y enumerados</div></div>
+  </div>
+  <div class="pie"><span>PrestArte · Ficha técnica</span><span>Confidencial · 1</span></div>
+</section>
+
+<!-- 2 -->
+<section class="pagina">
+  <div class="eyebrow">Backend</div>
+  <h2>Organización del código</h2>
+  <table>
+    <tr><th>Paquete</th><th>Contenido</th></tr>
+    <tr><td><code>controller</code></td><td>17 controladores REST delgados que delegan en servicios: autenticación, obras, préstamos, envíos, exposiciones, informes de instalaciones, procedencia, chat y mensajes, avisos, valoraciones, archivos, paneles y transportistas.</td></tr>
+    <tr><td><code>service</code></td><td>27 servicios transaccionales con la lógica de negocio: préstamos, envíos, seguro y permisos (<code>LoanDocumentsService</code>), supervisión del correo, informes de estado, compatibilidad, estimación de costes y CO₂, procedencia, recordatorios, PDF, email y validación de subidas.</td></tr>
+    <tr><td><code>service.statemachine</code></td><td><code>LoanStateMachine</code> y <code>ShipmentStateMachine</code>: mapas de transiciones permitidas. Una transición inválida devuelve HTTP 409.</td></tr>
+    <tr><td><code>model.entity</code> / <code>dto</code></td><td>Entidades JPA (usuarios con herencia JOINED) y DTO de entrada y salida con Bean Validation.</td></tr>
+    <tr><td><code>repository</code></td><td>24 repositorios Spring Data, con <code>@EntityGraph</code> donde hace falta carga anticipada.</td></tr>
+    <tr><td><code>security</code></td><td>Filtro JWT, usuario actual, <code>RateLimitFilter</code> y carga de usuarios.</td></tr>
+    <tr><td><code>config</code></td><td>Seguridad y CORS, programación de tareas, administrador inicial y datos de demostración.</td></tr>
+    <tr><td><code>exception</code></td><td><code>GlobalExceptionHandler</code>: respuestas de error uniformes (400, 401, 403, 404, 409).</td></tr>
+  </table>
+
+  <h3>Ciclo de vida del préstamo (14 estados)</h3>
+  <div class="estados">
+    <span>REQUESTED</span><i>→</i><span>ACCEPTED</span><i>→</i><span>QUOTE_PENDING</span><i>⇄</i><span>QUOTE_PROPOSED</span><i>→</i><span>PAID</span><i>→</i><span>READY_FOR_PICKUP</span><i>→</i><span>IN_TRANSIT</span><i>→</i><span>DELIVERED</span><i>→</i><span>ON_LOAN</span><i>→</i><span>RETURNING</span><i>→</i><span>RETURNED</span>
+  </div>
+  <p class="small">Estados finales alternativos: <code>REJECTED</code> (desde la solicitud) y <code>CANCELLED</code> (hasta que la obra sale). Un presupuesto rechazado vuelve a <code>QUOTE_PENDING</code> y permite reasignar transportista.</p>
+  <h3>Ciclo de vida del envío (7 estados)</h3>
+  <div class="estados">
+    <span>REQUESTED</span><i>→</i><span>QUOTED</span><i>→</i><span>APPROVED</span><i>→</i><span>PICKED_UP</span><i>→</i><span>IN_TRANSIT</span><i>→</i><span>DELIVERED</span><i>·</i><span>REJECTED</span>
+  </div>
+  <p class="small">Cada préstamo tiene un envío de ida y otro de vuelta. Los envíos notifican al préstamo cuando avanzan, de modo que ambos nunca quedan incoherentes.</p>
+
+  <h3>Reglas de negocio destacadas</h3>
+  <ul class="small">
+    <li>La obra no puede pasar a «lista para recoger» ni recogerse sin seguro aprobado que cubra el valor y el periodo, ni sin permiso de exportación cuando la Ley 16/1985 lo exige.</li>
+    <li>Al aceptar una solicitud se rechazan de forma automática las solicitudes que se solapan, con aviso a esas instituciones.</li>
+    <li>Las ampliaciones comprueban reservas posteriores, la fecha límite del permiso y la cobertura del seguro.</li>
+    <li>La recogida y la entrega exigen un informe de estado con fotografías; la entrega la confirma quien recibe la obra.</li>
+    <li>Sin declaración de titularidad firmada, una obra no recibe solicitudes. Las obras marcadas como sospechosas en la diligencia debida salen del catálogo.</li>
+  </ul>
+  <div class="pie"><span>PrestArte · Ficha técnica</span><span>Confidencial · 2</span></div>
+</section>
+
+<!-- 3 -->
+<section class="pagina">
+  <div class="eyebrow">Datos y API</div>
+  <h2>Modelo de datos</h2>
+  <table>
+    <tr><th>Área</th><th>Entidades</th></tr>
+    <tr><td>Usuarios</td><td>User (herencia JOINED) → Admin, Collector, Foundation, TransportCompany · CoverageArea · PasswordResetToken</td></tr>
+    <tr><td>Obras</td><td>Artwork · ArtworkFile · LoanRequirements · ImageRights · ProvenanceEntry · DueDiligenceCheck</td></tr>
+    <tr><td>Préstamos</td><td>LoanRequest · LoanEvent · Exhibition · FacilityReport · InsuranceCertificate · ExportPermit · Review</td></tr>
+    <tr><td>Logística</td><td>Shipment · ConditionReport · SupervisionCheckpoint · CourierMode</td></tr>
+    <tr><td>Comunicación</td><td>ChatSession · Message · Notification · ReminderLog</td></tr>
+    <tr><td>Archivos</td><td>DBFile (contenido binario con identificador UUID)</td></tr>
+  </table>
+
+  <h2 style="margin-top:6mm">API REST</h2>
+  <p>102 endpoints bajo <code>/api</code>: 49 GET, 42 POST, 5 PUT, 5 DELETE y 1 PATCH. Los públicos son el catálogo, la disponibilidad y el historial de exposiciones de las obras, el directorio de transportistas, las valoraciones agregadas y la autenticación. El resto exige JWT y el rol y la relación con el recurso adecuados.</p>
+  <table>
+    <tr><th>Grupo</th><th>Ejemplos</th></tr>
+    <tr><td>Autenticación</td><td><code>POST /auth/register</code> (multipart con documento) · <code>/auth/login</code> · <code>/auth/forgot-password</code> · <code>/auth/reset-password</code></td></tr>
+    <tr><td>Obras</td><td><code>GET /artworks/search</code> · <code>/artworks/{id}/availability</code> · <code>/artworks/{id}/cost-estimate</code> · <code>/artworks/{id}/compatibility</code> · <code>/artworks/{id}/provenance</code></td></tr>
+    <tr><td>Préstamos</td><td><code>POST /loan-requests</code> · <code>/{id}/accept</code> · <code>/{id}/insurance</code> · <code>/{id}/export-permit</code> · <code>/{id}/ready-for-pickup</code> · <code>/{id}/start-return</code> · <code>/{id}/extension</code> · <code>/{id}/contract</code></td></tr>
+    <tr><td>Envíos</td><td><code>POST /shipments/{id}/quote</code> · <code>/approve-quote</code> · <code>/picked-up</code> · <code>/in-transit</code> · <code>/delivered</code></td></tr>
+    <tr><td>Instituciones</td><td><code>/exhibitions</code> · <code>/facility-report</code></td></tr>
+    <tr><td>Comunicación</td><td><code>/chat-sessions</code> · <code>/messages</code> · <code>/notifications</code> · <code>/loan-requests/{id}/reviews</code></td></tr>
+    <tr><td>Administración</td><td>Aprobación de cuentas · <code>/admin/due-diligence/pending</code> · <code>/admin/artworks/{id}/due-diligence</code></td></tr>
+  </table>
+
+  <div class="pie"><span>PrestArte · Ficha técnica</span><span>Confidencial · 3</span></div>
+</section>
+
+<!-- 4 -->
+<section class="pagina">
+  <div class="eyebrow">Frontend, seguridad y validación</div>
+  <h2>Frontend</h2>
+  <p>Organizado en <code>core</code> (servicios HTTP, modelos espejo de los DTO, guards de autenticación y rol, interceptores JWT y de errores, validadores de DNI, NIE, CIF y teléfono), <code>features</code> (una carpeta por pantalla y por perfil) y <code>shared</code> (componentes reutilizables: estado, tarjetas de cifras, panel de compatibilidad, estimación de costes, condiciones del prestador). El pipe <code>secureFile</code> descarga los archivos protegidos con el token.</p>
+  <h2 style="margin-top:5mm">Seguridad y privacidad</h2>
+  <table>
+    <tr><th>Medida</th><th>Detalle</th></tr>
+    <tr><td>Autenticación</td><td>JWT firmado, sin sesión en el servidor. Contraseñas con BCrypt.</td></tr>
+    <tr><td>Autorización</td><td>Rol por ruta y comprobación de propiedad en cada operación: solo el dueño edita su obra y solo las partes de un préstamo lo ven o escriben en su chat.</td></tr>
+    <tr><td>Verificación de cuentas</td><td>Alta con documento acreditativo; la cuenta queda pendiente hasta que la administración la aprueba. Validación de la letra o el dígito de control de DNI, NIE y CIF.</td></tr>
+    <tr><td>Archivos</td><td>Descarga con permisos según a qué pertenece el archivo. Tipo detectado por el contenido real (JPEG, PNG, WEBP, PDF), no por la extensión. Cabecera <code>Content-Security-Policy: sandbox</code>.</td></tr>
+    <tr><td>Límite de intentos</td><td>Por IP en login (10 cada 5 min), registro (5 por hora) y recuperación de contraseña. Respuesta 429.</td></tr>
+    <tr><td>Recuperación de contraseña</td><td>Token de un solo uso. La respuesta no revela si el email está registrado.</td></tr>
+    <tr><td>Producción</td><td>Perfil <code>prod</code> sin valores por defecto: base de datos, correo, secreto JWT, CORS y URL del frontend son obligatorios por variable de entorno. Datos de demostración desactivados y trazas de error ocultas.</td></tr>
+    <tr><td>Privacidad del coleccionista</td><td>Anonimato por defecto, valor en horquilla para terceros, dirección de recogida solo para el transportista con envío en curso, documentos confidenciales.</td></tr>
+  </table>
+
+  <h2 style="margin-top:5mm">Validación realizada (23 de octubre de 2026)</h2>
+  <div class="tarjeta suave">
+    <ul class="check small">
+      <li><b>Compilación:</b> <code>mvn compile</code> correcto con OpenJDK 21 (269 clases generadas).</li>
+      <li><b>Arranque:</b> la aplicación arranca contra MariaDB 10.11, crea el esquema y siembra el administrador y los datos de demostración.</li>
+      <li><b>Prueba de extremo a extremo por API</b> con los tres perfiles: alta de 4 obras con fotos, exposición, estimación de coste, 3 solicitudes, aceptación, presupuesto, aprobación, contrato PDF, seguro subido y aprobado, recogida con informe y fotos, tránsito, entrega, estado <code>ON_LOAN</code>, certificado de exposición, devolución completa hasta <code>RETURNED</code>, valoraciones e historial con 16 eventos. Todos los pasos respondieron correctamente.</li>
+      <li><b>Frontend:</b> servido con Angular CLI y recorrido con los cuatro perfiles; las capturas del dosier proceden de esa sesión.</li>
+    </ul>
+  </div>
+
+  <h3>Requisitos de despliegue</h3>
+  <p class="small">Java 21, MySQL 8, un servidor SMTP y un servidor web estático para el frontend compilado. En el entorno de desarrollo se usó un portátil estándar; para un primer despliegue basta un VPS de 2 vCPU y 4 GB de RAM.</p>
+  <div class="pie"><span>PrestArte · Ficha técnica</span><span>Confidencial · 4</span></div>
+</section>
+
+<!-- 5 -->
+<section class="pagina">
+  <div class="eyebrow">Deuda técnica</div>
+  <h2>Deuda técnica conocida y recomendaciones</h2>
+  <p>Lista transparente de lo que un equipo debería abordar antes o poco después del lanzamiento. Ninguno de estos puntos bloquea el funcionamiento actual.</p>
+  <table>
+    <tr><th>Punto</th><th>Situación</th><th>Recomendación</th><th>Prioridad</th></tr>
+    <tr><td>Tests automáticos</td><td>Solo existe el test de arranque. La validación se ha hecho con una prueba de extremo a extremo manual por API.</td><td>Tests unitarios de máquinas de estados y servicios, y tests de integración del flujo del préstamo.</td><td><span class="etiqueta terra">Alta</span></td></tr>
+    <tr><td>Migraciones</td><td>Esquema gestionado con <code>ddl-auto=update</code>.</td><td>Flyway con un script base generado del esquema actual.</td><td><span class="etiqueta terra">Alta</span></td></tr>
+    <tr><td>Despliegue</td><td>Sin Docker ni integración continua.</td><td>Dockerfile para cada parte, docker-compose y un pipeline de CI.</td><td><span class="etiqueta terra">Alta</span></td></tr>
+    <tr><td>Textos legales</td><td>Pendientes privacidad (RGPD), cookies y aviso legal.</td><td>Redacción con asesoría legal; registro de actividades de tratamiento.</td><td><span class="etiqueta terra">Alta</span></td></tr>
+    <tr><td>Almacenamiento de archivos</td><td>Archivos en la base de datos (LONGBLOB).</td><td>Migrar a almacenamiento de objetos compatible con S3.</td><td><span class="etiqueta">Media</span></td></tr>
+    <tr><td>Búsqueda del catálogo</td><td>Los filtros se aplican en memoria.</td><td>Consultas JPA o Specifications cuando el catálogo crezca.</td><td><span class="etiqueta">Media</span></td></tr>
+    <tr><td>Estimador de costes</td><td>Tarifas de referencia razonables pero no calibradas con datos de mercado; cada estimación lista sus supuestos.</td><td>Calibrar con presupuestos reales de transportistas.</td><td><span class="etiqueta">Media</span></td></tr>
+    <tr><td>Avisos en tiempo real</td><td>Consulta periódica desde el frontend.</td><td>WebSockets o Server-Sent Events.</td><td><span class="etiqueta">Baja</span></td></tr>
+    <tr><td>Pagos</td><td>El paso «Pagado» se marca al aprobar el presupuesto; no hay cobro real.</td><td>Pasarela de pago y modelo de comisión.</td><td><span class="etiqueta">Según modelo</span></td></tr>
+    <tr><td>Errores de entrada</td><td>Un JSON mal formado responde 500 en lugar de 400.</td><td>Añadir el caso al manejador global de excepciones.</td><td><span class="etiqueta">Baja</span></td></tr>
+    <tr><td>Idiomas</td><td>Interfaz solo en español.</td><td>Internacionalización de Angular, empezando por el inglés.</td><td><span class="etiqueta">Baja</span></td></tr>
+  </table>
+  <h3>Documentación disponible</h3>
+  <ul class="small">
+    <li><b>README.md</b>: descripción funcional, perfiles, flujo, seguridad, stack y estructura.</li>
+    <li><b>CHANGELOG.md</b>: detalle de la última fase de desarrollo, incluidos los cambios de API.</li>
+    <li><b>Memoria del proyecto</b> (Word): análisis, diagramas de clases, casos de uso, flujos, máquinas de estado, esquema de base de datos, manual de instalación y manual de usuario.</li>
+    <li><b>Carpeta design/</b>: prototipos de las pantallas.</li>
+  </ul>
+  <div class="pie"><span>PrestArte · Ficha técnica</span><span>Confidencial · 5</span></div>
+</section>
+
+</body>
+</html>
